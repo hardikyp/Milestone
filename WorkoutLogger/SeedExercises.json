@@ -1,0 +1,155 @@
+[
+  {
+    "id": "seed-bicep-curl",
+    "name": "Bicep curl",
+    "type": "weight",
+    "category": "pull",
+    "description": "Hold a dumbbell in each hand with your palms facing forward.\nSlowly raise both dumbbells at the same time by bending your elbows, while keeping your upper arms stationary. Keep your palms facing forward throughout the movement.\nContinue to curl the dumbbells until they are level with your shoulders or until you feel a good contraction in your biceps.\nPause for a second at the top of the movement, then slowly lower the dumbbells back down to the starting position.\nRepeat for your desired number of reps.",
+    "target_area": "Biceps",
+    "media_uri": "ExerciseGIFs/bicep-curl.gif"
+  },
+  {
+    "id": "seed-lat-pull-down",
+    "name": "Lat pull down",
+    "type": "weight",
+    "category": "pull",
+    "description": "Start by attaching a wide handle bar to the cable.\nSit on the lat pulldown machine with your feet flat on the ground and your knees firmly pressed against the pad. Your thighs should be parallel to the ground.\nGrab the bar with both hands, making sure your palms are facing away from you and your grip is wider than shoulder-width apart.\nWhile keeping your back straight and your chest up, pull the bar down towards your chest by contracting your back muscles. Your elbows should point downwards and stay close to your body.\nPause for a second when the bar reaches your chest, and then slowly release it back up to the starting position, extending your arms fully.\nRepeat for the desired number of reps.",
+    "target_area": "Latissimus Dorsi",
+    "media_uri": "ExerciseGIFs/lat-pulldown.gif"
+  },
+  {
+    "id": "seed-seated-cable-row",
+    "name": "Seated cable row",
+    "type": "weight",
+    "category": "pull",
+    "description": "Place your feet firmly on the footrest or platform provided by the cable machine.\nKeep your back straight and avoid slouching or rounding your shoulders forward. Engage your core muscles to help maintain good posture. This will help you maintain stability and prevent your lower back from rounding.\nBefore starting the exercise, retract your shoulder blades and keep them in this position throughout the movement. This will help engage the muscles of the upper back and prevent excessive strain on the shoulders and neck.\nAs you pull the cable handles towards you, keep your elbows flared out to the sides and squeeze your shoulder blades together at the end of the movement. This will help engage the muscles of the upper back and prevent excessive strain on the shoulders.\nPause for a second at the top of the movement and then slowly release back to the starting position. Exhale as you pull the cable towards your body and inhale as you return to the starting position.\nRepeat for the desired number of repetitions.",
+    "target_area": "Latissimus Dorsi",
+    "media_uri": "ExerciseGIFs/seated-cable-row.gif"
+  },
+  {
+    "id": "seed-face-pulls",
+    "name": "Face pulls",
+    "type": "weight",
+    "category": "pull",
+    "description": "Set Up: Attach a rope handle to a cable machine or use resistance bands at chest or eye level.\nGrip: Hold the handles with an overhand grip, palms facing down.\nPosition: Stand tall with feet shoulder-width apart, engaging your core.\nExecution: Pull the rope toward your face, elbows flaring outward. Squeeze your shoulder blades together at the peak of the movement. Slowly return to the starting position.",
+    "target_area": "Posterior Deltoid",
+    "media_uri": "ExerciseGIFs/face-pull.gif"
+  },
+  {
+    "id": "seed-cable-crossover",
+    "name": "Cable crossover",
+    "type": "weight",
+    "category": "pull",
+    "description": "Adjust the pulleys to the desired height. High Pulley: Targets the lower chest. Low Pulley: Engages the upper chest. Mid Pulley: Works the middle chest. Attach D-handles to each pulley.\nStand in the center of the machine with one foot slightly forward for balance.\nGrasp the handles with your palms facing each other and step forward slightly to create tension on the cables.\nStart with your arms outstretched to the sides, elbows slightly bent.\nPull the handles downward and together in a wide arc, as if hugging a barrel.\nSqueeze your chest at the peak of the movement.\nSlowly return to the starting position, maintaining control.",
+    "target_area": "Pectoralis Major, Sternal",
+    "media_uri": "ExerciseGIFs/cable-crossover.gif"
+  },
+  {
+    "id": "seed-low-cable-crossover",
+    "name": "Low cable crossover",
+    "type": "weight",
+    "category": "pull",
+    "description": "Start by setting the cable machine to the lowest setting and attaching a handle to each side.\nStand in the center of the cable machine with your feet shoulder-width apart and facing the machine. Grab a handle in each hand and bring your hands up to shoulder height. This is the starting position.\nTake a step forward with one foot, keeping your knees slightly bent, and lean forward at the waist while maintaining a straight back.\nYour hands should end up at your sides, just below your hips.\nWith a slight bend in your arms, draw your weights upward and toward the midline of your body. Make sure to keep your elbows slightly bent throughout the movement.\nPause for a moment, then slowly release the tension and return to the starting position.\nRepeat for the desired number of repetitions, then switch sides and repeat with the other arm.",
+    "target_area": "Pectoralis Major, Sternal",
+    "media_uri": "ExerciseGIFs/low-cable-crossover.gif"
+  },
+  {
+    "id": "seed-overhead-press",
+    "name": "Overhead press",
+    "type": "weight",
+    "category": "push",
+    "description": "Starting Position: Grasp a barbell or body bar with an overhand grip. Your hands should be wider than shoulder width.\nRaise the barbell so that it is just below your chin, and keep your knees slightly bent.\nWhile keeping your core muscles engaged, exhale and press your arms over your head. Hold for a brief second at the top and then slowly lower back to the starting position.\nYou can perform this exercise with your feet parallel or with your feet staggered. When your feet are parallel there is more challenge on balance and there is also more challenge on your lower back.\nIf you want to take some pressure off your lower back use a staggered stance.\nAs with all exercises, posture is very important. Make sure that your back does not arch excessively when you press over head.\nIt is important to note that proper form and technique are crucial when performing the barbell military press to avoid injury. It is recommended to start with lighter weights and gradually increase the load as your strength and technique improve.",
+    "target_area": "Shoulders",
+    "media_uri": "ExerciseGIFs/overhead-press.gif" 
+  },
+  {
+  "id": "seed-tricep-pushdown",
+  "name": "Tricep pushdown",
+  "type": "weight",
+  "category": "push",
+    "description": "Attach a rope handle to a high pulley cable machine.\nSelect an appropriate weight that allows for controlled movement.\nStand facing the machine with a slight forward lean, keeping your feet shoulder-width apart.\nGrasp the rope with both hands, using a neutral grip (palms facing each other).\nKeep your elbows close to your torso, and engage your core.\nPush the rope down by extending your elbows, keeping your upper arms stationary.\nAs you reach the bottom, separate the rope handles, emphasizing a full contraction of the triceps.\nHold the contraction for a second, then slowly return to the starting position while controlling the resistance.\nRepeat for 3 to 4 sets of 10 to 12 reps with proper form.",
+    "target_area": "Triceps",
+    "media_uri": "ExerciseGIFs/tricep-pushdown.gif" 
+  },
+  {
+    "id": "seed-lateral-raise",
+    "name": "Cable lateral raise",
+    "type": "weight",
+    "category": "push",
+    "description": "Stand with your feet shoulder-width apart and hold a dumbbell in each hand.\nExtend your arms out to the sides, parallel to the floor, with your palms facing down.\nKeeping your arms straight, lift the weights up and out to the sides until they reach shoulder height.\nPause for a moment at the top of the movement, then slowly lower the weights back down to the starting position.\nRepeat for the desired number of repetitions.",
+    "target_area": "Shoulders",
+    "media_uri": "ExerciseGIFs/cable-lateral-raise.gif" 
+  },
+  {
+  "id": "seed-cable-chest-press",
+  "name": "Supinated Cable Chest Press",
+  "type": "weight",
+  "category": "push",
+    "description": "Stand with your feet shoulder-width apart and your back straight.\nAttach the cable to the pulley at chest height.\nGrasp the handles with your palms facing down and your elbows bent at a 90-degree angle.\nStep forward slightly to create tension in the cable.\nPush the handles forward until your arms are fully extended in front of you.\nHold for a second, then slowly release back to the starting position.\nRepeat for desired number of reps.",
+    "target_area": "Chest",
+    "media_uri": "ExerciseGIFs/cable-chest-press.gif" 
+  },
+  {
+  "id": "seed-pushup",
+  "name": "Push Up",
+  "type": "functional",
+  "category": "push",
+    "description": "\nBegin in a high plank position with hands placed slightly wider than shoulder-width apart.\nKeep your body in a straight line from head to heels.\nEngage your core and keep your neck neutral.\nInhale as you bend your elbows and lower your chest toward the ground.\nKeep your elbows at a 45-degree angle to your torso.\nLower until your chest is just above the floor or as far as mobility allows.\nExhale as you push through your palms to return to the starting position.\nFully extend your arms while maintaining core engagement.\nPerform controlled reps at a steady pace to maximize muscle engagement.",
+    "target_area": "Abs, Back, Chest, Shoulders, Triceps,",
+    "media_uri": "ExerciseGIFs/push-up.gif" 
+  },
+  {
+  "id": "seed-barbell-squat",
+  "name": "Barbell Squat",
+  "type": "weight",
+  "category": "legs",
+    "description": "Set the barbell on a squat rack just below shoulder height. Step under it and rest the bar across your upper traps or rear delts.\nGrip the bar firmly, pull your elbows down and under, and lift the bar off the rack.\nStep back, set your feet shoulder-width apart, and brace your core.\nLower your body by pushing your hips back and bending the knees, keeping your chest upright.\nDescend until your thighs are parallel to the ground or lower if mobility allows.\nDrive through your heels to return to the standing position, keeping the spine neutral..",
+    "target_area": "Quadriceps",
+    "media_uri": "ExerciseGIFs/barbell-squat.gif" 
+  },
+  {
+  "id": "seed-static-lunge",
+  "name": "Static Lunge",
+  "type": "weight",
+  "category": "legs",
+    "description": "Stand with your feet hip-width apart.\nTake a step forward with one foot, and then take a larger step backward with your other foot. Your feet should be positioned so that when you lower your body into the lunge, both knees form 90-degree angles.\nKeep your torso upright with your chest lifted and your shoulders relaxed. Your core should be engaged for stability.\nLower your body by bending both knees simultaneously.\nHold the lowered position for a moment, and then push through the heel of your front foot to return to the starting position.\nRepeat the movement for the desired number of repetitions on one leg before switching to the other leg.",
+    "target_area": "Quadriceps, Glutes",
+    "media_uri": "ExerciseGIFs/static-lunge.gif" 
+  },
+  {
+  "id": "seed-cable-romanian-deadlift",
+  "name": "Cable Romanian Deadlift",
+  "type": "weight",
+  "category": "legs",
+    "description": "Stand with your feet shoulder-width apart and place a cable attachment at the lowest setting on a cable machine.\nGrab the cable attachment with both hands and step back until there is tension on the cable.\nKeeping your back straight and your core engaged, hinge at the hips and lower the cable attachment towards the ground.\nLower the cable attachment as far as you can while maintaining proper form and feeling a stretch in your hamstrings.\nSlowly raise the cable attachment back up to the starting position, squeezing your glutes and hamstrings at the top of the movement.\nRepeat for the desired number of reps.",
+    "target_area": "Hamstrings, Glutes, Erector spinae, Core muscles",
+    "media_uri": "ExerciseGIFs/cable-romanian-deadlift.gif" 
+  },
+  {
+  "id": "seed-hip-adduction",
+  "name": "Hip Adduction",
+  "type": "weight",
+  "category": "legs",
+    "description": "Adjust the machine: Before starting, adjust the machine to your height and select the appropriate weight. Make sure the pads are positioned comfortably on your legs and your feet are firmly on the footrests.\nSit on the machine: Sit on the seat with your back against the backrest and your feet on the footrests.\nPosition your legs: Position your legs so that your knees are bent at a 90-degree angle and your thighs are slightly apart.\nEngage your inner thighs: Squeeze your inner thighs together and push your legs against the resistance. Exhale as you bring your legs together.\nRelease: Slowly release the resistance and allow your legs to return to the starting position. Inhale as you release.\nRepeat: Complete the desired number of repetitions and sets, and adjust the weight as needed.",
+    "target_area": "Hip adductors",
+    "media_uri": "ExerciseGIFs/hip-adduction.gif" 
+  },
+  {
+  "id": "seed-hip-abduction",
+  "name": "Hip Abduction",
+  "type": "weight",
+  "category": "legs",
+    "description": "Start by sitting on the lever seated hip abduction machine with your back straight and your feet flat on the footrests.\nAdjust the machine so that the pads are resting just above your knees.\nPlace your hands on the handles provided on either side of the seat.\nSlowly push your legs outwards, away from each other, until you feel a stretch in your hip muscles.\nHold this position for a few seconds, then slowly bring your legs back together.\nRepeat this movement for the desired number of repetitions.\nRemember to keep your back straight and your core engaged throughout the exercise.\nOnce you have completed your set, carefully stand up and step off the machine.",
+    "target_area": "Hip abductors",
+    "media_uri": "ExerciseGIFs/hip-abduction.gif" 
+  },
+  {
+  "id": "seed-leg-curl",
+  "name": "Seated Leg Curl",
+  "type": "weight",
+  "category": "legs",
+    "description": "Set the leg curl machine to your appropriate height and adjust the resistance level according to your fitness level and goals.\nSit on the machine with your back against the backrest and your legs extended in front of you. Make sure your knees are aligned with the pivot point of the machine.\nPlace the back of your lower legs (just above the heels) under the padded lever or roller of the machine. The pad should rest comfortably against your legs, and your knees should be slightly off the edge of the seat.\nGrasp the handles provided on the machine for stability and support throughout the exercise. Keep your upper body relaxed and maintain good posture.\nBend your knees, bringing your heels toward your buttocks while maintaining control and avoiding any jerking or swinging motions.\nContinue the movement until your legs are fully bent and the machine pad is close to your glutes.\nPause briefly in the contracted position, focusing on squeezing your hamstrings.\nInhale and slowly lower the weight by extending your legs back to the starting position, maintaining control throughout the descent.\nRepeat the exercise for the desired number of repetitions.",
+    "target_area": "Hamstrings",
+    "media_uri": "ExerciseGIFs/seated-leg-curl.gif" 
+  }
+]

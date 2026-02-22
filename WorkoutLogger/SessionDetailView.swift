@@ -1,0 +1,311 @@
+import SwiftUI
+import GRDB
+
+struct SessionDetailView: View {
+    let sessionId: String
+
+    @EnvironmentObject private var container: AppContainer
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel = SessionDetailViewModel()
+    @State private var isDeleteConfirmationPresented = false
+
+    var body: some View {
+        List {
+            if let session = viewModel.session {
+                Section {
+                    Text(session.name?.isEmpty == false ? session.name! : "Workout")
+                        .font(.app(.headline))
+
+                    Text(Self.dateFormatter.string(from: session.startDateTime))
+                        .font(.app(.subheadline))
+                        .foregroundStyle(.secondary)
+
+                    if let durationText = viewModel.durationText {
+                        Text("Duration: \(durationText)")
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text(String(format: "Total Volume: %.1f kg", viewModel.totalVolumeKg))
+                        .font(.app(.subheadline))
+                        .foregroundStyle(.secondary)
+                }
+
+                ForEach(viewModel.exerciseSections) { section in
+                    Section("\(section.orderIndex). \(section.exerciseName)") {
+                        if section.sets.isEmpty {
+                            Text("No sets logged")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(section.sets) { set in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Set \(set.setIndex)")
+                                        .font(.app(.subheadline))
+                                    Text(set.summary)
+                                        .font(.app(.caption))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if viewModel.isLoading {
+                Section {
+                    ProgressView()
+                }
+            }
+        }
+        .navigationTitle("Session")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if viewModel.session?.endDateTime == nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(viewModel.isEnding ? "Ending..." : "End Session") {
+                        Task {
+                            await viewModel.endSession(
+                                sessionId: sessionId,
+                                sessionRepository: container.sessionRepository,
+                                dbQueue: container.dbQueue
+                            )
+                        }
+                    }
+                    .disabled(viewModel.isEnding)
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .destructive) {
+                    isDeleteConfirmationPresented = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+            }
+        }
+        .task {
+            await viewModel.load(sessionId: sessionId, dbQueue: container.dbQueue)
+        }
+        .alert("Session Detail Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "Unknown error")
+        }
+        .alert(
+            "Delete Exercise",
+            isPresented: $isDeleteConfirmationPresented
+        ) {
+            Button("Yes", role: .destructive) {
+                Task {
+                    let didDelete = await viewModel.deleteSession(
+                        sessionId: sessionId,
+                        sessionRepository: container.sessionRepository
+                    )
+                    if didDelete {
+                        dismiss()
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete this exercise?")
+        }
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+}
+
+@MainActor
+final class SessionDetailViewModel: ObservableObject {
+    struct SetDisplay: Identifiable {
+        let id: String
+        let setIndex: Int
+        let metricType: MetricType
+        let reps: Int?
+        let weightKg: Double?
+        let distanceM: Double?
+        let durationSec: Int?
+        let comment: String?
+
+        var summary: String {
+            switch metricType {
+            case .strength:
+                let repsPart = reps.map { "\($0) reps" } ?? "- reps"
+                let weightPart = weightKg.map { String(format: "%.1f kg", $0) } ?? "- kg"
+                return [repsPart, weightPart].joined(separator: " • ")
+            case .repsOnly:
+                return "\(reps ?? 0) reps"
+            case .time:
+                return "\(durationSec ?? 0)s"
+            case .distanceOnly:
+                let distance = distanceM ?? 0
+                return String(format: "%.0f m", distance)
+            case .distanceTime:
+                let distance = distanceM ?? 0
+                let duration = durationSec ?? 0
+                return String(format: "%.0f m • %ds", distance, duration)
+            }
+        }
+    }
+
+    struct ExerciseSection: Identifiable {
+        let id: String
+        let orderIndex: Int
+        let exerciseName: String
+        var sets: [SetDisplay]
+    }
+
+    @Published var session: Session?
+    @Published var exerciseSections: [ExerciseSection] = []
+    @Published var totalVolumeKg: Double = 0
+    @Published var durationText: String?
+    @Published var isLoading = false
+    @Published var isEnding = false
+    @Published var errorMessage: String?
+
+    func load(sessionId: String, dbQueue: DatabaseQueue) async {
+        isLoading = true
+
+        do {
+            let statsService = StatsService(dbQueue: dbQueue)
+
+            let loaded = try dbQueue.read { db in
+                guard let session = try Session.fetchOne(db, key: sessionId) else {
+                    throw RepositoryError.sessionNotFound(sessionId)
+                }
+
+                let rows = try Row.fetchAll(
+                    db,
+                    sql: """
+                    SELECT
+                        se.id AS session_exercise_id,
+                        se.order_index,
+                        e.name AS exercise_name,
+                        s.id AS set_id,
+                        s.set_index,
+                        s.metric_type,
+                        s.reps,
+                        s.weight_kg,
+                        s.distance_m,
+                        s.duration_sec,
+                        s.comment
+                    FROM session_exercises se
+                    JOIN exercises e ON e.id = se.exercise_id
+                    LEFT JOIN sets s ON s.session_exercise_id = se.id
+                    WHERE se.session_id = ?
+                    ORDER BY se.order_index ASC, s.set_index ASC
+                    """,
+                    arguments: [sessionId]
+                )
+
+                return (session, rows)
+            }
+
+            var sectionsByID: [String: ExerciseSection] = [:]
+            var orderedSectionIDs: [String] = []
+
+            for row in loaded.1 {
+                let sessionExerciseID: String = row["session_exercise_id"]
+                let orderIndex: Int = row["order_index"]
+                let exerciseName: String = row["exercise_name"]
+
+                if sectionsByID[sessionExerciseID] == nil {
+                    sectionsByID[sessionExerciseID] = ExerciseSection(
+                        id: sessionExerciseID,
+                        orderIndex: orderIndex,
+                        exerciseName: exerciseName,
+                        sets: []
+                    )
+                    orderedSectionIDs.append(sessionExerciseID)
+                }
+
+                let setID: String? = row["set_id"]
+                if let setID {
+                    let rawMetricType: String = row["metric_type"]
+                    let metricType = MetricType(rawValue: rawMetricType) ?? .strength
+
+                    let setDisplay = SetDisplay(
+                        id: setID,
+                        setIndex: row["set_index"],
+                        metricType: metricType,
+                        reps: row["reps"],
+                        weightKg: row["weight_kg"],
+                        distanceM: row["distance_m"],
+                        durationSec: row["duration_sec"],
+                        comment: row["comment"]
+                    )
+
+                    sectionsByID[sessionExerciseID]?.sets.append(setDisplay)
+                }
+            }
+
+            let sections = orderedSectionIDs.compactMap { sectionsByID[$0] }
+            let volume = try statsService.totalVolumeKg(sessionId: sessionId)
+
+            session = loaded.0
+            exerciseSections = sections
+            totalVolumeKg = volume
+            durationText = formatDuration(statsService.duration(session: loaded.0))
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    func endSession(
+        sessionId: String,
+        sessionRepository: SessionRepository,
+        dbQueue: DatabaseQueue
+    ) async {
+        guard !isEnding else { return }
+        isEnding = true
+        defer { isEnding = false }
+
+        do {
+            _ = try sessionRepository.endSession(sessionId: sessionId, notes: nil)
+            await load(sessionId: sessionId, dbQueue: dbQueue)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteSession(
+        sessionId: String,
+        sessionRepository: SessionRepository
+    ) async -> Bool {
+        do {
+            try sessionRepository.deleteSession(sessionId: sessionId)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    private func formatDuration(_ duration: TimeInterval?) -> String? {
+        guard let duration else {
+            return nil
+        }
+
+        let totalSeconds = Int(duration)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%dh %02dm %02ds", hours, minutes, seconds)
+        }
+
+        return String(format: "%dm %02ds", minutes, seconds)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        SessionDetailView(sessionId: "example-session")
+    }
+}
