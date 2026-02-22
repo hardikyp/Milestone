@@ -8,4 +8,4 @@ Milestone is a local-first iOS workout tracker for logging sessions, managing ex
 
 ## Preview
 
-![Milestone preview](docs/preview.png)
+<img src="docs/preview.png" alt="Milestone preview" width="280" />
