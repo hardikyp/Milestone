@@ -300,9 +300,43 @@ struct ExerciseDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text(exercise.name)
-                    .font(.app(.title2))
-                    .fontWeight(.semibold)
+                HStack(alignment: .center, spacing: 12) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .buttonStyle(BouncyOpaqueButtonStyle())
+
+                    Text(exercise.name)
+                        .font(.app(.title2))
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button {
+                        isEditPresented = true
+                    } label: {
+                        Text("Edit")
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(Color.black)
+                            )
+                    }
+                    .buttonStyle(BouncyOpaqueButtonStyle())
+                }
 
                 if let mediaURI = exercise.mediaURI,
                    let url = Self.resolvedMediaURL(from: mediaURI) {
@@ -322,15 +356,15 @@ struct ExerciseDetailView: View {
                         }
                 }
 
-                if let category = exercise.category {
-                    Text("Category: \(category.displayName)")
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Category: \(exercise.category?.displayName ?? "Uncategorized")")
+                        .font(.app(.subheadline))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("Type: \(exercise.type.displayName)")
                         .font(.app(.subheadline))
                         .foregroundStyle(.secondary)
                 }
-
-                Text("Type: \(exercise.type.displayName)")
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.secondary)
 
                 if let targetArea = exercise.targetArea,
                    !targetArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -341,6 +375,7 @@ struct ExerciseDetailView: View {
 
                 Text("How to do")
                     .font(.app(.headline))
+                    .fontWeight(.bold)
 
                 if instructionLines.isEmpty {
                     Text("No instructions available yet.")
@@ -351,6 +386,7 @@ struct ExerciseDetailView: View {
                             HStack(alignment: .top, spacing: 8) {
                                 Text("•")
                                 Text(line)
+                                    .fontWeight(.regular)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
@@ -376,15 +412,8 @@ struct ExerciseDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(exercise.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Edit") {
-                    isEditPresented = true
-                }
-            }
-        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isEditPresented) {
             CreateExerciseView(
                 title: "Edit Exercise",

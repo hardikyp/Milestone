@@ -44,7 +44,7 @@ struct SettingsView: View {
                         NavigationLink {
                             UserProfileView(viewModel: viewModel)
                         } label: {
-                            settingsRow(icon: "person.crop.circle", title: "Modify Details")
+                            settingsRow(icon: "person.crop.circle.fill", title: "Modify Details")
                         }
                     }
                     .background(cardBackground)
@@ -54,36 +54,46 @@ struct SettingsView: View {
 
                         HStack(spacing: 12) {
                             Label("Weight Unit", systemImage: "scalemass")
+                                .imageScale(.large)
                             Spacer()
-                            inlineUnitPicker(
+                            MinimalDropdownButton(
                                 options: SettingsViewModel.WeightUnit.allCases,
                                 selected: viewModel.weightUnit
                             ) { unit in
+                                unit.displayName
+                            } onSelect: { unit in
                                 viewModel.weightUnit = unit
                             }
                         }
+                        .zIndex(2)
 
                         Divider()
 
                         HStack(spacing: 12) {
                             Label("Distance Unit", systemImage: "ruler")
+                                .imageScale(.large)
                             Spacer()
-                            inlineUnitPicker(
+                            MinimalDropdownButton(
                                 options: SettingsViewModel.DistanceUnit.allCases,
                                 selected: viewModel.distanceUnit
                             ) { unit in
+                                unit.displayName
+                            } onSelect: { unit in
                                 viewModel.distanceUnit = unit
                             }
                         }
+                        .zIndex(1)
                     }
                     .padding(16)
                     .background(cardBackground)
+                    .zIndex(20)
 
                     VStack(alignment: .leading, spacing: 12) {
                         sectionTitle("Health and Fitness Data")
 
                         HStack(spacing: 12) {
                             Label("Connect HealthKit", systemImage: "heart.text.square")
+                                .imageScale(.large)
                             Spacer()
                             Button {
                                 withAnimation(.easeInOut(duration: 0.18)) {
@@ -121,7 +131,12 @@ struct SettingsView: View {
                     .background(cardBackground)
 
                     VStack(alignment: .leading, spacing: 16) {
-                        Label("About", systemImage: "info.circle")
+                        HStack(spacing: 12) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(width: 26, height: 26)
+                            Text("About")
+                        }
                         Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
                             .font(.app(.footnote))
                             .foregroundStyle(.secondary)
@@ -180,7 +195,8 @@ struct SettingsView: View {
     private func settingsRow(icon: String, title: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .frame(width: 22, height: 22)
+                .font(.system(size: 18, weight: .semibold))
+                .frame(width: 26, height: 26)
             Text(title)
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
@@ -189,47 +205,6 @@ struct SettingsView: View {
         }
         .padding(16)
         .contentShape(Rectangle())
-    }
-
-    @ViewBuilder
-    private func inlineUnitPicker<Option: CaseIterable & Identifiable>(
-        options: Option.AllCases,
-        selected: Option,
-        onSelect: @escaping (Option) -> Void
-    ) -> some View where Option: RawRepresentable, Option.RawValue == String {
-        HStack(spacing: 0) {
-            ForEach(Array(options), id: \.id) { option in
-                Button {
-                    onSelect(option)
-                } label: {
-                    Text(option.rawValue.uppercased())
-                        .font(.app(.caption))
-                        .foregroundStyle(selected.id == option.id ? Color.primary : Color.secondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .overlay(alignment: .bottom) {
-                            Rectangle()
-                                .fill(Color.primary)
-                                .frame(height: selected.id == option.id ? 2 : 0)
-                                .padding(.horizontal, 4)
-                        }
-                }
-                .buttonStyle(.plain)
-
-                if option.id != Array(options).last?.id {
-                    Divider()
-                        .frame(height: 14)
-                }
-            }
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(.systemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(Color.black.opacity(0.12), lineWidth: 1)
-        )
     }
 
     @ViewBuilder
@@ -711,6 +686,7 @@ struct UserProfileView: View {
                 }
                 .padding(16)
                 .background(profileCardBackground)
+                .zIndex(20)
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -770,34 +746,18 @@ struct UserProfileView: View {
             .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
     }
 
-    private var genderGridColumns: [GridItem] {
-        [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
-    }
-
     @ViewBuilder
     private var genderSelector: some View {
-        LazyVGrid(columns: genderGridColumns, spacing: 8) {
-            ForEach(SettingsViewModel.Gender.allCases) { option in
-                Button {
-                    gender = option
-                } label: {
-                    Text(option.displayName)
-                        .font(.app(.caption))
-                        .foregroundStyle(gender == option ? Color.white : Color.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(gender == option ? Color.black : Color(.systemBackground))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .stroke(Color.black.opacity(gender == option ? 0 : 0.12), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-            }
+        MinimalDropdownButton(
+            options: SettingsViewModel.Gender.allCases,
+            selected: gender
+        ) { option in
+            option.displayName
+        } onSelect: { option in
+            gender = option
         }
+        .expansionDirection(.up)
+        .panelAlignment(.leading)
     }
 
     private func saveAndDismiss() {
@@ -833,5 +793,150 @@ private struct BouncyPressableButton<Label: View>: View {
                     state = true
                 }
         )
+    }
+}
+
+private struct MinimalDropdownButton<Option: Identifiable>: View where Option.ID: Hashable {
+    enum ExpansionDirection {
+        case up
+        case down
+    }
+
+    enum PanelAlignment {
+        case leading
+        case trailing
+        case center
+    }
+
+    let options: [Option]
+    let selected: Option
+    let title: (Option) -> String
+    let onSelect: (Option) -> Void
+    @State private var isExpanded = false
+    private var expansionDirection: ExpansionDirection = .down
+    private var panelAlignment: PanelAlignment = .trailing
+
+    init(
+        options: [Option],
+        selected: Option,
+        title: @escaping (Option) -> String,
+        onSelect: @escaping (Option) -> Void
+    ) {
+        self.options = options
+        self.selected = selected
+        self.title = title
+        self.onSelect = onSelect
+    }
+
+    func expansionDirection(_ direction: ExpansionDirection) -> Self {
+        var copy = self
+        copy.expansionDirection = direction
+        return copy
+    }
+
+    func panelAlignment(_ alignment: PanelAlignment) -> Self {
+        var copy = self
+        copy.panelAlignment = alignment
+        return copy
+    }
+
+    var body: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                isExpanded.toggle()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(title(selected))
+                    .font(.app(.subheadline))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(.systemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.black.opacity(0.12), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: overlayAlignment) {
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
+                        Button {
+                            onSelect(option)
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                isExpanded = false
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(title(option))
+                                    .font(.app(.subheadline))
+                                    .foregroundStyle(.primary)
+                                Spacer(minLength: 0)
+                                if option.id == selected.id {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        if index < options.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+                .frame(minWidth: 180, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(.systemBackground))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.black.opacity(0.12), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
+                .offset(y: expansionDirection == .down ? 42 : -42)
+                .transition(
+                    .asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: expansionDirection == .down ? .top : .bottom)),
+                        removal: .opacity.combined(with: .move(edge: expansionDirection == .down ? .top : .bottom))
+                    )
+                )
+            }
+        }
+        .zIndex(isExpanded ? 10 : 0)
+    }
+
+    private var overlayAlignment: Alignment {
+        switch (panelAlignment, expansionDirection) {
+        case (.leading, .down):
+            return .topLeading
+        case (.leading, .up):
+            return .bottomLeading
+        case (.trailing, .down):
+            return .topTrailing
+        case (.trailing, .up):
+            return .bottomTrailing
+        case (.center, .down):
+            return .top
+        case (.center, .up):
+            return .bottom
+        }
     }
 }
