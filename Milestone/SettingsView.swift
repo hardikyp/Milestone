@@ -9,79 +9,131 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    VStack(spacing: 8) {
-                        profileImageView
-                            .frame(width: 96, height: 96)
-                            .clipShape(Circle())
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Settings")
+                        .font(.app(.title))
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text(viewModel.fullNameDisplay)
-                            .font(.app(.headline))
-                            .multilineTextAlignment(.center)
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionTitle("Profile")
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+                            .padding(.bottom, 12)
+
+                        HStack(spacing: 12) {
+                            profileImageView
+                                .frame(width: 48, height: 48)
+                                .clipShape(Circle())
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(viewModel.fullNameDisplay)
+                                    .font(.app(.headline))
+
+                                Text(viewModel.genderAgeDisplay)
+                                    .font(.app(.subheadline))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+
+                        Divider()
+
+                        NavigationLink {
+                            UserProfileView(viewModel: viewModel)
+                        } label: {
+                            settingsRow(icon: "person.crop.circle", title: "Modify Details")
+                        }
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
-                }
+                    .background(cardBackground)
 
-                Section("User Details") {
-                    NavigationLink {
-                        UserProfileView(viewModel: viewModel)
-                    } label: {
-                        Label("Edit Profile", systemImage: "person.crop.circle")
-                    }
-                }
+                    VStack(alignment: .leading, spacing: 12) {
+                        sectionTitle("Preferences")
 
-                Section("Preferences") {
-                    HStack {
-                        Label("Weight Unit", systemImage: "scalemass")
-                        Spacer()
-                        Picker("Weight Unit", selection: $viewModel.weightUnit) {
-                            ForEach(SettingsViewModel.WeightUnit.allCases) { unit in
-                                Text(unit.displayName).tag(unit)
+                        HStack(spacing: 12) {
+                            Label("Weight Unit", systemImage: "scalemass")
+                            Spacer()
+                            inlineUnitPicker(
+                                options: SettingsViewModel.WeightUnit.allCases,
+                                selected: viewModel.weightUnit
+                            ) { unit in
+                                viewModel.weightUnit = unit
                             }
                         }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                    }
 
-                    HStack {
-                        Label("Distance Unit", systemImage: "ruler")
-                        Spacer()
-                        Picker("Distance Unit", selection: $viewModel.distanceUnit) {
-                            ForEach(SettingsViewModel.DistanceUnit.allCases) { unit in
-                                Text(unit.displayName).tag(unit)
+                        Divider()
+
+                        HStack(spacing: 12) {
+                            Label("Distance Unit", systemImage: "ruler")
+                            Spacer()
+                            inlineUnitPicker(
+                                options: SettingsViewModel.DistanceUnit.allCases,
+                                selected: viewModel.distanceUnit
+                            ) { unit in
+                                viewModel.distanceUnit = unit
                             }
                         }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
                     }
-                }
+                    .padding(16)
+                    .background(cardBackground)
 
-                Section("Access Health and Fitness Data") {
-                    Toggle(isOn: $viewModel.isHealthConnected) {
-                        Label("Connect HealthKit", systemImage: "heart.text.square")
+                    VStack(alignment: .leading, spacing: 12) {
+                        sectionTitle("Health and Fitness Data")
+
+                        HStack(spacing: 12) {
+                            Label("Connect HealthKit", systemImage: "heart.text.square")
+                            Spacer()
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.18)) {
+                                    viewModel.isHealthConnected.toggle()
+                                }
+                            } label: {
+                                ZStack(alignment: viewModel.isHealthConnected ? .trailing : .leading) {
+                                    Capsule(style: .continuous)
+                                        .fill(viewModel.isHealthConnected ? Color.black : Color.secondary.opacity(0.25))
+                                        .frame(width: 52, height: 30)
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 24, height: 24)
+                                        .padding(3)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                }
+                    .padding(16)
+                    .background(cardBackground)
 
-                Section("Data") {
-                    NavigationLink {
-                        DataHandlingView(viewModel: viewModel)
-                    } label: {
-                        Label("Data Handling", systemImage: "externaldrive")
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionTitle("Data handling")
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+                            .padding(.bottom, 12)
+
+                        NavigationLink {
+                            DataHandlingView(viewModel: viewModel)
+                        } label: {
+                            settingsRow(icon: "externaldrive", title: "Data")
+                        }
                     }
-                }
+                    .background(cardBackground)
 
-                Section("App") {
                     VStack(alignment: .leading, spacing: 16) {
                         Label("About", systemImage: "info.circle")
-                        Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency. ")
+                        Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
                             .font(.app(.footnote))
                             .foregroundStyle(.secondary)
                     }
+                    .padding(16)
+                    .background(cardBackground)
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
             }
-            .contentMargins(.top, 16, for: .scrollContent)
+            .background(Color(.systemBackground))
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: viewModel.weightUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.distanceUnit) { _, _ in viewModel.save() }
@@ -112,6 +164,80 @@ struct SettingsView: View {
                 .scaledToFit()
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+    }
+
+    @ViewBuilder
+    private func settingsRow(icon: String, title: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .frame(width: 22, height: 22)
+            Text(title)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private func inlineUnitPicker<Option: CaseIterable & Identifiable>(
+        options: Option.AllCases,
+        selected: Option,
+        onSelect: @escaping (Option) -> Void
+    ) -> some View where Option: RawRepresentable, Option.RawValue == String {
+        HStack(spacing: 0) {
+            ForEach(Array(options), id: \.id) { option in
+                Button {
+                    onSelect(option)
+                } label: {
+                    Text(option.rawValue.uppercased())
+                        .font(.app(.caption))
+                        .foregroundStyle(selected.id == option.id ? Color.primary : Color.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .overlay(alignment: .bottom) {
+                            Rectangle()
+                                .fill(Color.primary)
+                                .frame(height: selected.id == option.id ? 2 : 0)
+                                .padding(.horizontal, 4)
+                        }
+                }
+                .buttonStyle(.plain)
+
+                if option.id != Array(options).last?.id {
+                    Divider()
+                        .frame(height: 14)
+                }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(.systemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.black.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(.app(.subheadline))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -168,7 +294,7 @@ final class SettingsViewModel: ObservableObject {
         var displayName: String {
             switch self {
             case .kg: return "Kilogram"
-            case .lb: return "Pound"
+            case .lb: return "Pounds"
             }
         }
     }
@@ -283,6 +409,20 @@ final class SettingsViewModel: ObservableObject {
         return last.isEmpty ? "Last name" : last
     }
 
+    var ageDisplay: String {
+        let value = age.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.isEmpty {
+            return "Age not set"
+        }
+        return "Age \(value)"
+    }
+
+    var genderAgeDisplay: String {
+        let ageValue = age.trimmingCharacters(in: .whitespacesAndNewlines)
+        let agePart = ageValue.isEmpty ? "Age not set" : ageValue
+        return "\(gender.displayName), \(agePart)"
+    }
+
     var profileUIImage: UIImage? {
         guard let data = profileImageData else { return nil }
         return UIImage(data: data)
@@ -345,45 +485,78 @@ final class SettingsViewModel: ObservableObject {
 
 struct DataHandlingView: View {
     @EnvironmentObject private var container: AppContainer
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: SettingsViewModel
     @State private var showingResetConfirmation = false
 
     var body: some View {
-        Form {
-            Section {
-                dataRow(
-                    title: "Export to CSV",
-                    description: "Create a CSV file export of your logged workouts."
-                )
-                dataRow(
-                    title: "Export to JSON",
-                    description: "Create a JSON export for structured backup or migration."
-                )
-                dataRow(
-                    title: "Backup",
-                    description: "Create a full local backup snapshot of app data."
-                )
-                dataRow(
-                    title: "Restore",
-                    description: "Restore app data from a previously created backup."
-                )
-                Button(role: .destructive) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    BouncyPressableButton {
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+
+                    Text("Data Handling")
+                        .font(.app(.title))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    dataRow(
+                        title: "Export to CSV",
+                        description: "Create a CSV file export of your logged workouts."
+                    )
+                    Divider()
+                    dataRow(
+                        title: "Export to JSON",
+                        description: "Create a JSON export for structured backup or migration."
+                    )
+                    Divider()
+                    dataRow(
+                        title: "Backup",
+                        description: "Create a full local backup snapshot of app data."
+                    )
+                    Divider()
+                    dataRow(
+                        title: "Restore",
+                        description: "Restore app data from a previously created backup."
+                    )
+                }
+                .padding(16)
+                .background(dataCardBackground)
+
+                BouncyPressableButton {
                     showingResetConfirmation = true
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("Reset data")
                             .foregroundStyle(.red)
                         Text("Permanently clear all local workout, exercise, and template data.")
                             .font(.app(.footnote))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(dataCardBackground)
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
         }
-        .navigationTitle("Data Handling")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color(.systemBackground))
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .alert("Reset data", isPresented: $showingResetConfirmation) {
             Button("Yes", role: .destructive) {
                 viewModel.resetData(dbQueue: container.dbQueue)
@@ -404,6 +577,16 @@ struct DataHandlingView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+    }
+
+    private var dataCardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
     }
 }
 
@@ -432,8 +615,41 @@ struct UserProfileView: View {
     }
 
     var body: some View {
-        Form {
-            Section("Profile image") {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    BouncyPressableButton {
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+
+                    Text("User Profile")
+                        .font(.app(.title))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    BouncyPressableButton {
+                        saveAndDismiss()
+                    } label: {
+                        Text("Save")
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(Color.black)
+                            )
+                    }
+                }
+
                 VStack(spacing: 12) {
                     profileImagePreview
                         .frame(width: 96, height: 96)
@@ -444,55 +660,63 @@ struct UserProfileView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-            }
+                .padding(16)
+                .background(profileCardBackground)
 
-            Section {
-                labeledTextField(
-                    title: "First name",
-                    text: $firstName
-                )
-
-                labeledTextField(
-                    title: "Last name",
-                    text: $lastName
-                )
-            } header: {
-                Text("Name")
-            } footer: {
-                Text("Input your first and last name.")
-            }
-
-            Section {
-                labeledTextField(
-                    title: "Weight (\(viewModel.weightUnit.displayName))",
-                    text: $bodyWeight,
-                    keyboardType: .decimalPad
-                )
-
-                labeledTextField(
-                    title: "Height (cm)",
-                    text: $bodyHeight,
-                    keyboardType: .numberPad
-                )
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Gender")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Name")
                         .font(.app(.subheadline))
                         .foregroundStyle(.secondary)
 
-                    Picker("Gender", selection: $gender) {
-                        ForEach(SettingsViewModel.Gender.allCases) { value in
-                            Text(value.displayName).tag(value)
-                        }
-                    }
-                    .labelsHidden()
+                    labeledTextField(
+                        title: "First name",
+                        text: $firstName
+                    )
+                    labeledTextField(
+                        title: "Last name",
+                        text: $lastName
+                    )
                 }
-            } header: {
-                Text("Body metrics")
-            } footer: {
-                Text("Input body metrics.")
+                .padding(16)
+                .background(profileCardBackground)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Body metrics")
+                        .font(.app(.subheadline))
+                        .foregroundStyle(.secondary)
+
+                    labeledTextField(
+                        title: "Weight (\(viewModel.weightUnit.displayName))",
+                        text: $bodyWeight,
+                        keyboardType: .decimalPad
+                    )
+                    labeledTextField(
+                        title: "Height (cm)",
+                        text: $bodyHeight,
+                        keyboardType: .numberPad
+                    )
+                    labeledTextField(
+                        title: "Age",
+                        text: $age,
+                        keyboardType: .numberPad
+                    )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Gender")
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.secondary)
+
+                        genderSelector
+                    }
+                }
+                .padding(16)
+                .background(profileCardBackground)
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
         }
+        .background(Color(.systemBackground))
         .onChange(of: selectedPhotoItem) { _, newValue in
             guard let newValue else { return }
             Task {
@@ -501,24 +725,8 @@ struct UserProfileView: View {
                 }
             }
         }
-        .navigationTitle("User Profile")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Save") {
-                    viewModel.saveUserDetails(
-                        firstName: firstName,
-                        lastName: lastName,
-                        bodyWeight: bodyWeight,
-                        bodyHeight: bodyHeight,
-                        age: age,
-                        gender: gender,
-                        profileImageData: profileImageData
-                    )
-                    dismiss()
-                }
-            }
-        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     @ViewBuilder
@@ -547,7 +755,83 @@ struct UserProfileView: View {
                 .foregroundStyle(.secondary)
             TextField("", text: text)
                 .keyboardType(keyboardType)
-                .textFieldStyle(.roundedBorder)
+                .padding(.vertical, 6)
+            Divider()
         }
+    }
+
+    private var profileCardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+    }
+
+    private var genderGridColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
+    }
+
+    @ViewBuilder
+    private var genderSelector: some View {
+        LazyVGrid(columns: genderGridColumns, spacing: 8) {
+            ForEach(SettingsViewModel.Gender.allCases) { option in
+                Button {
+                    gender = option
+                } label: {
+                    Text(option.displayName)
+                        .font(.app(.caption))
+                        .foregroundStyle(gender == option ? Color.white : Color.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(gender == option ? Color.black : Color(.systemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Color.black.opacity(gender == option ? 0 : 0.12), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func saveAndDismiss() {
+        viewModel.saveUserDetails(
+            firstName: firstName,
+            lastName: lastName,
+            bodyWeight: bodyWeight,
+            bodyHeight: bodyHeight,
+            age: age,
+            gender: gender,
+            profileImageData: profileImageData
+        )
+        dismiss()
+    }
+}
+
+private struct BouncyPressableButton<Label: View>: View {
+    let action: () -> Void
+    @ViewBuilder let label: () -> Label
+    @GestureState private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            label()
+        }
+        .buttonStyle(.plain)
+        .opacity(1)
+        .scaleEffect(isPressed ? 0.96 : 1)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .updating($isPressed) { _, state, _ in
+                    state = true
+                }
+        )
     }
 }

@@ -10,77 +10,137 @@ struct SessionDetailView: View {
     @State private var isDeleteConfirmationPresented = false
 
     var body: some View {
-        List {
-            if let session = viewModel.session {
-                Section {
-                    Text(session.name?.isEmpty == false ? session.name! : "Workout")
-                        .font(.app(.headline))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    BouncyIconButton {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                Circle()
+                                    .fill(Color.black)
+                            )
+                    }
 
-                    Text(Self.dateFormatter.string(from: session.startDateTime))
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
+                    Text("Session")
+                        .font(.app(.title))
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                    if let durationText = viewModel.durationText {
-                        Text("Duration: \(durationText)")
+                    HStack(spacing: 8) {
+                        if viewModel.session?.endDateTime == nil {
+                            BouncyIconButton {
+                                Task {
+                                    await viewModel.endSession(
+                                        sessionId: sessionId,
+                                        sessionRepository: container.sessionRepository,
+                                        dbQueue: container.dbQueue
+                                    )
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "stop.fill")
+                                        .font(.system(size: 12, weight: .semibold))
+                                    Text(viewModel.isEnding ? "Ending..." : "End")
+                                        .font(.app(.caption))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 9)
+                                .background(
+                                    Capsule(style: .continuous)
+                                        .fill(Color.black)
+                                )
+                            }
+                            .disabled(viewModel.isEnding)
+                        }
+
+                        BouncyIconButton {
+                            isDeleteConfirmationPresented = true
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    Circle()
+                                        .fill(Color.black)
+                                )
+                        }
+                    }
+                }
+                .padding(.top, 16)
+
+                if let session = viewModel.session {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(session.name?.isEmpty == false ? session.name! : "Workout")
+                            .font(.app(.headline))
+
+                        Text(Self.dateFormatter.string(from: session.startDateTime))
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.secondary)
+
+                        if let durationText = viewModel.durationText {
+                            Text("Duration: \(durationText)")
+                                .font(.app(.subheadline))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text(String(format: "Total Volume: %.1f kg", viewModel.totalVolumeKg))
                             .font(.app(.subheadline))
                             .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(cardBackground)
 
-                    Text(String(format: "Total Volume: %.1f kg", viewModel.totalVolumeKg))
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
-                }
+                    ForEach(viewModel.exerciseSections) { section in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("\(section.orderIndex). \(section.exerciseName)")
+                                .font(.app(.headline))
 
-                ForEach(viewModel.exerciseSections) { section in
-                    Section("\(section.orderIndex). \(section.exerciseName)") {
-                        if section.sets.isEmpty {
-                            Text("No sets logged")
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(section.sets) { set in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Set \(set.setIndex)")
-                                        .font(.app(.subheadline))
-                                    Text(set.summary)
-                                        .font(.app(.caption))
-                                        .foregroundStyle(.secondary)
+                            if section.sets.isEmpty {
+                                Text("No sets logged")
+                                    .font(.app(.subheadline))
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(Array(section.sets.enumerated()), id: \.element.id) { index, set in
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Set \(set.setIndex)")
+                                            .font(.app(.subheadline))
+                                        Text(set.summary)
+                                            .font(.app(.caption))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    if index < section.sets.count - 1 {
+                                        Divider()
+                                    }
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(cardBackground)
                     }
-                }
-            } else if viewModel.isLoading {
-                Section {
+                } else if viewModel.isLoading {
                     ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 30)
+                        .background(cardBackground)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
         }
-        .navigationTitle("Session")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if viewModel.session?.endDateTime == nil {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(viewModel.isEnding ? "Ending..." : "End Session") {
-                        Task {
-                            await viewModel.endSession(
-                                sessionId: sessionId,
-                                sessionRepository: container.sessionRepository,
-                                dbQueue: container.dbQueue
-                            )
-                        }
-                    }
-                    .disabled(viewModel.isEnding)
-                }
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(role: .destructive) {
-                    isDeleteConfirmationPresented = true
-                } label: {
-                    Image(systemName: "trash")
-                }
-            }
-        }
+        .background(Color(.systemBackground))
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             await viewModel.load(sessionId: sessionId, dbQueue: container.dbQueue)
         }
@@ -89,25 +149,85 @@ struct SessionDetailView: View {
         } message: {
             Text(viewModel.errorMessage ?? "Unknown error")
         }
-        .alert(
-            "Delete Exercise",
-            isPresented: $isDeleteConfirmationPresented
-        ) {
-            Button("Yes", role: .destructive) {
-                Task {
-                    let didDelete = await viewModel.deleteSession(
-                        sessionId: sessionId,
-                        sessionRepository: container.sessionRepository
-                    )
-                    if didDelete {
-                        dismiss()
+        .overlay {
+            if isDeleteConfirmationPresented {
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea()
+                    .overlay {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Delete Session")
+                                .font(.app(.headline))
+
+                            Text("Are you sure you want to delete this session?")
+                                .font(.app(.subheadline))
+                                .foregroundStyle(.secondary)
+
+                            HStack(spacing: 10) {
+                                BouncyIconButton {
+                                    Task {
+                                        let didDelete = await viewModel.deleteSession(
+                                            sessionId: sessionId,
+                                            sessionRepository: container.sessionRepository
+                                        )
+                                        if didDelete {
+                                            dismiss()
+                                        }
+                                        isDeleteConfirmationPresented = false
+                                    }
+                                } label: {
+                                    Text("Yes")
+                                        .font(.app(.subheadline))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .fill(Color.red)
+                                        )
+                                }
+
+                                BouncyIconButton {
+                                    isDeleteConfirmationPresented = false
+                                } label: {
+                                    Text("Cancel")
+                                        .font(.app(.subheadline))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .fill(Color(.systemBackground))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color(.systemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                        )
+                        .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
+                        .padding(.horizontal, 24)
                     }
-                }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to delete this exercise?")
         }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -116,6 +236,29 @@ struct SessionDetailView: View {
         formatter.timeStyle = .short
         return formatter
     }()
+}
+
+private struct BouncyIconButton<Label: View>: View {
+    let action: () -> Void
+    @ViewBuilder let label: () -> Label
+    @GestureState private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            label()
+        }
+        .buttonStyle(.plain)
+        .opacity(1)
+        .scaleEffect(isPressed ? 0.96 : 1)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .updating($isPressed) { _, state, _ in
+                    state = true
+                }
+        )
+    }
+
 }
 
 @MainActor

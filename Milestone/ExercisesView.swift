@@ -21,16 +21,6 @@ struct ExercisesView: View {
                         isCreateExercisePresented = true
                     } label: {
                         HStack(spacing: -6) {
-                            Text("New")
-                                .font(.app(.subheadline))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(Color.black)
-                                )
-
                             ZStack {
                                 Circle()
                                     .fill(Color.black)
