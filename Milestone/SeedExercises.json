@@ -157,7 +157,7 @@
     "name": "Battle Rope",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Battle Rope with controlled movement and proper form.",
+    "description": "Anchor the ropes securely and stand facing the anchor with feet shoulder-width apart.\nHold one rope end in each hand, bend your knees slightly, and brace your core.\nHinge at the hips into an athletic stance with your chest up and back neutral.\nRaise and lower your arms quickly to create alternating waves through the ropes.\nKeep your torso stable while breathing steadily and maintaining a fast, controlled rhythm.\nContinue for the target time, then slow down gradually and stand tall to finish.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/battle-rope.gif"
   },
@@ -184,7 +184,7 @@
     "name": "Crunch",
     "type": "functional",
     "category": "core",
-    "description": "Perform Crunch with controlled movement and proper form.",
+    "description": "Lie on your back with knees bent, feet flat on the floor, and hands lightly behind your head or across your chest.\nPress your lower back gently into the floor and engage your abdominal muscles.\nExhale and lift your head, shoulders, and upper back off the floor using your abs.\nKeep your neck neutral and avoid pulling on your head with your hands.\nPause briefly at the top, then lower slowly with control to the starting position.\nRepeat for the desired number of reps, keeping each rep smooth and controlled.",
     "target_area": "Core",
     "media_uri": "ExerciseGIFs/crunch.gif"
   },
@@ -238,7 +238,7 @@
     "name": "Reverse Crunch",
     "type": "functional",
     "category": "core",
-    "description": "Perform Reverse Crunch with controlled movement and proper form.",
+    "description": "Lie on your back with your arms by your sides and bend your knees to about 90 degrees.\nEngage your core and flatten your lower back gently against the floor.\nExhale and curl your pelvis upward, bringing your knees toward your chest.\nLift only until your hips slightly leave the floor; avoid swinging your legs.\nInhale and lower your hips back down slowly to the start position.\nRepeat for controlled reps while keeping tension in your abs throughout.",
     "target_area": "Core",
     "media_uri": "ExerciseGIFs/reverse-crunch.gif"
   },
@@ -256,7 +256,7 @@
     "name": "Running",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Running with controlled movement and proper form.",
+    "description": "Start with a brief warm-up walk or light jog for 3 to 5 minutes.\nStand tall with your head neutral, shoulders relaxed, and core engaged.\nBegin running at a manageable pace with short, quick steps and soft landings.\nKeep your arms bent around 90 degrees and swing them naturally front to back.\nBreathe rhythmically and maintain a steady pace you can control.\nFinish with a slow jog or walk for cooldown and light lower-body stretching.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/running.gif"
   },
@@ -265,7 +265,7 @@
     "name": "Scissor Kick",
     "type": "functional",
     "category": "core",
-    "description": "Perform Scissor Kick with controlled movement and proper form.",
+    "description": "Lie on your back with your legs extended and hands under your hips for support if needed.\nEngage your core and lift both legs a few inches off the floor.\nRaise one leg upward while the other leg stays low, keeping knees mostly straight.\nSwitch leg positions in a controlled, alternating scissor motion.\nKeep your lower back pressed toward the floor and avoid arching.\nContinue for the target reps or time, then lower both legs slowly to finish.",
     "target_area": "Core",
     "media_uri": "ExerciseGIFs/scissor-kick.gif"
   },
@@ -292,7 +292,7 @@
     "name": "Stair Stepper",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Stair Stepper with controlled movement and proper form.",
+    "description": "Step onto the machine and place both feet fully on the pedals.\nHold the handles lightly for balance, keeping your chest up and core tight.\nStart stepping at a comfortable pace with smooth, even pressure through each leg.\nKeep your posture upright and avoid leaning heavily on the handles.\nIncrease resistance or pace gradually as your heart rate rises.\nEnd with 2 to 3 minutes at an easier pace before stepping off carefully.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/stair-stepper.gif"
   },
@@ -301,7 +301,7 @@
     "name": "Standing Cable Twist",
     "type": "functional",
     "category": "core",
-    "description": "Perform Standing Cable Twist with controlled movement and proper form.",
+    "description": "Set a cable handle at chest height and stand sideways to the machine.\nHold the handle with both hands, arms extended in front of your chest.\nStand with feet shoulder-width apart and knees slightly bent.\nBrace your core and rotate your torso away from the machine in a controlled motion.\nPause briefly at end range, then return slowly to the start without letting the stack slam.\nComplete all reps on one side, then switch sides and repeat.",
     "target_area": "Obliques",
     "media_uri": "ExerciseGIFs/standing-cable-twist.gif"
   },
@@ -310,7 +310,7 @@
     "name": "Standing Rotation",
     "type": "functional",
     "category": "core",
-    "description": "Perform Standing Rotation with controlled movement and proper form.",
+    "description": "Stand tall with feet shoulder-width apart and hold your hands together in front of your chest.\nKeep your knees soft and your core engaged to stabilize your spine.\nRotate your torso to one side while keeping hips mostly facing forward.\nReturn to center with control, then rotate to the opposite side.\nMove through a pain-free range and avoid forcing the rotation.\nContinue alternating sides for the desired number of repetitions.",
     "target_area": "Obliques",
     "media_uri": "ExerciseGIFs/standing-rotation.gif"
   },
@@ -319,7 +319,7 @@
     "name": "Stationary Bike",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Stationary Bike with controlled movement and proper form.",
+    "description": "Adjust the seat so your knee has a slight bend at the bottom of each pedal stroke.\nPlace your feet securely on the pedals and set a light starting resistance.\nBegin pedaling smoothly while keeping your chest up and shoulders relaxed.\nMaintain even cadence and breathe steadily as you settle into pace.\nIncrease resistance gradually based on your workout goal.\nCool down at low resistance for a few minutes before stopping.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/stationary-bike.gif"
   },
@@ -328,7 +328,7 @@
     "name": "Treadmill Run",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Treadmill Run with controlled movement and proper form.",
+    "description": "Set the treadmill to a slow walk for warm-up, then progress to an easy jog.\nIncrease speed to your target running pace once you feel ready.\nRun with a slight forward lean from the ankles, relaxed shoulders, and engaged core.\nKeep your stride controlled and avoid overstriding in front of your body.\nUse handrails only for balance when needed, not for continuous support.\nReduce speed gradually at the end and walk to cool down.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/treadmill-run.gif"
   },
@@ -337,7 +337,7 @@
     "name": "Treadmill",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Treadmill with controlled movement and proper form.",
+    "description": "Step onto the side rails, start the belt at a slow speed, then begin walking.\nStand upright with your eyes forward and arms swinging naturally.\nSet a comfortable pace and optional incline based on your workout goal.\nKeep your steps consistent and avoid holding the rails unless necessary.\nMonitor effort and breathing, adjusting speed as needed.\nFinish by lowering speed gradually and walking for cooldown before stepping off.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/treadmill.gif"
   },
@@ -346,7 +346,7 @@
     "name": "Walking",
     "type": "cardio",
     "category": "cardio",
-    "description": "Perform Walking with controlled movement and proper form.",
+    "description": "Stand tall with shoulders relaxed, chest open, and eyes looking forward.\nBegin walking at a comfortable pace with natural arm swing.\nLand softly from heel to toe while keeping your stride smooth and even.\nKeep your core lightly engaged and maintain steady breathing.\nIncrease pace gradually if you want higher intensity.\nSlow down for the last few minutes to cool down before stopping.",
     "target_area": "Cardiovascular system",
     "media_uri": "ExerciseGIFs/walking.gif"
   }
