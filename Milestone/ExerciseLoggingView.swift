@@ -166,6 +166,8 @@ struct ExerciseLoggingView: View {
                 .buttonStyle(.borderedProminent)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationTitle("Log Exercise")
         .navigationBarTitleDisplayMode(.inline)
         .task {

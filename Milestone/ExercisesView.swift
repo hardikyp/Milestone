@@ -6,140 +6,149 @@ struct ExercisesView: View {
     @StateObject private var viewModel = ExercisesViewModel()
     @State private var isCreateExercisePresented = false
     @State private var pendingDeleteExercise: Exercise?
-    @State private var selectedCategoryFilter: ExerciseCategory?
+    @State private var selectedCategoryTab = "All"
     @State private var navigationPath: [String] = []
+    @State private var openSwipeExerciseID: String?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 12) {
-                    Text("Exercises")
-                        .font(.app(.title))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            ZStack {
+                VStack(spacing: 12) {
+                    header
 
-                    Button {
-                        isCreateExercisePresented = true
-                    } label: {
-                        HStack(spacing: -6) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.black)
-                                    .frame(width: 38, height: 38)
-                                Image(systemName: "plus")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.white)
+                    UIAssetTabFilter(
+                        tabs: categoryTabs,
+                        selectedTab: $selectedCategoryTab
+                    )
+                    .padding(.horizontal, 16)
+
+                    List(filteredExercises) { exercise in
+                        ExerciseSwipeRow(
+                            canDelete: exercise.source != .seeded,
+                            isOpen: openSwipeExerciseID == exercise.id,
+                            onOpen: { openSwipeExerciseID = exercise.id },
+                            onClose: {
+                                if openSwipeExerciseID == exercise.id {
+                                    openSwipeExerciseID = nil
+                                }
+                            },
+                            onTapRow: {
+                                if openSwipeExerciseID != nil {
+                                    openSwipeExerciseID = nil
+                                } else {
+                                    navigationPath.append(exercise.id)
+                                }
+                            },
+                            onDelete: { pendingDeleteExercise = exercise }
+                        ) {
+                            exerciseRow(exercise)
+                        }
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(UIAssetColors.secondary)
+                }
+                .background(UIAssetColors.secondary.ignoresSafeArea())
+                .toolbar(.hidden, for: .navigationBar)
+                .sheet(isPresented: $isCreateExercisePresented) {
+                    CreateExerciseView { input in
+                        Task {
+                            await viewModel.createExercise(
+                                input: input,
+                                repository: container.exerciseRepository
+                            )
+
+                            if viewModel.errorMessage == nil {
+                                isCreateExercisePresented = false
                             }
                         }
                     }
-                    .buttonStyle(BouncyOpaqueButtonStyle())
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 8)
-
-                ZStack(alignment: .bottomLeading) {
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.35))
-                        .frame(height: 1)
-
-                    HStack(spacing: 0) {
-                        filterTab(title: "All", category: nil)
-                        ForEach(ExerciseCategory.allCases, id: \.rawValue) { category in
-                            filterTab(title: category.displayName, category: category)
+                .task {
+                    await viewModel.loadExercises(repository: container.exerciseRepository)
+                }
+                .navigationDestination(for: String.self) { exerciseID in
+                    if let exercise = viewModel.exercises.first(where: { $0.id == exerciseID }) {
+                        ExerciseDetailView(exercise: exercise) { updated in
+                            viewModel.replaceExercise(updated)
+                        } onDidDelete: { deletedID in
+                            viewModel.removeExercise(id: deletedID)
                         }
+                    } else {
+                        Text("Exercise not found")
+                            .uiAssetText(.paragraph)
+                            .foregroundStyle(UIAssetColors.textSecondary)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
 
-                List(filteredExercises) { exercise in
-                    Button {
-                        navigationPath.append(exercise.id)
-                    } label: {
-                        exerciseRow(exercise)
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if exercise.source != .seeded {
-                            Button {
-                                pendingDeleteExercise = exercise
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                            .tint(.red)
+                if let message = viewModel.errorMessage {
+                    dialogBackdrop {
+                        UIAssetAlertDialog(
+                            title: "Exercise Error",
+                            message: message,
+                            cancelTitle: "Close",
+                            destructiveTitle: "OK"
+                        ) {
+                            viewModel.errorMessage = nil
+                        } onDestructive: {
+                            viewModel.errorMessage = nil
                         }
+                        .padding(.horizontal, 16)
                     }
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .background(Color(.systemBackground))
-            }
-            .background(Color(.systemBackground))
-            .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $isCreateExercisePresented) {
-                CreateExerciseView { input in
-                    Task {
-                        await viewModel.createExercise(
-                            input: input,
-                            repository: container.exerciseRepository
-                        )
-
-                        if viewModel.errorMessage == nil {
-                            isCreateExercisePresented = false
-                        }
-                    }
-                }
-            }
-            .task {
-                await viewModel.loadExercises(repository: container.exerciseRepository)
-            }
-            .alert("Exercise Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "Unknown error")
-            }
-            .alert(
-                "Delete Exercise",
-                isPresented: Binding(
-                    get: { pendingDeleteExercise != nil },
-                    set: { isPresented in
-                        if !isPresented {
+                } else if let exercise = pendingDeleteExercise {
+                    dialogBackdrop {
+                        UIAssetAlertDialog(
+                            title: "Delete Exercise",
+                            message: "Delete \(exercise.name)? This action cannot be undone.",
+                            cancelTitle: "Cancel",
+                            destructiveTitle: "Delete"
+                        ) {
                             pendingDeleteExercise = nil
+                        } onDestructive: {
+                            let exerciseID = exercise.id
+                            pendingDeleteExercise = nil
+                            Task {
+                                await viewModel.deleteExercise(
+                                    id: exerciseID,
+                                    repository: container.exerciseRepository
+                                )
+                            }
                         }
+                        .padding(.horizontal, 16)
                     }
-                )
-            ) {
-                Button("Yes", role: .destructive) {
-                    guard let exercise = pendingDeleteExercise else { return }
-                    pendingDeleteExercise = nil
-                    Task {
-                        await viewModel.deleteExercise(
-                            id: exercise.id,
-                            repository: container.exerciseRepository
-                        )
-                    }
-                }
-                Button("Cancel", role: .cancel) {
-                    pendingDeleteExercise = nil
-                }
-            } message: {
-                Text("Are you sure you want to delete this exercise?")
-            }
-            .navigationDestination(for: String.self) { exerciseID in
-                if let exercise = viewModel.exercises.first(where: { $0.id == exerciseID }) {
-                    ExerciseDetailView(exercise: exercise) { updated in
-                        viewModel.replaceExercise(updated)
-                    } onDidDelete: { deletedID in
-                        viewModel.removeExercise(id: deletedID)
-                    }
-                } else {
-                    Text("Exercise not found")
                 }
             }
         }
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            Text("Exercises")
+                .uiAssetText(.h2)
+                .foregroundStyle(UIAssetColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                isCreateExercisePresented = true
+            } label: {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(UIAssetFloatingActionButtonStyle())
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+    }
+
+    private var categoryTabs: [String] {
+        ["All"] + ExerciseCategory.allCases.map(\.displayName)
+    }
+
+    private var selectedCategoryFilter: ExerciseCategory? {
+        guard selectedCategoryTab != "All" else { return nil }
+        return ExerciseCategory.allCases.first { $0.displayName == selectedCategoryTab }
     }
 
     private var filteredExercises: [Exercise] {
@@ -150,76 +159,141 @@ struct ExercisesView: View {
     }
 
     @ViewBuilder
-    private func filterTab(title: String, category: ExerciseCategory?) -> some View {
-        let isSelected = selectedCategoryFilter == category
-        Button {
-            selectedCategoryFilter = category
-        } label: {
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.app(.subheadline))
-                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-                Rectangle()
-                    .fill(isSelected ? Color.primary : Color.clear)
-                    .frame(height: 3)
-            }
-            .padding(.top, 2)
-        }
-        .frame(maxWidth: .infinity)
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
     private func exerciseRow(_ exercise: Exercise) -> some View {
         HStack(spacing: 12) {
             Image(systemName: exercise.listSymbolName)
                 .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(UIAssetColors.accent)
                 .frame(width: 30, height: 30)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(exercise.name)
+                        .uiAssetText(.subtitle)
+                        .foregroundStyle(UIAssetColors.textPrimary)
                     if exercise.source == .user {
-                        Text("User")
-                            .font(.app(.caption2))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.blue.opacity(0.15))
-                            .foregroundStyle(.blue)
-                            .clipShape(Capsule())
+                        UIAssetBadge(text: "User", variant: .accent)
                     }
                 }
 
                 Text("\(exercise.category?.displayName ?? "Uncategorized") • \(exercise.type.displayName)")
-                    .font(.app(.caption))
-                    .foregroundStyle(.secondary)
+                    .uiAssetText(.caption)
+                    .foregroundStyle(UIAssetColors.textSecondary)
             }
 
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(UIAssetColors.textSecondary)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(.systemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.black.opacity(0.05), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+        .contentShape(Rectangle())
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
+    }
+
+    private func dialogBackdrop<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ZStack {
+            Rectangle()
+                .fill(Color.black.opacity(0.24))
+                .ignoresSafeArea()
+
+            content()
+        }
+        .transition(.opacity)
     }
 }
 
-private struct BouncyOpaqueButtonStyle: ButtonStyle {
+private struct ExerciseSwipeRow<Content: View>: View {
+    let canDelete: Bool
+    let isOpen: Bool
+    let onOpen: () -> Void
+    let onClose: () -> Void
+    let onTapRow: () -> Void
+    let onDelete: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    @State private var dragTranslation: CGFloat = 0
+
+    private let actionRevealWidth: CGFloat = 84
+    private let rowHeight: CGFloat = 58
+    private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
+    private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            if canDelete {
+                Button(action: onDelete) {
+                    UIAssetRowSlideActionButton(
+                        systemName: "trash",
+                        title: "Delete",
+                        iconColor: .white,
+                        backgroundColor: destructiveColor,
+                        borderColor: destructiveColor.opacity(0.7),
+                        height: rowHeight
+                    )
+                }
+                .buttonStyle(BouncyPlainButtonStyle())
+                .frame(width: actionRevealWidth, height: rowHeight)
+                .offset(x: actionOffset)
+                .opacity(swipeProgress)
+                .allowsHitTesting(swipeProgress > 0.02)
+            }
+
+            content()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTapRow()
+            }
+            .offset(x: rowOffset)
+            .highPriorityGesture(canDelete ? dragGesture : nil)
+        }
+        .animation(settleAnimation, value: isOpen)
+    }
+
+    private var rowOffset: CGFloat {
+        let baseOffset = (canDelete && isOpen) ? -actionRevealWidth : 0
+        let proposedOffset = baseOffset + dragTranslation
+        return min(0, max(-actionRevealWidth, proposedOffset))
+    }
+
+    private var actionOffset: CGFloat {
+        // Keep the action attached to the swipe progress so it slides in with the row.
+        actionRevealWidth + rowOffset
+    }
+
+    private var swipeProgress: CGFloat {
+        min(1, max(0, -rowOffset / actionRevealWidth))
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                dragTranslation = value.translation.width
+            }
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                let baseOffset = (canDelete && isOpen) ? -actionRevealWidth : 0
+                let projected = baseOffset + value.predictedEndTranslation.width
+                let shouldOpen = projected < -actionRevealWidth * 0.45
+
+                withAnimation(settleAnimation) {
+                    dragTranslation = 0
+                    if shouldOpen {
+                        onOpen()
+                    } else {
+                        onClose()
+                    }
+                }
+            }
+    }
+}
+
+private struct BouncyPlainButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .opacity(1)
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .scaleEffect(configuration.isPressed ? 0.93 : 1)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
@@ -298,150 +372,187 @@ struct ExerciseDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .center, spacing: 12) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 36, height: 36)
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 12) {
+                        Button {
+                            dismiss()
+                        } label: {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
                         }
-                    }
-                    .buttonStyle(BouncyOpaqueButtonStyle())
+                        .buttonStyle(UIAssetFloatingActionButtonStyle())
 
-                    Text(exercise.name)
-                        .font(.app(.title2))
-                        .fontWeight(.semibold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(exercise.name)
+                            .uiAssetText(.h2)
+                            .foregroundStyle(UIAssetColors.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Button {
-                        isEditPresented = true
-                    } label: {
-                        Text("Edit")
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(Color.black)
-                            )
-                    }
-                    .buttonStyle(BouncyOpaqueButtonStyle())
-                }
-
-                if let mediaURI = exercise.mediaURI,
-                   let url = Self.resolvedMediaURL(from: mediaURI) {
-                    GIFWebView(url: url)
-                        .aspectRatio(1, contentMode: .fit)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, -16)
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.15))
-                        .aspectRatio(1, contentMode: .fit)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, -16)
-                        .overlay {
-                            Text("No GIF available")
-                                .foregroundStyle(.secondary)
+                        Button("Edit") {
+                            isEditPresented = true
                         }
-                }
-
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Category: \(exercise.category?.displayName ?? "Uncategorized")")
                         .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text("Type: \(exercise.type.displayName)")
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
-                }
+                        .foregroundStyle(UIAssetColors.accent)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background(
+                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                .fill(UIAssetColors.accentSecondary)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 1)
+                        )
+                        .buttonStyle(.plain)
+                        .frame(width: 86, height: 36)
+                    }
 
-                if let targetArea = exercise.targetArea,
-                   !targetArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text("Target area: \(targetArea)")
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
-                }
+                    mediaSection
 
-                Text("How to do")
-                    .font(.app(.headline))
-                    .fontWeight(.bold)
+                    VStack(alignment: .leading, spacing: 10) {
+                        if let targetArea = exercise.targetArea,
+                           !targetArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Text("Target area: \(targetArea)")
+                                .uiAssetText(.subtitle)
+                                .foregroundStyle(UIAssetColors.textSecondary)
+                        }
 
-                if instructionLines.isEmpty {
-                    Text("No instructions available yet.")
-                        .font(.app(.body))
-                } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(instructionLines.enumerated()), id: \.offset) { _, line in
-                            HStack(alignment: .top, spacing: 8) {
-                                Text("•")
-                                Text(line)
-                                    .fontWeight(.regular)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                UIAssetBadge(
+                                    text: "Category: \(exercise.category?.displayName ?? "Uncategorized")",
+                                    variant: .neutral
+                                )
+                                UIAssetBadge(
+                                    text: "Type: \(exercise.type.displayName)",
+                                    variant: .accent
+                                )
+                                if exercise.source == .user {
+                                    UIAssetBadge(text: "User", variant: .accent)
+                                }
                             }
                         }
                     }
-                    .font(.app(.body))
-                }
+                    .padding(16)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
 
-                if exercise.source != .seeded {
-                    Divider()
-                        .padding(.top, 8)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("How To Do")
+                            .uiAssetText(.h4)
+                            .foregroundStyle(UIAssetColors.textPrimary)
 
-                    Button(role: .destructive) {
-                        isDeleteConfirmationPresented = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("Delete Exercise")
-                            Spacer()
+                        if instructionLines.isEmpty {
+                            Text("No instructions available yet.")
+                                .uiAssetText(.paragraph)
+                                .foregroundStyle(UIAssetColors.textSecondary)
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(Array(instructionLines.enumerated()), id: \.offset) { _, line in
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .uiAssetText(.paragraph)
+                                            .foregroundStyle(UIAssetColors.accent)
+                                        Text(line)
+                                            .uiAssetText(.paragraph)
+                                            .foregroundStyle(UIAssetColors.textPrimary)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                }
+                            }
                         }
                     }
-                    .padding(.bottom, 16)
+                    .padding(16)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
+
+                    if exercise.source != .seeded {
+                        Button("Delete Exercise") {
+                            isDeleteConfirmationPresented = true
+                        }
+                        .buttonStyle(UIAssetButtonStyle(variant: .destructive))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+            }
+            .background(UIAssetColors.secondary.ignoresSafeArea())
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $isEditPresented) {
+                CreateExerciseView(
+                    title: "Edit Exercise",
+                    confirmButtonTitle: "Update",
+                    initialInput: exercise.createExerciseInput
+                ) { input in
+                    Task {
+                        await updateExercise(input)
+                    }
                 }
             }
-            .padding()
-        }
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isEditPresented) {
-            CreateExerciseView(
-                title: "Edit Exercise",
-                confirmButtonTitle: "Update",
-                initialInput: exercise.createExerciseInput
-            ) { input in
-                Task {
-                    await updateExercise(input)
+
+            if let errorMessage {
+                dialogBackdrop {
+                    UIAssetAlertDialog(
+                        title: "Exercise Error",
+                        message: errorMessage,
+                        cancelTitle: "Close",
+                        destructiveTitle: "OK"
+                    ) {
+                        self.errorMessage = nil
+                    } onDestructive: {
+                        self.errorMessage = nil
+                    }
+                    .padding(.horizontal, 16)
+                }
+            } else if isDeleteConfirmationPresented {
+                dialogBackdrop {
+                    UIAssetAlertDialog(
+                        title: "Delete Exercise",
+                        message: "Are you sure you want to delete this exercise?",
+                        cancelTitle: "Cancel",
+                        destructiveTitle: "Delete"
+                    ) {
+                        isDeleteConfirmationPresented = false
+                    } onDestructive: {
+                        isDeleteConfirmationPresented = false
+                        Task {
+                            await deleteExercise()
+                        }
+                    }
+                    .padding(.horizontal, 16)
                 }
             }
         }
-        .alert("Exercise Error", isPresented: .constant(errorMessage != nil)) {
-            Button("OK") { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "Unknown error")
-        }
-        .alert(
-            "Delete Exercise",
-            isPresented: $isDeleteConfirmationPresented
-        ) {
-            Button("Yes", role: .destructive) {
-                Task {
-                    await deleteExercise()
+    }
+
+    @ViewBuilder
+    private var mediaSection: some View {
+        if let mediaURI = exercise.mediaURI,
+           let url = Self.resolvedMediaURL(from: mediaURI) {
+            GIFWebView(url: url)
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
+                .background(UIAssetColors.primary)
+        } else {
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .fill(UIAssetColors.accentSecondary)
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .overlay {
+                    Text("No GIF available")
+                        .uiAssetText(.subtitle)
+                        .foregroundStyle(UIAssetColors.textSecondary)
                 }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to delete this exercise?")
+                .overlay(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         }
     }
 
@@ -472,6 +583,17 @@ struct ExerciseDetailView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func dialogBackdrop<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ZStack {
+            Rectangle()
+                .fill(Color.black.opacity(0.24))
+                .ignoresSafeArea()
+
+            content()
+        }
+        .transition(.opacity)
     }
 
     private static func resolvedMediaURL(from rawValue: String) -> URL? {

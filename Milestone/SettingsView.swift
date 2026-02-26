@@ -6,163 +6,131 @@ import UIKit
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
+    @State private var activePreferencesDropdownID: String?
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+            UIAssetInlineDropdownHost {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
                     Text("Settings")
-                        .font(.app(.title))
+                        .uiAssetText(.h2)
+                        .foregroundStyle(UIAssetColors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    VStack(alignment: .leading, spacing: 0) {
-                        sectionTitle("Profile")
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                            .padding(.bottom, 12)
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Profile")
+                            .uiAssetText(.caption)
+                            .foregroundStyle(UIAssetColors.textSecondary)
 
                         HStack(spacing: 12) {
                             profileImageView
-                                .frame(width: 48, height: 48)
-                                .clipShape(Circle())
+                                .frame(width: 52, height: 52)
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(viewModel.fullNameDisplay)
-                                    .font(.app(.headline))
+                                    .uiAssetText(.h4)
+                                    .foregroundStyle(UIAssetColors.textPrimary)
 
                                 Text(viewModel.genderAgeDisplay)
-                                    .font(.app(.subheadline))
-                                    .foregroundStyle(.secondary)
+                                    .uiAssetText(.footnote)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
 
                         Divider()
 
                         NavigationLink {
                             UserProfileView(viewModel: viewModel)
                         } label: {
-                            settingsRow(icon: "person.crop.circle.fill", title: "Modify Details")
-                        }
-                    }
-                    .background(cardBackground)
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        sectionTitle("Preferences")
-
-                        HStack(spacing: 12) {
-                            Label("Weight Unit", systemImage: "scalemass")
-                                .imageScale(.large)
-                            Spacer()
-                            MinimalDropdownButton(
-                                options: SettingsViewModel.WeightUnit.allCases,
-                                selected: viewModel.weightUnit
-                            ) { unit in
-                                unit.displayName
-                            } onSelect: { unit in
-                                viewModel.weightUnit = unit
+                            UIAssetSettingsRow(symbol: "person.crop.circle", title: "Modify Details", showsDivider: false) {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(UIAssetColors.textSecondary)
                             }
                         }
-                        .zIndex(2)
-
-                        Divider()
-
-                        HStack(spacing: 12) {
-                            Label("Distance Unit", systemImage: "ruler")
-                                .imageScale(.large)
-                            Spacer()
-                            MinimalDropdownButton(
-                                options: SettingsViewModel.DistanceUnit.allCases,
-                                selected: viewModel.distanceUnit
-                            ) { unit in
-                                unit.displayName
-                            } onSelect: { unit in
-                                viewModel.distanceUnit = unit
-                            }
-                        }
-                        .zIndex(1)
+                        .buttonStyle(.plain)
                     }
-                    .padding(16)
-                    .background(cardBackground)
-                    .zIndex(20)
+                    .padding(.top, 16)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        sectionTitle("Health and Fitness Data")
+                    preferencesCard
 
-                        HStack(spacing: 12) {
-                            Label("Connect HealthKit", systemImage: "heart.text.square")
-                                .imageScale(.large)
-                            Spacer()
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.18)) {
-                                    viewModel.isHealthConnected.toggle()
-                                }
-                            } label: {
-                                ZStack(alignment: viewModel.isHealthConnected ? .trailing : .leading) {
-                                    Capsule(style: .continuous)
-                                        .fill(viewModel.isHealthConnected ? Color.black : Color.secondary.opacity(0.25))
-                                        .frame(width: 52, height: 30)
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 24, height: 24)
-                                        .padding(3)
-                                }
-                            }
-                            .buttonStyle(.plain)
+                    UIAssetSettingsCategoryCard(category: "Health and Fitness Data", bottomPadding: 8) {
+                        UIAssetSettingsRow(symbol: "heart.text.square", title: "Connect HealthKit", showsDivider: false) {
+                            UIAssetSettingsInlineToggle(isOn: $viewModel.isHealthConnected)
                         }
                     }
-                    .padding(16)
-                    .background(cardBackground)
 
-                    VStack(alignment: .leading, spacing: 0) {
-                        sectionTitle("Data handling")
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                            .padding(.bottom, 12)
+                    UIAssetSettingsCategoryCard(category: "Design System", bottomPadding: 8) {
+                        NavigationLink {
+                            UIAssetsCatalogView()
+                        } label: {
+                            UIAssetSettingsRow(symbol: "paintpalette", title: "UI Assets", showsDivider: false) {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
 
+                    UIAssetSettingsCategoryCard(category: "Data Handling", bottomPadding: 8) {
                         NavigationLink {
                             DataHandlingView(viewModel: viewModel)
                         } label: {
-                            settingsRow(icon: "externaldrive", title: "Data")
+                            UIAssetSettingsRow(symbol: "externaldrive", title: "Data", showsDivider: false) {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .background(cardBackground)
 
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
                             Image(systemName: "info.circle")
-                                .font(.system(size: 18, weight: .semibold))
-                                .frame(width: 26, height: 26)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(UIAssetColors.accent)
+                                .frame(width: 28, height: 28)
+                                .background(
+                                    Circle()
+                                        .fill(UIAssetColors.accentSecondary)
+                                )
+
                             Text("About")
+                                .uiAssetText(.h5)
+                                .foregroundStyle(UIAssetColors.textPrimary)
                         }
+
                         Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
-                            .font(.app(.footnote))
-                            .foregroundStyle(.secondary)
+                            .uiAssetText(.footnote)
+                            .foregroundStyle(UIAssetColors.textSecondary)
                     }
                     .padding(16)
-                    .background(cardBackground)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 24)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
+                }
             }
-            .background(Color(.systemBackground))
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: viewModel.weightUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.distanceUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.isHealthConnected) { _, _ in viewModel.save() }
-            .alert("Settings", isPresented: .constant(viewModel.statusMessage != nil || viewModel.errorMessage != nil)) {
+            .alert("Settings", isPresented: statusAlertPresented) {
                 Button("OK") {
                     viewModel.statusMessage = nil
                     viewModel.errorMessage = nil
                 }
             } message: {
                 Text(viewModel.errorMessage ?? viewModel.statusMessage ?? "")
-            }
-            .overlay(alignment: .top) {
-                SettingsTopFadeNavigationBackground()
             }
         }
     }
@@ -173,64 +141,79 @@ struct SettingsView: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(.secondary)
+            Circle()
+                .fill(UIAssetColors.accentSecondary)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 24, weight: .regular))
+                        .foregroundStyle(UIAssetColors.accent)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         }
     }
 
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color(.systemBackground))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
-    }
+    private var preferencesCard: some View {
+        UIAssetSettingsCategoryCard(category: "Preferences", bottomPadding: 8) {
+            UIAssetSettingsRow(symbol: "scalemass", title: "Weight Unit", showsDivider: true) {
+                UIAssetSettingsInlineDropdown(
+                    options: SettingsViewModel.WeightUnit.allCases.map(\.displayName),
+                    selected: weightUnitDisplaySelection,
+                    id: "settings.preferences.weightUnit",
+                    activeDropdownID: $activePreferencesDropdownID,
+                    panelWidth: 168
+                )
+            }
 
-    @ViewBuilder
-    private func settingsRow(icon: String, title: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .semibold))
-                .frame(width: 26, height: 26)
-            Text(title)
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+            UIAssetSettingsRow(symbol: "ruler", title: "Distance Unit", showsDivider: false) {
+                UIAssetSettingsInlineDropdown(
+                    options: SettingsViewModel.DistanceUnit.allCases.map(\.displayName),
+                    selected: distanceUnitDisplaySelection,
+                    id: "settings.preferences.distanceUnit",
+                    activeDropdownID: $activePreferencesDropdownID,
+                    panelWidth: 168
+                )
+            }
         }
-        .padding(16)
-        .contentShape(Rectangle())
     }
 
-    @ViewBuilder
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(.app(.subheadline))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private var weightUnitDisplaySelection: Binding<String> {
+        Binding {
+            viewModel.weightUnit.displayName
+        } set: { selected in
+            if let value = SettingsViewModel.WeightUnit.allCases.first(where: { $0.displayName == selected }) {
+                viewModel.weightUnit = value
+            }
+        }
     }
-}
 
-private struct SettingsTopFadeNavigationBackground: View {
-    var body: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color(.systemBackground).opacity(0.85),
-                Color(.systemBackground).opacity(0.0)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .frame(height: 75)
-        .frame(maxWidth: .infinity, alignment: .top)
-        .ignoresSafeArea(edges: .top)
-        .allowsHitTesting(false)
+    private var distanceUnitDisplaySelection: Binding<String> {
+        Binding {
+            viewModel.distanceUnit.displayName
+        } set: { selected in
+            if let value = SettingsViewModel.DistanceUnit.allCases.first(where: { $0.displayName == selected }) {
+                viewModel.distanceUnit = value
+            }
+        }
+    }
+
+    private var statusAlertPresented: Binding<Bool> {
+        Binding {
+            viewModel.statusMessage != nil || viewModel.errorMessage != nil
+        } set: { isPresented in
+            if !isPresented {
+                viewModel.statusMessage = nil
+                viewModel.errorMessage = nil
+            }
+        }
     }
 }
 
@@ -458,6 +441,44 @@ final class SettingsViewModel: ObservableObject {
     }
 }
 
+private struct SettingsScreenHeader<Trailing: View>: View {
+    let title: String
+    let onBack: () -> Void
+    let trailing: Trailing
+
+    init(
+        title: String,
+        onBack: @escaping () -> Void,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.title = title
+        self.onBack = onBack
+        self.trailing = trailing()
+    }
+
+    init(title: String, onBack: @escaping () -> Void) where Trailing == EmptyView {
+        self.init(title: title, onBack: onBack) {
+            EmptyView()
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+            }
+            .buttonStyle(UIAssetFloatingActionButtonStyle())
+
+            Text(title)
+                .uiAssetText(.h2)
+                .foregroundStyle(UIAssetColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            trailing
+        }
+    }
+}
+
 struct DataHandlingView: View {
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
@@ -465,107 +486,169 @@ struct DataHandlingView: View {
     @State private var showingResetConfirmation = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    BouncyPressableButton {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    SettingsScreenHeader(title: "Data Handling", onBack: { dismiss() })
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Export and Backup")
+                            .uiAssetText(.caption)
+                            .foregroundStyle(UIAssetColors.textSecondary)
+
+                        dataActionCard(
+                            symbol: "tablecells",
+                            title: "Export to CSV",
+                            description: "Create a CSV file export of your logged workouts.",
+                            action: viewModel.exportCSV
+                        )
+
+                        dataActionCard(
+                            symbol: "curlybraces",
+                            title: "Export to JSON",
+                            description: "Create a JSON export for structured backup or migration.",
+                            action: viewModel.exportJSON
+                        )
+
+                        dataActionCard(
+                            symbol: "externaldrive.badge.icloud",
+                            title: "Backup",
+                            description: "Create a full local backup snapshot of app data.",
+                            action: viewModel.backup
+                        )
+
+                        dataActionCard(
+                            symbol: "arrow.triangle.2.circlepath",
+                            title: "Restore",
+                            description: "Restore app data from a previously created backup.",
+                            action: viewModel.restore
+                        )
+                    }
+
+                    UIAssetSettingsCategoryCard(category: "Danger Zone") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Permanently clear all local workout, exercise, and template data.")
+                                .uiAssetText(.footnote)
+                                .foregroundStyle(UIAssetColors.textSecondary)
+
+                            Button("Reset data") {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showingResetConfirmation = true
+                                }
+                            }
+                            .buttonStyle(UIAssetButtonStyle(variant: .destructive))
+                        }
+                        .padding(.vertical, 6)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+            }
+
+            if showingResetConfirmation {
+                Rectangle()
+                    .fill(Color.black.opacity(0.24))
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingResetConfirmation = false
                         }
                     }
 
-                    Text("Data Handling")
-                        .font(.app(.title))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    dataRow(
-                        title: "Export to CSV",
-                        description: "Create a CSV file export of your logged workouts."
-                    )
-                    Divider()
-                    dataRow(
-                        title: "Export to JSON",
-                        description: "Create a JSON export for structured backup or migration."
-                    )
-                    Divider()
-                    dataRow(
-                        title: "Backup",
-                        description: "Create a full local backup snapshot of app data."
-                    )
-                    Divider()
-                    dataRow(
-                        title: "Restore",
-                        description: "Restore app data from a previously created backup."
-                    )
-                }
-                .padding(16)
-                .background(dataCardBackground)
-
-                BouncyPressableButton {
-                    showingResetConfirmation = true
-                } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Reset data")
-                            .foregroundStyle(.red)
-                        Text("Permanently clear all local workout, exercise, and template data.")
-                            .font(.app(.footnote))
-                            .foregroundStyle(.secondary)
+                UIAssetAlertDialog(
+                    title: "Reset data?",
+                    message: "Are you sure you want to reset the data?",
+                    cancelTitle: "Cancel",
+                    destructiveTitle: "Reset"
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showingResetConfirmation = false
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(dataCardBackground)
+                } onDestructive: {
+                    viewModel.resetData(dbQueue: container.dbQueue)
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showingResetConfirmation = false
+                    }
                 }
+                .padding(.horizontal, 16)
+                .transition(.scale.combined(with: .opacity))
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 24)
         }
-        .background(Color(.systemBackground))
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
-        .alert("Reset data", isPresented: $showingResetConfirmation) {
-            Button("Yes", role: .destructive) {
-                viewModel.resetData(dbQueue: container.dbQueue)
+        .alert("Data Handling", isPresented: statusAlertPresented) {
+            Button("OK") {
+                viewModel.statusMessage = nil
+                viewModel.errorMessage = nil
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to reset the data?")
+            Text(viewModel.errorMessage ?? viewModel.statusMessage ?? "")
         }
     }
 
     @ViewBuilder
-    private func dataRow(title: String, description: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .foregroundStyle(.primary)
-            Text(description)
-                .font(.app(.footnote))
-                .foregroundStyle(.secondary)
+    private func dataActionCard(
+        symbol: String,
+        title: String,
+        description: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: symbol)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(UIAssetColors.accent)
+                        .frame(width: 30, height: 30)
+                        .background(
+                            Circle()
+                                .fill(UIAssetColors.accentSecondary)
+                        )
+
+                    Text(title)
+                        .uiAssetText(.h5)
+                        .foregroundStyle(UIAssetColors.textPrimary)
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+
+                Text(description)
+                    .uiAssetText(.footnote)
+                    .foregroundStyle(UIAssetColors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 
-    private var dataCardBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color(.systemBackground))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+    private var statusAlertPresented: Binding<Bool> {
+        Binding {
+            viewModel.statusMessage != nil || viewModel.errorMessage != nil
+        } set: { isPresented in
+            if !isPresented {
+                viewModel.statusMessage = nil
+                viewModel.errorMessage = nil
+            }
+        }
     }
 }
 
 struct UserProfileView: View {
+    private enum ProfileField: Hashable {
+        case firstName
+        case lastName
+    }
+
     @ObservedObject var viewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
 
@@ -577,6 +660,7 @@ struct UserProfileView: View {
     @State private var gender: SettingsViewModel.Gender
     @State private var profileImageData: Data?
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @FocusState private var focusedProfileField: ProfileField?
 
     init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -590,109 +674,127 @@ struct UserProfileView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    BouncyPressableButton {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-
-                    Text("User Profile")
-                        .font(.app(.title))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    BouncyPressableButton {
+        UIAssetInlineDropdownHost {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                SettingsScreenHeader(title: "User Profile", onBack: { dismiss() }) {
+                    Button("Save") {
                         saveAndDismiss()
-                    } label: {
-                        Text("Save")
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(Color.black)
-                            )
                     }
+                    .font(.app(.subheadline))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .background(
+                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                            .fill(UIAssetColors.accent)
+                    )
+                    .buttonStyle(.plain)
+                    .frame(width: 94, height: 36)
                 }
 
-                VStack(spacing: 12) {
-                    profileImagePreview
-                        .frame(width: 96, height: 96)
-                        .clipShape(Circle())
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Profile Picture")
+                        .uiAssetText(.caption)
+                        .foregroundStyle(UIAssetColors.textSecondary)
 
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Label("Add profile image", systemImage: "photo")
+                    VStack(spacing: 12) {
+                        profileImagePreview
+                            .frame(width: 96, height: 96)
+
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            Text("Choose image")
+                                .font(.app(.subheadline))
+                                .foregroundStyle(UIAssetColors.accent)
+                                .frame(maxWidth: .infinity, minHeight: 36)
+                                .background(
+                                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                        .fill(UIAssetColors.accentSecondary)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                        .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: 180)
                     }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(16)
-                .background(profileCardBackground)
+                .uiAssetCardSurface(fill: UIAssetColors.primary)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Name")
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
+                        .uiAssetText(.caption)
+                        .foregroundStyle(UIAssetColors.textSecondary)
 
-                    labeledTextField(
-                        title: "First name",
-                        text: $firstName
-                    )
-                    labeledTextField(
-                        title: "Last name",
-                        text: $lastName
-                    )
+                    HStack(spacing: 10) {
+                        profileNameInput(
+                            placeholder: "First",
+                            text: $firstName,
+                            field: .firstName
+                        )
+
+                        profileNameInput(
+                            placeholder: "Last",
+                            text: $lastName,
+                            field: .lastName
+                        )
+                    }
                 }
                 .padding(16)
-                .background(profileCardBackground)
+                .uiAssetCardSurface(fill: UIAssetColors.primary)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Body metrics")
-                        .font(.app(.subheadline))
-                        .foregroundStyle(.secondary)
+                    Text("Body Metrics")
+                        .uiAssetText(.caption)
+                        .foregroundStyle(UIAssetColors.textSecondary)
 
-                    labeledTextField(
+                    UIAssetTextField(
                         title: "Weight (\(viewModel.weightUnit.displayName))",
+                        placeholder: "Enter weight",
                         text: $bodyWeight,
                         keyboardType: .decimalPad
                     )
-                    labeledTextField(
+
+                    UIAssetTextField(
                         title: "Height (cm)",
+                        placeholder: "Enter height",
                         text: $bodyHeight,
                         keyboardType: .numberPad
                     )
-                    labeledTextField(
+
+                    UIAssetTextField(
                         title: "Age",
+                        placeholder: "Enter age",
                         text: $age,
                         keyboardType: .numberPad
                     )
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Gender")
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.secondary)
+                            .uiAssetText(.caption)
+                            .foregroundStyle(UIAssetColors.textSecondary)
 
-                        genderSelector
+                        UIAssetSettingsInlineDropdown(
+                            options: genderOptions,
+                            selected: genderSelection,
+                            expansionDirection: .up,
+                            panelAlignment: .leading,
+                            panelWidth: 180
+                        )
                     }
                 }
                 .padding(16)
-                .background(profileCardBackground)
+                .uiAssetCardSurface(fill: UIAssetColors.primary)
                 .zIndex(20)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 24)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+            }
         }
-        .background(Color(.systemBackground))
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .onChange(of: selectedPhotoItem) { _, newValue in
             guard let newValue else { return }
             Task {
@@ -711,53 +813,63 @@ struct UserProfileView: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(.secondary)
+            Circle()
+                .fill(UIAssetColors.accentSecondary.opacity(0.6))
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 36, weight: .regular))
+                        .foregroundStyle(UIAssetColors.accent)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         }
     }
 
-    @ViewBuilder
-    private func labeledTextField(
-        title: String,
+    private func profileNameInput(
+        placeholder: String,
         text: Binding<String>,
-        keyboardType: UIKeyboardType = .default
+        field: ProfileField
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.app(.subheadline))
-                .foregroundStyle(.secondary)
-            TextField("", text: text)
-                .keyboardType(keyboardType)
-                .padding(.vertical, 6)
-            Divider()
-        }
-    }
-
-    private var profileCardBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color(.systemBackground))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+        TextField(placeholder, text: text)
+            .font(.app(.body))
+            .padding(.horizontal, 12)
+            .frame(height: 44)
+            .background(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                    .fill(UIAssetColors.surface)
             )
-            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                    .stroke(
+                        focusedProfileField == field
+                        ? UIAssetColors.accent.opacity(0.7)
+                        : UIAssetColors.border.opacity(1.6),
+                        lineWidth: 1
+                    )
+            )
+            .focused($focusedProfileField, equals: field)
     }
 
-    @ViewBuilder
-    private var genderSelector: some View {
-        MinimalDropdownButton(
-            options: SettingsViewModel.Gender.allCases,
-            selected: gender
-        ) { option in
-            option.displayName
-        } onSelect: { option in
-            gender = option
+    private var genderOptions: [String] {
+        SettingsViewModel.Gender.allCases.map(\.displayName)
+    }
+
+    private var genderSelection: Binding<String> {
+        Binding {
+            gender.displayName
+        } set: { selected in
+            if let matched = SettingsViewModel.Gender.allCases.first(where: { $0.displayName == selected }) {
+                gender = matched
+            }
         }
-        .expansionDirection(.up)
-        .panelAlignment(.leading)
     }
 
     private func saveAndDismiss() {
@@ -771,172 +883,5 @@ struct UserProfileView: View {
             profileImageData: profileImageData
         )
         dismiss()
-    }
-}
-
-private struct BouncyPressableButton<Label: View>: View {
-    let action: () -> Void
-    @ViewBuilder let label: () -> Label
-    @GestureState private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            label()
-        }
-        .buttonStyle(.plain)
-        .opacity(1)
-        .scaleEffect(isPressed ? 0.96 : 1)
-        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .updating($isPressed) { _, state, _ in
-                    state = true
-                }
-        )
-    }
-}
-
-private struct MinimalDropdownButton<Option: Identifiable>: View where Option.ID: Hashable {
-    enum ExpansionDirection {
-        case up
-        case down
-    }
-
-    enum PanelAlignment {
-        case leading
-        case trailing
-        case center
-    }
-
-    let options: [Option]
-    let selected: Option
-    let title: (Option) -> String
-    let onSelect: (Option) -> Void
-    @State private var isExpanded = false
-    private var expansionDirection: ExpansionDirection = .down
-    private var panelAlignment: PanelAlignment = .trailing
-
-    init(
-        options: [Option],
-        selected: Option,
-        title: @escaping (Option) -> String,
-        onSelect: @escaping (Option) -> Void
-    ) {
-        self.options = options
-        self.selected = selected
-        self.title = title
-        self.onSelect = onSelect
-    }
-
-    func expansionDirection(_ direction: ExpansionDirection) -> Self {
-        var copy = self
-        copy.expansionDirection = direction
-        return copy
-    }
-
-    func panelAlignment(_ alignment: PanelAlignment) -> Self {
-        var copy = self
-        copy.panelAlignment = alignment
-        return copy
-    }
-
-    var body: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.18)) {
-                isExpanded.toggle()
-            }
-        } label: {
-            HStack(spacing: 8) {
-                Text(title(selected))
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(.systemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(Color.black.opacity(0.12), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .overlay(alignment: overlayAlignment) {
-            if isExpanded {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-                        Button {
-                            onSelect(option)
-                            withAnimation(.easeInOut(duration: 0.18)) {
-                                isExpanded = false
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text(title(option))
-                                    .font(.app(.subheadline))
-                                    .foregroundStyle(.primary)
-                                Spacer(minLength: 0)
-                                if option.id == selected.id {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-
-                        if index < options.count - 1 {
-                            Divider()
-                        }
-                    }
-                }
-                .frame(minWidth: 180, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(.systemBackground))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color.black.opacity(0.12), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 3)
-                .offset(y: expansionDirection == .down ? 42 : -42)
-                .transition(
-                    .asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: expansionDirection == .down ? .top : .bottom)),
-                        removal: .opacity.combined(with: .move(edge: expansionDirection == .down ? .top : .bottom))
-                    )
-                )
-            }
-        }
-        .zIndex(isExpanded ? 10 : 0)
-    }
-
-    private var overlayAlignment: Alignment {
-        switch (panelAlignment, expansionDirection) {
-        case (.leading, .down):
-            return .topLeading
-        case (.leading, .up):
-            return .bottomLeading
-        case (.trailing, .down):
-            return .topTrailing
-        case (.trailing, .up):
-            return .bottomTrailing
-        case (.center, .down):
-            return .top
-        case (.center, .up):
-            return .bottom
-        }
     }
 }

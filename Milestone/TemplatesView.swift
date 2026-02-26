@@ -41,6 +41,8 @@ struct TemplatesView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationTitle("Templates")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -174,6 +176,8 @@ struct TemplateDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationTitle("Template")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -300,6 +304,8 @@ struct CreateTemplateFromSessionView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationTitle("New Template")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

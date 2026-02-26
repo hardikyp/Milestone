@@ -38,6 +38,8 @@ struct LogView: View {
                 .buttonStyle(.bordered)
             }
             .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationTitle("Log")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

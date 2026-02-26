@@ -78,7 +78,7 @@ struct HistoryView: View {
                                 .padding(.vertical, 14)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(Color(.systemBackground))
+                                        .fill(UIAssetColors.primary)
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -97,7 +97,7 @@ struct HistoryView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Color(.systemBackground))
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .task {
                 await viewModel.loadInitial(
@@ -155,7 +155,7 @@ struct HistoryView: View {
                                             .padding(.vertical, 10)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .fill(Color(.systemBackground))
+                                                    .fill(UIAssetColors.primary)
                                             )
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -168,7 +168,7 @@ struct HistoryView: View {
                             .padding(16)
                             .background(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color(.systemBackground))
+                                    .fill(UIAssetColors.primary)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -219,7 +219,7 @@ struct HistoryView: View {
         .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(.systemBackground))
+                .fill(UIAssetColors.primary)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)

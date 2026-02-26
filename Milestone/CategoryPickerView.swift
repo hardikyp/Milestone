@@ -22,6 +22,8 @@ struct CategoryPickerView: View {
                     dismiss()
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationTitle("Select Category")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

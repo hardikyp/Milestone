@@ -12,11 +12,6 @@ struct DashboardView: View {
     private let actionButtonSpacing: CGFloat = 16
     private let sectionVerticalSpacing: CGFloat = 24
 
-    private var actionButtonSide: CGFloat {
-        let totalHorizontalSpacing = (contentHorizontalPadding * 2) + actionButtonSpacing
-        return max((UIScreen.main.bounds.width - totalHorizontalSpacing) / 2, 0)
-    }
-
     private static let sessionStartTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -30,57 +25,29 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(viewModel.greetingText)
-                            .font(.app(.title))
+                            .uiAssetText(.h1)
                             .padding(.top, 16)
 
                         Text(viewModel.greetingSubtext)
-                            .font(.app(.headline))
-                            .foregroundStyle(.secondary)
+                            .uiAssetText(.h4)
+                            .foregroundStyle(UIAssetColors.textSecondary)
 
                         HStack(spacing: actionButtonSpacing) {
-                            Button {
+                            UIAssetTiledButton(
+                                systemImage: "play.circle.fill",
+                                title: "Start a new workout",
+                                variant: .primary
+                            ) {
                                 isCategoryPickerPresented = true
-                            } label: {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "play.circle.fill")
-                                        .font(.app(.title))
-                                        .foregroundStyle(.white)
-                                    Text("Start a new workout")
-                                        .font(.app(.subheadline))
-                                        .foregroundStyle(.white)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                        .fill(Color.accentColor)
-                                )
                             }
-                            .frame(width: actionButtonSide, height: actionButtonSide)
-                            .buttonStyle(.plain)
 
-                            Button {
+                            UIAssetTiledButton(
+                                systemImage: "square.stack.3d.up.fill",
+                                title: "Start from a template",
+                                variant: .secondary
+                            ) {
                                 isTemplatePickerPresented = true
-                            } label: {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "square.stack.3d.up.fill")
-                                        .font(.app(.title2))
-                                        .foregroundStyle(Color.accentColor)
-                                    Text("Start from a template")
-                                        .font(.app(.subheadline))
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                        .stroke(Color.accentColor.opacity(0.35), lineWidth: 1)
-                                        .background(
-                                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                            .fill(Color.accentColor.opacity(0.08))
-                                    )
-                                )
                             }
-                            .frame(width: actionButtonSide, height: actionButtonSide)
-                            .buttonStyle(.plain)
                         }
                         .frame(maxWidth: .infinity)
 
@@ -121,33 +88,43 @@ struct DashboardView: View {
                     .frame(maxWidth: .infinity)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text("Your Month")
-                        .font(.app(.title2))
-                        .padding(.top, sectionVerticalSpacing)
-                        .padding(.bottom, contentHorizontalPadding)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Your Month")
+                            .uiAssetText(.h4)
 
-                    MonthlyCalendarView(
-                        monthDate: viewModel.monthDate,
-                        highlightedDays: viewModel.highlightedDays,
-                        onPreviousMonth: {
-                            Task {
-                                await viewModel.shiftMonth(
-                                    by: -1,
-                                    sessionRepository: container.sessionRepository
-                                )
+                        MonthlyCalendarView(
+                            monthDate: viewModel.monthDate,
+                            highlightedDays: viewModel.highlightedDays,
+                            onPreviousMonth: {
+                                Task {
+                                    await viewModel.shiftMonth(
+                                        by: -1,
+                                        sessionRepository: container.sessionRepository
+                                    )
+                                }
+                            },
+                            onNextMonth: {
+                                Task {
+                                    await viewModel.shiftMonth(
+                                        by: 1,
+                                        sessionRepository: container.sessionRepository
+                                    )
+                                }
                             }
-                        },
-                        onNextMonth: {
-                            Task {
-                                await viewModel.shiftMonth(
-                                    by: 1,
-                                    sessionRepository: container.sessionRepository
-                                )
-                            }
-                        }
-                    )
+                        )
+                    }
+                    .padding(16)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
+                    .padding(.top, sectionVerticalSpacing)
 
-                    VolumeLast7DaysView(points: viewModel.last7DayVolumes)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Volume Last 7 Days")
+                            .uiAssetText(.h4)
+
+                        VolumeLast7DaysView(points: viewModel.last7DayVolumes, showsTitle: false)
+                    }
+                    .padding(16)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
                         .padding(.top, sectionVerticalSpacing)
 
                     if viewModel.isLoading {
@@ -158,6 +135,7 @@ struct DashboardView: View {
                 .padding(.horizontal, contentHorizontalPadding)
                 .padding(.vertical, 16)
             }
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $isCategoryPickerPresented) {
                 CategoryPickerView { category in
@@ -226,9 +204,9 @@ private struct DashboardTopFadeNavigationBackground: View {
     var body: some View {
         LinearGradient(
             colors: [
-                Color(.systemBackground),
-                Color(.systemBackground).opacity(0.85),
-                Color(.systemBackground).opacity(0.0)
+                UIAssetColors.secondary,
+                UIAssetColors.secondary.opacity(0.85),
+                UIAssetColors.secondary.opacity(0.0)
             ],
             startPoint: .top,
             endPoint: .bottom

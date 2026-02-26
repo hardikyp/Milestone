@@ -50,6 +50,8 @@ struct ExercisePickerView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationTitle("Add Exercise")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search exercises")

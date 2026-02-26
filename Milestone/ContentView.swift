@@ -13,6 +13,7 @@ struct ContentView: View {
             MinimalBottomMenu(selectedTab: $container.selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
+        .background(UIAssetColors.secondary.ignoresSafeArea())
     }
 
     @ViewBuilder

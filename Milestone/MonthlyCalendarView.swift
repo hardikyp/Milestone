@@ -80,11 +80,12 @@ struct MonthlyCalendarView: View {
                     if let day {
                         Text("\(day)")
                             .font(.app(.subheadline))
+                            .foregroundStyle(highlightedDays.contains(day) ? UIAssetColors.accent : UIAssetColors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(
                                 Circle()
-                                    .fill(highlightedDays.contains(day) ? Color.accentColor.opacity(0.25) : Color.clear)
+                                    .fill(highlightedDays.contains(day) ? UIAssetColors.accentSecondary : Color.clear)
                             )
                     } else {
                         Text(" ")

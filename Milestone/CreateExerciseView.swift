@@ -31,51 +31,208 @@ struct CreateExerciseView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Exercise") {
-                    TextField("Name", text: $viewModel.name)
+            ZStack {
+                UIAssetInlineDropdownHost {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                        HStack(spacing: 12) {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Image(systemName: "chevron.left")
+                            }
+                            .buttonStyle(UIAssetFloatingActionButtonStyle())
 
-                    Picker("Type", selection: $viewModel.type) {
-                        Text("Weight").tag(ExerciseType.weight)
-                        Text("Cardio").tag(ExerciseType.cardio)
-                        Text("Functional").tag(ExerciseType.functional)
-                    }
+                            Text(title)
+                                .uiAssetText(.h2)
+                                .foregroundStyle(UIAssetColors.textPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Picker("Category", selection: $viewModel.category) {
-                        Text("Push").tag(ExerciseCategory.push)
-                        Text("Pull").tag(ExerciseCategory.pull)
-                        Text("Legs").tag(ExerciseCategory.legs)
-                        Text("Core").tag(ExerciseCategory.core)
-                        Text("Cardio").tag(ExerciseCategory.cardio)
-                    }
-
-                    TextField("Description", text: $viewModel.description, axis: .vertical)
-                    TextField("Target Area", text: $viewModel.targetArea)
-                    TextField("Media GIF URL", text: $viewModel.mediaURI)
-                }
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(confirmButtonTitle) {
-                        do {
-                            let input = try viewModel.makeInput()
-                            onSave(input)
-                        } catch {
-                            viewModel.errorMessage = error.localizedDescription
+                            Button(confirmButtonTitle) {
+                                do {
+                                    let input = try viewModel.makeInput()
+                                    onSave(input)
+                                } catch {
+                                    viewModel.errorMessage = error.localizedDescription
+                                }
+                            }
+                            .font(.app(.subheadline))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .background(
+                                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                    .fill(UIAssetColors.accent)
+                            )
+                            .buttonStyle(.plain)
+                            .frame(width: 108, height: 36)
                         }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Exercise")
+                                .uiAssetText(.caption)
+                                .foregroundStyle(UIAssetColors.textSecondary)
+
+                            UIAssetTextField(
+                                title: "Name",
+                                placeholder: "Exercise name",
+                                text: $viewModel.name
+                            )
+
+                            dropdownField(
+                                title: "Type",
+                                options: exerciseTypeTitles,
+                                selection: exerciseTypeSelection,
+                                width: 150
+                            )
+                            .zIndex(30)
+
+                            dropdownField(
+                                title: "Category",
+                                options: exerciseCategoryTitles,
+                                selection: exerciseCategorySelection,
+                                width: 170
+                            )
+                            .zIndex(29)
+
+                            UIAssetTextField(
+                                title: "Target Area",
+                                placeholder: "Chest, shoulders, glutes...",
+                                text: $viewModel.targetArea
+                            )
+
+                            UIAssetTextField(
+                                title: "Media GIF URL",
+                                placeholder: "https://... or local path",
+                                text: $viewModel.mediaURI,
+                                keyboardType: .URL
+                            )
+
+                            multilineField(
+                                title: "Description",
+                                placeholder: "Write step-by-step instructions...",
+                                text: $viewModel.description
+                            )
+                        }
+                        .padding(16)
+                        .uiAssetCardSurface(fill: UIAssetColors.primary)
+                    }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 24)
+                    }
+                }
+                .background(UIAssetColors.secondary.ignoresSafeArea())
+                .navigationBarBackButtonHidden(true)
+                .toolbar(.hidden, for: .navigationBar)
+
+                if let error = viewModel.errorMessage {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.black.opacity(0.24))
+                            .ignoresSafeArea()
+
+                        UIAssetAlertDialog(
+                            title: "Invalid Exercise",
+                            message: error,
+                            cancelTitle: "Close",
+                            destructiveTitle: "OK"
+                        ) {
+                            viewModel.errorMessage = nil
+                        } onDestructive: {
+                            viewModel.errorMessage = nil
+                        }
+                        .padding(.horizontal, 16)
                     }
                 }
             }
-            .alert("Invalid Exercise", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "Unknown error")
+        }
+    }
+
+    @ViewBuilder
+    private func dropdownField(
+        title: String,
+        options: [String],
+        selection: Binding<String>,
+        width: CGFloat
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .uiAssetText(.caption)
+                .foregroundStyle(UIAssetColors.textSecondary)
+
+            UIAssetSettingsInlineDropdown(
+                options: options,
+                selected: selection,
+                panelAlignment: .leading,
+                panelWidth: width,
+                textStyle: .paragraph
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func multilineField(
+        title: String,
+        placeholder: String,
+        text: Binding<String>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .uiAssetText(.caption)
+                .foregroundStyle(UIAssetColors.textSecondary)
+
+            ZStack(alignment: .topLeading) {
+                if text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(placeholder)
+                        .font(.app(.body))
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                }
+
+                TextEditor(text: text)
+                    .font(.app(.body))
+                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .frame(minHeight: 130)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .scrollContentBackground(.hidden)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                    .fill(UIAssetColors.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                    .stroke(UIAssetColors.border, lineWidth: 1)
+            )
+        }
+    }
+
+    private var exerciseTypeTitles: [String] {
+        ExerciseType.allCases.map(\.createViewDisplayName)
+    }
+
+    private var exerciseCategoryTitles: [String] {
+        ExerciseCategory.allCases.map(\.createViewDisplayName)
+    }
+
+    private var exerciseTypeSelection: Binding<String> {
+        Binding {
+            viewModel.type.createViewDisplayName
+        } set: { selected in
+            if let matched = ExerciseType.allCases.first(where: { $0.createViewDisplayName == selected }) {
+                viewModel.type = matched
+            }
+        }
+    }
+
+    private var exerciseCategorySelection: Binding<String> {
+        Binding {
+            viewModel.category.createViewDisplayName
+        } set: { selected in
+            if let matched = ExerciseCategory.allCases.first(where: { $0.createViewDisplayName == selected }) {
+                viewModel.category = matched
             }
         }
     }
@@ -125,6 +282,31 @@ final class CreateExerciseViewModel: ObservableObject {
             case .emptyName:
                 return "Name is required."
             }
+        }
+    }
+}
+
+private extension ExerciseType {
+    var createViewDisplayName: String {
+        switch self {
+        case .weight:
+            return "Weight"
+        case .cardio:
+            return "Cardio"
+        case .functional:
+            return "Functional"
+        }
+    }
+}
+
+private extension ExerciseCategory {
+    var createViewDisplayName: String {
+        switch self {
+        case .push: return "Push"
+        case .pull: return "Pull"
+        case .legs: return "Legs"
+        case .core: return "Core"
+        case .cardio: return "Cardio"
         }
     }
 }

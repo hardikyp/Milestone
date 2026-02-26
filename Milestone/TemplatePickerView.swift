@@ -39,6 +39,8 @@ struct TemplatePickerView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationTitle("Start from Template")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

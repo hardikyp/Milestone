@@ -64,6 +64,8 @@ struct ActiveSessionView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationTitle("Active Session")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isExercisePickerPresented) {

@@ -138,7 +138,7 @@ struct SessionDetailView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
-        .background(Color(.systemBackground))
+        .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task {
@@ -195,7 +195,7 @@ struct SessionDetailView: View {
                                         .padding(.vertical, 10)
                                         .background(
                                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .fill(Color(.systemBackground))
+                                                .fill(UIAssetColors.primary)
                                         )
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -207,7 +207,7 @@ struct SessionDetailView: View {
                         .padding(16)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color(.systemBackground))
+                                .fill(UIAssetColors.primary)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -222,7 +222,7 @@ struct SessionDetailView: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color(.systemBackground))
+            .fill(UIAssetColors.primary)
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(Color.black.opacity(0.05), lineWidth: 1)

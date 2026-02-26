@@ -2,6 +2,7 @@ import SwiftUI
 
 struct VolumeLast7DaysView: View {
     let points: [DailyVolumePoint]
+    var showsTitle: Bool = true
 
     private var maxVolume: Double {
         max(points.map(\.volumeKg).max() ?? 0, 1)
@@ -9,14 +10,16 @@ struct VolumeLast7DaysView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Volume Last 7 Days")
-                .font(.app(.headline))
+            if showsTitle {
+                Text("Volume Last 7 Days")
+                    .uiAssetText(.h4)
+            }
 
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(points) { point in
                     VStack(spacing: 4) {
                         Rectangle()
-                            .fill(point.volumeKg > 0 ? Color.accentColor : Color.gray.opacity(0.25))
+                            .fill(point.volumeKg > 0 ? UIAssetColors.accent : Color.gray.opacity(0.25))
                             .frame(height: barHeight(for: point.volumeKg))
 
                         Text(Self.dayFormatter.string(from: point.date))
