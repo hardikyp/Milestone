@@ -2,22 +2,6 @@
 
 This document lists functionality that is currently incomplete or actions that are wired to placeholders/no-op behavior.
 
-## 1) Data export/backup/restore actions are placeholder-only
-
-- **Type:** Unimplemented functionality (action wired, backend missing)
-- **Evidence:**
-  - `DataHandlingView` binds buttons to these actions: `exportCSV`, `exportJSON`, `backup`, `restore` in `Milestone/SettingsView.swift:499-525`.
-  - Each action only sets a status message indicating wiring is pending in `Milestone/SettingsView.swift:394-407`.
-- **Current behavior:** Tapping these options shows informational alerts, but no file is created/imported.
-- **Detailed TODO:**
-  - Implement `exportCSV()` to generate a CSV from sessions/session_exercises/sets and save/share it.
-  - Implement `exportJSON()` to generate a full structured JSON export (including templates/exercises/settings if intended).
-  - Implement `backup()` to create a restorable archive package (likely JSON + metadata/version).
-  - Implement `restore()` with file picker + validation + transactional import path.
-  - Add migration/version handling for backup/restore payload format.
-  - Add success/failure UX with destination details (saved path / share sheet completion / import result summary).
-  - Add tests for export schema completeness and restore idempotency/error handling.
-
 ## 2) HealthKit toggle does not connect to HealthKit APIs
 
 - **Type:** Action visually wired, integration missing
