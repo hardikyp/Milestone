@@ -5,13 +5,14 @@ struct HistoryView: View {
     @StateObject private var viewModel = HistoryViewModel()
     @State private var pendingDeleteSessionID: String?
     @State private var navigationPath: [String] = []
+    @State private var openSwipeSessionID: String?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 12) {
                     Text("History")
-                        .font(.app(.title))
+                        .uiAssetText(.h2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(.horizontal, 16)
@@ -27,31 +28,35 @@ struct HistoryView: View {
                             .listRowSeparator(.hidden)
                     } else {
                         ForEach(viewModel.rows) { row in
-                            Button {
-                                navigationPath.append(row.id)
-                            } label: {
-                                historyRow(row)
-                            }
-                            .buttonStyle(.plain)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                if row.isInProgress {
-                                    Button("End Session") {
-                                        Task {
-                                            await viewModel.endSession(
-                                                sessionId: row.id,
-                                                sessionRepository: container.sessionRepository
-                                            )
-                                        }
+                            HistorySwipeRow(
+                                canEnd: row.isInProgress,
+                                isOpen: openSwipeSessionID == row.id,
+                                onOpen: { openSwipeSessionID = row.id },
+                                onClose: {
+                                    if openSwipeSessionID == row.id {
+                                        openSwipeSessionID = nil
                                     }
-                                    .tint(.red)
-                                }
-
-                                Button {
+                                },
+                                onTapRow: {
+                                    if openSwipeSessionID != nil {
+                                        openSwipeSessionID = nil
+                                    } else {
+                                        navigationPath.append(row.id)
+                                    }
+                                },
+                                onDelete: {
                                     pendingDeleteSessionID = row.id
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+                                },
+                                onEnd: {
+                                    Task {
+                                        await viewModel.endSession(
+                                            sessionId: row.id,
+                                            sessionRepository: container.sessionRepository
+                                        )
+                                    }
                                 }
-                                .tint(.red)
+                            ) {
+                                historyRow(row)
                             }
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .listRowBackground(Color.clear)
@@ -74,6 +79,7 @@ struct HistoryView: View {
                                         Text("Load More")
                                     }
                                 }
+                                .uiAssetText(.paragraph)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(
@@ -105,77 +111,45 @@ struct HistoryView: View {
                     statsService: StatsService(dbQueue: container.dbQueue)
                 )
             }
-            .alert("History Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "Unknown error")
-            }
             .overlay {
-                if pendingDeleteSessionID != nil {
+                if let error = viewModel.errorMessage {
+                    Color.black.opacity(0.24)
+                        .ignoresSafeArea()
+                        .overlay {
+                            UIAssetAlertDialog(
+                                title: "History Error",
+                                message: error,
+                                cancelTitle: "Close",
+                                destructiveTitle: "OK"
+                            ) {
+                                viewModel.errorMessage = nil
+                            } onDestructive: {
+                                viewModel.errorMessage = nil
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                } else if pendingDeleteSessionID != nil {
                     Color.black.opacity(0.25)
                         .ignoresSafeArea()
                         .overlay {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("Delete Session")
-                                    .font(.app(.headline))
-
-                                Text("Are you sure you want to delete this session?")
-                                    .font(.app(.subheadline))
-                                    .foregroundStyle(.secondary)
-
-                                HStack(spacing: 10) {
-                                    Button {
-                                        guard let sessionId = pendingDeleteSessionID else { return }
-                                        pendingDeleteSessionID = nil
-                                        Task {
-                                            await viewModel.deleteSession(
-                                                sessionId: sessionId,
-                                                sessionRepository: container.sessionRepository
-                                            )
-                                        }
-                                    } label: {
-                                        Text("Yes")
-                                            .font(.app(.subheadline))
-                                            .foregroundStyle(.white)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .fill(Color.red)
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    Button {
-                                        pendingDeleteSessionID = nil
-                                    } label: {
-                                        Text("Cancel")
-                                            .font(.app(.subheadline))
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .fill(UIAssetColors.primary)
-                                            )
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
+                            UIAssetAlertDialog(
+                                title: "Delete Session",
+                                message: "Are you sure you want to delete this session?",
+                                cancelTitle: "Cancel",
+                                destructiveTitle: "Delete"
+                            ) {
+                                pendingDeleteSessionID = nil
+                            } onDestructive: {
+                                guard let sessionId = pendingDeleteSessionID else { return }
+                                pendingDeleteSessionID = nil
+                                Task {
+                                    await viewModel.deleteSession(
+                                        sessionId: sessionId,
+                                        sessionRepository: container.sessionRepository
+                                    )
                                 }
                             }
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(UIAssetColors.primary)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, 16)
                         }
                 }
             }
@@ -190,11 +164,12 @@ struct HistoryView: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(row.name)
-                    .font(.app(.headline))
+                    .uiAssetText(.h5)
+                    .foregroundStyle(UIAssetColors.textPrimary)
 
                 Text(Self.dateFormatter.string(from: row.startDateTime))
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.secondary)
+                    .uiAssetText(.subtitle)
+                    .foregroundStyle(UIAssetColors.textSecondary)
 
                 HStack {
                     if let durationText = row.durationText {
@@ -206,26 +181,27 @@ struct HistoryView: View {
                     Spacer()
                     Text(String(format: "Volume: %.1f kg", row.totalVolumeKg))
                 }
-                .font(.app(.caption))
-                .foregroundStyle(.secondary)
+                .uiAssetText(.caption)
+                .foregroundStyle(UIAssetColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(UIAssetColors.textSecondary)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
+        .contentShape(Rectangle())
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(UIAssetColors.primary)
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .fill(row.isInProgress ? UIAssetColors.accentSecondary : UIAssetColors.primary)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .stroke(UIAssetColors.border, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -234,6 +210,118 @@ struct HistoryView: View {
         formatter.timeStyle = .short
         return formatter
     }()
+}
+
+private struct HistorySwipeRow<Content: View>: View {
+    let canEnd: Bool
+    let isOpen: Bool
+    let onOpen: () -> Void
+    let onClose: () -> Void
+    let onTapRow: () -> Void
+    let onDelete: () -> Void
+    let onEnd: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    @State private var dragTranslation: CGFloat = 0
+
+    private let actionWidth: CGFloat = 84
+    private let rowHeight: CGFloat = UIAssetMetrics.rowCardHeight
+    private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
+    private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
+
+    private var actionCount: CGFloat { canEnd ? 2 : 1 }
+    private var actionRevealWidth: CGFloat { actionWidth * actionCount }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            HStack(spacing: 0) {
+                if canEnd {
+                    Button(action: onEnd) {
+                        UIAssetRowSlideActionButton(
+                            systemName: "stop.fill",
+                            title: "Stop",
+                            iconColor: UIAssetColors.accent,
+                            backgroundColor: UIAssetColors.accentSecondary,
+                            borderColor: UIAssetColors.accent.opacity(0.3),
+                            height: rowHeight
+                        )
+                    }
+                    .buttonStyle(HistoryBouncyPlainButtonStyle())
+                    .frame(width: actionWidth, height: rowHeight)
+                }
+
+                Button(action: onDelete) {
+                    UIAssetRowSlideActionButton(
+                        systemName: "trash",
+                        title: "Delete",
+                        iconColor: .white,
+                        backgroundColor: destructiveColor,
+                        borderColor: destructiveColor.opacity(0.7),
+                        height: rowHeight
+                    )
+                }
+                .buttonStyle(HistoryBouncyPlainButtonStyle())
+                .frame(width: actionWidth, height: rowHeight)
+            }
+            .offset(x: actionOffset)
+            .opacity(swipeProgress)
+            .allowsHitTesting(swipeProgress > 0.02)
+
+            content()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTapRow()
+                }
+                .offset(x: rowOffset)
+                .highPriorityGesture(dragGesture)
+        }
+        .animation(settleAnimation, value: isOpen)
+    }
+
+    private var rowOffset: CGFloat {
+        let baseOffset = isOpen ? -actionRevealWidth : 0
+        let proposedOffset = baseOffset + dragTranslation
+        return min(0, max(-actionRevealWidth, proposedOffset))
+    }
+
+    private var actionOffset: CGFloat {
+        actionRevealWidth + rowOffset
+    }
+
+    private var swipeProgress: CGFloat {
+        min(1, max(0, -rowOffset / actionRevealWidth))
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                dragTranslation = value.translation.width
+            }
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                let baseOffset = isOpen ? -actionRevealWidth : 0
+                let projected = baseOffset + value.predictedEndTranslation.width
+                let shouldOpen = projected < -actionRevealWidth * 0.45
+
+                withAnimation(settleAnimation) {
+                    dragTranslation = 0
+                    if shouldOpen {
+                        onOpen()
+                    } else {
+                        onClose()
+                    }
+                }
+            }
+    }
+}
+
+private struct HistoryBouncyPlainButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.93 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
+    }
 }
 
 @MainActor

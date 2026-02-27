@@ -56,15 +56,8 @@ struct CreateExerciseView: View {
                                     viewModel.errorMessage = error.localizedDescription
                                 }
                             }
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, minHeight: 36)
-                            .background(
-                                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                                    .fill(UIAssetColors.accent)
-                            )
-                            .buttonStyle(.plain)
-                            .frame(width: 108, height: 36)
+                            .buttonStyle(UIAssetTextActionButtonStyle())
+                            .frame(minWidth: 92, alignment: .trailing)
                         }
 
                         VStack(alignment: .leading, spacing: 12) {

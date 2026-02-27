@@ -3,7 +3,6 @@ import GRDB
 
 enum AppTab: Hashable {
     case home
-    case log
     case history
     case exercises
     case settings

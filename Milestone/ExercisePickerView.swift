@@ -24,74 +24,166 @@ struct ExercisePickerView: View {
         return ExerciseCategory.fromSessionCategoryName(sessionCategoryName)
     }
 
+    private var filteredExercises: [Exercise] {
+        viewModel.filteredExercises(query: searchText, category: sessionCategory)
+    }
+
     var body: some View {
         NavigationStack {
-            List(viewModel.filteredExercises(query: searchText, category: sessionCategory)) { exercise in
-                Button {
-                    Task {
-                        await viewModel.addExistingExercise(
-                            sessionId: sessionId,
-                            exercise: exercise,
-                            sessionExerciseRepository: container.sessionExerciseRepository
-                        )
-
-                        if viewModel.errorMessage == nil,
-                           let added = viewModel.lastAddedExerciseSelection {
-                            onDidAddExercise(added)
+            ZStack {
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        Button {
                             dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                        .buttonStyle(UIAssetFloatingActionButtonStyle())
+
+                        Text("Add Exercise")
+                            .uiAssetText(.h2)
+                            .foregroundStyle(UIAssetColors.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Button("New") {
+                            isCreateExercisePresented = true
+                        }
+                        .buttonStyle(UIAssetTextActionButtonStyle())
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+
+                    List {
+                        if filteredExercises.isEmpty {
+                            Text("No exercises found")
+                                .uiAssetText(.paragraph)
+                                .foregroundStyle(UIAssetColors.textSecondary)
+                                .padding(14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .uiAssetCardSurface(fill: UIAssetColors.primary)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                        } else {
+                            ForEach(filteredExercises) { exercise in
+                                Button {
+                                    Task {
+                                        await viewModel.addExistingExercise(
+                                            sessionId: sessionId,
+                                            exercise: exercise,
+                                            sessionExerciseRepository: container.sessionExerciseRepository
+                                        )
+
+                                        if viewModel.errorMessage == nil,
+                                           let added = viewModel.lastAddedExerciseSelection {
+                                            onDidAddExercise(added)
+                                            dismiss()
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(exercise.name)
+                                                .uiAssetText(.paragraph)
+                                                .foregroundStyle(UIAssetColors.textPrimary)
+                                            Text(exercise.type.displayName)
+                                                .uiAssetText(.caption)
+                                                .foregroundStyle(UIAssetColors.textSecondary)
+                                        }
+
+                                        Spacer(minLength: 0)
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(UIAssetColors.textSecondary)
+                                    }
+                                    .padding(14)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .uiAssetCardSurface(fill: UIAssetColors.primary)
+                                }
+                                .buttonStyle(.plain)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                            }
                         }
                     }
-                } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(exercise.name)
-                        Text(exercise.type.displayName)
-                            .font(.app(.caption))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .background(UIAssetColors.secondary.ignoresSafeArea())
-            .navigationTitle("Add Exercise")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search exercises")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
 
-                ToolbarItem(placement: .primaryAction) {
-                    Button("+ New Exercise") {
-                        isCreateExercisePresented = true
-                    }
                 }
-            }
-            .sheet(isPresented: $isCreateExercisePresented) {
-                CreateExerciseView { input in
-                    Task {
-                        await viewModel.createAndAddExercise(
-                            sessionId: sessionId,
-                            input: input,
-                            exerciseRepository: container.exerciseRepository,
-                            sessionExerciseRepository: container.sessionExerciseRepository
-                        )
+                .background(UIAssetColors.secondary.ignoresSafeArea())
+                .safeAreaInset(edge: .bottom) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(UIAssetColors.textSecondary)
 
-                        if viewModel.errorMessage == nil,
-                           let added = viewModel.lastAddedExerciseSelection {
-                            isCreateExercisePresented = false
-                            onDidAddExercise(added)
-                            dismiss()
+                        TextField("Search exercises", text: $searchText)
+                            .font(.app(.body))
+                            .foregroundStyle(UIAssetColors.textPrimary)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 44)
+                    .background(
+                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                            .fill(UIAssetColors.surface)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                            .stroke(UIAssetColors.border, lineWidth: 1)
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
+                    .background(UIAssetColors.secondary)
+                }
+                .navigationBarBackButtonHidden(true)
+                .toolbar(.hidden, for: .navigationBar)
+                .sheet(isPresented: $isCreateExercisePresented) {
+                    CreateExerciseView { input in
+                        Task {
+                            await viewModel.createAndAddExercise(
+                                sessionId: sessionId,
+                                input: input,
+                                exerciseRepository: container.exerciseRepository,
+                                sessionExerciseRepository: container.sessionExerciseRepository
+                            )
+
+                            if viewModel.errorMessage == nil,
+                               let added = viewModel.lastAddedExerciseSelection {
+                                isCreateExercisePresented = false
+                                onDidAddExercise(added)
+                                dismiss()
+                            }
                         }
                     }
                 }
-            }
-            .task {
-                await viewModel.loadExercises(repository: container.exerciseRepository)
-            }
-            .alert("Exercise Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "Unknown error")
+                .task {
+                    await viewModel.loadExercises(repository: container.exerciseRepository)
+                }
+
+                if let error = viewModel.errorMessage {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.black.opacity(0.24))
+                            .ignoresSafeArea()
+
+                        UIAssetAlertDialog(
+                            title: "Exercise Error",
+                            message: error,
+                            cancelTitle: "Close",
+                            destructiveTitle: "OK"
+                        ) {
+                            viewModel.errorMessage = nil
+                        } onDestructive: {
+                            viewModel.errorMessage = nil
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                    .transition(.opacity)
+                }
             }
         }
     }

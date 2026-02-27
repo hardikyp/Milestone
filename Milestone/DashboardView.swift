@@ -10,7 +10,7 @@ struct DashboardView: View {
     @State private var actionErrorMessage: String?
     private let contentHorizontalPadding: CGFloat = 16
     private let actionButtonSpacing: CGFloat = 16
-    private let sectionVerticalSpacing: CGFloat = 24
+    private let sectionVerticalSpacing: CGFloat = 16
 
     private static let sessionStartTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -29,13 +29,14 @@ struct DashboardView: View {
                             .padding(.top, 16)
 
                         Text(viewModel.greetingSubtext)
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h5)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         HStack(spacing: actionButtonSpacing) {
                             UIAssetTiledButton(
                                 systemImage: "play.circle.fill",
-                                title: "Start a new workout",
+                                label: "Start",
+                                description: "New workout",
                                 variant: .primary
                             ) {
                                 isCategoryPickerPresented = true
@@ -43,7 +44,8 @@ struct DashboardView: View {
 
                             UIAssetTiledButton(
                                 systemImage: "square.stack.3d.up.fill",
-                                title: "Start from a template",
+                                label: "Start",
+                                description: "From template",
                                 variant: .secondary
                             ) {
                                 isTemplatePickerPresented = true
@@ -54,17 +56,18 @@ struct DashboardView: View {
                         if let active = viewModel.activeSession {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Active Session")
-                                    .font(.app(.title2))
+                                    .uiAssetText(.h4)
+                                    .foregroundStyle(UIAssetColors.textPrimary)
 
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(active.name ?? "Workout")
-                                            .font(.app(.headline))
-                                            .foregroundStyle(.primary)
+                                            .uiAssetText(.paragraph)
+                                            .foregroundStyle(UIAssetColors.textPrimary)
 
                                         Text("Started: \(Self.sessionStartTimeFormatter.string(from: active.startDateTime))")
-                                            .font(.app(.subheadline))
-                                            .foregroundStyle(.secondary)
+                                            .uiAssetText(.footnote)
+                                            .foregroundStyle(UIAssetColors.textSecondary)
                                     }
 
                                     Spacer(minLength: 0)
@@ -72,17 +75,14 @@ struct DashboardView: View {
                                     Button {
                                         navigationPath.append(active.id)
                                     } label: {
-                                        HStack(spacing: 6) {
-                                            Text("Resume")
-                                            Image(systemName: "restart.circle")
-                                            
-                                        }
+                                        Text("Resume")
                                     }
-                                    .buttonStyle(.borderedProminent)
+                                    .buttonStyle(UIAssetTextActionButtonStyle())
                                 }
                             }
+                            .padding(16)
+                            .uiAssetCardSurface(fill: UIAssetColors.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, sectionVerticalSpacing)
                         }
                     }
                     .frame(maxWidth: .infinity)

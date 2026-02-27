@@ -21,8 +21,6 @@ struct ContentView: View {
         switch container.selectedTab {
         case .home:
             DashboardView()
-        case .log:
-            LogView()
         case .history:
             HistoryView()
         case .exercises:
@@ -53,7 +51,6 @@ private struct MinimalBottomMenu: View {
 
     private let items: [MenuItem] = [
         MenuItem(id: .home, title: "Home", systemImage: "house"),
-        MenuItem(id: .log, title: "Log", systemImage: "plus.circle"),
         MenuItem(id: .history, title: "History", systemImage: "clock.arrow.circlepath"),
         MenuItem(id: .exercises, title: "Exercises", systemImage: "figure.strengthtraining.traditional.circle"),
         MenuItem(id: .settings, title: "Settings", systemImage: "gear")

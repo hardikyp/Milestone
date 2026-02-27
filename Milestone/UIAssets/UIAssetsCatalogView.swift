@@ -4,7 +4,7 @@ import UIKit
 enum UIAssetColors {
     static let primary = Color.white
     static let secondary = Color(red: 250 / 255, green: 250 / 255, blue: 250 / 255)
-    static let accent = Color(red: 6 / 255, green: 57 / 255, blue: 47 / 255)
+    static let accent = Color(red: 3 / 255, green: 57 / 255, blue: 50 / 255)
     static let accentSecondary = Color(red: 224 / 255, green: 234 / 255, blue: 231 / 255)
 
     static let textPrimary = Color.primary
@@ -478,11 +478,41 @@ enum UIAssetTiledButtonVariant {
 
 struct UIAssetTiledButton: View {
     let systemImage: String
-    let title: String
+    let label: String
+    let description: String
     let variant: UIAssetTiledButtonVariant
+    let customBackgroundColor: Color?
+    let customIconColor: Color?
+    let customLabelColor: Color?
+    let customDescriptionColor: Color?
     let onTap: () -> Void
 
+    init(
+        systemImage: String,
+        label: String,
+        description: String,
+        variant: UIAssetTiledButtonVariant,
+        customBackgroundColor: Color? = nil,
+        customIconColor: Color? = nil,
+        customLabelColor: Color? = nil,
+        customDescriptionColor: Color? = nil,
+        onTap: @escaping () -> Void
+    ) {
+        self.systemImage = systemImage
+        self.label = label
+        self.description = description
+        self.variant = variant
+        self.customBackgroundColor = customBackgroundColor
+        self.customIconColor = customIconColor
+        self.customLabelColor = customLabelColor
+        self.customDescriptionColor = customDescriptionColor
+        self.onTap = onTap
+    }
+
     private var backgroundColor: Color {
+        if let customBackgroundColor {
+            return customBackgroundColor
+        }
         switch variant {
         case .primary:
             return UIAssetColors.accent
@@ -491,7 +521,7 @@ struct UIAssetTiledButton: View {
         }
     }
 
-    private var foregroundColor: Color {
+    private var defaultForegroundColor: Color {
         switch variant {
         case .primary:
             return .white
@@ -500,20 +530,42 @@ struct UIAssetTiledButton: View {
         }
     }
 
+    private var iconColor: Color {
+        customIconColor ?? defaultForegroundColor
+    }
+
+    private var labelColor: Color {
+        customLabelColor ?? defaultForegroundColor
+    }
+
+    private var descriptionColor: Color {
+        customDescriptionColor ?? defaultForegroundColor
+    }
+
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 0) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 34, weight: .semibold))
-                    .foregroundStyle(foregroundColor)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 36, height: 36)
+                    .foregroundStyle(iconColor)
                     .symbolRenderingMode(.monochrome)
 
-                Text(title)
-                    .uiAssetText(.paragraph)
-                    .foregroundStyle(foregroundColor)
+                Spacer(minLength: 0)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .uiAssetText(.h4)
+                        .foregroundStyle(labelColor)
+
+                    Text(description)
+                        .uiAssetText(.paragraph)
+                        .foregroundStyle(descriptionColor)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                     .fill(backgroundColor)
@@ -527,8 +579,20 @@ struct UIAssetTiledButton: View {
             )
             .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 3)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(UIAssetTiledButtonStyle())
         .aspectRatio(5 / 4, contentMode: .fit)
+    }
+}
+
+struct UIAssetTiledButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .opacity(configuration.isPressed ? 0.84 : 1.0)
+            .animation(
+                .interpolatingSpring(stiffness: 320, damping: 16),
+                value: configuration.isPressed
+            )
     }
 }
 
@@ -616,20 +680,34 @@ struct UIAssetFloatingActionButtonStyle: ButtonStyle {
 
 struct UIAssetTextActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .uiAssetText(.subtitle)
-            .foregroundStyle(.white)
-            .frame(height: 36)
-            .padding(.horizontal, 16)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(UIAssetColors.accent)
-            )
-            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
-            .animation(
-                .interpolatingSpring(stiffness: 320, damping: 16),
-                value: configuration.isPressed
-            )
+        Content(configuration: configuration)
+    }
+
+    private struct Content: View {
+        let configuration: Configuration
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .uiAssetText(.subtitle)
+                .foregroundStyle(.white)
+                .frame(height: 36)
+                .padding(.horizontal, 16)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(UIAssetColors.accent)
+                )
+                .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+                .opacity(isEnabled ? (configuration.isPressed ? 0.84 : 1.0) : 0.5)
+                .animation(
+                    .interpolatingSpring(stiffness: 320, damping: 16),
+                    value: configuration.isPressed
+                )
+                .animation(
+                    .easeOut(duration: 0.12),
+                    value: isEnabled
+                )
+        }
     }
 }
 
@@ -1354,7 +1432,8 @@ struct UIAssetsCatalogView: View {
             HStack(spacing: 12) {
                 UIAssetTiledButton(
                     systemImage: "trash.fill",
-                    title: "Delete",
+                    label: "Delete",
+                    description: "remove item",
                     variant: .primary
                 ) {
                 }
@@ -1362,7 +1441,8 @@ struct UIAssetsCatalogView: View {
 
                 UIAssetTiledButton(
                     systemImage: "stop.fill",
-                    title: "Stop",
+                    label: "Stop",
+                    description: "pause now",
                     variant: .secondary
                 ) {
                 }

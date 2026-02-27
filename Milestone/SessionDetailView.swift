@@ -13,26 +13,21 @@ struct SessionDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 12) {
-                    BouncyIconButton {
+                    Button {
                         dismiss()
                     } label: {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 36, height: 36)
-                            .background(
-                                Circle()
-                                    .fill(Color.black)
-                            )
                     }
+                    .buttonStyle(UIAssetFloatingActionButtonStyle())
 
                     Text("Session")
-                        .font(.app(.title))
+                        .uiAssetText(.h2)
+                        .foregroundStyle(UIAssetColors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     HStack(spacing: 8) {
                         if viewModel.session?.endDateTime == nil {
-                            BouncyIconButton {
+                            Button(viewModel.isEnding ? "Ending..." : "End") {
                                 Task {
                                     await viewModel.endSession(
                                         sessionId: sessionId,
@@ -40,36 +35,17 @@ struct SessionDetailView: View {
                                         dbQueue: container.dbQueue
                                     )
                                 }
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "stop.fill")
-                                        .font(.system(size: 12, weight: .semibold))
-                                    Text(viewModel.isEnding ? "Ending..." : "End")
-                                        .font(.app(.caption))
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 9)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(Color.black)
-                                )
                             }
+                            .buttonStyle(UIAssetTextActionButtonStyle())
                             .disabled(viewModel.isEnding)
                         }
 
-                        BouncyIconButton {
+                        Button {
                             isDeleteConfirmationPresented = true
                         } label: {
                             Image(systemName: "trash")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 36, height: 36)
-                                .background(
-                                    Circle()
-                                        .fill(Color.black)
-                                )
                         }
+                        .buttonStyle(UIAssetFloatingActionButtonStyle())
                     }
                 }
                 .padding(.top, 16)
@@ -77,21 +53,22 @@ struct SessionDetailView: View {
                 if let session = viewModel.session {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(session.name?.isEmpty == false ? session.name! : "Workout")
-                            .font(.app(.headline))
+                            .uiAssetText(.h4)
+                            .foregroundStyle(UIAssetColors.textPrimary)
 
                         Text(Self.dateFormatter.string(from: session.startDateTime))
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.secondary)
+                            .uiAssetText(.subtitle)
+                            .foregroundStyle(UIAssetColors.textSecondary)
 
                         if let durationText = viewModel.durationText {
                             Text("Duration: \(durationText)")
-                                .font(.app(.subheadline))
-                                .foregroundStyle(.secondary)
+                                .uiAssetText(.subtitle)
+                                .foregroundStyle(UIAssetColors.textSecondary)
                         }
 
                         Text(String(format: "Total Volume: %.1f kg", viewModel.totalVolumeKg))
-                            .font(.app(.subheadline))
-                            .foregroundStyle(.secondary)
+                            .uiAssetText(.subtitle)
+                            .foregroundStyle(UIAssetColors.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
@@ -100,20 +77,22 @@ struct SessionDetailView: View {
                     ForEach(viewModel.exerciseSections) { section in
                         VStack(alignment: .leading, spacing: 10) {
                             Text("\(section.orderIndex). \(section.exerciseName)")
-                                .font(.app(.headline))
+                                .uiAssetText(.subtitle)
+                                .foregroundStyle(UIAssetColors.textPrimary)
 
                             if section.sets.isEmpty {
                                 Text("No sets logged")
-                                    .font(.app(.subheadline))
-                                    .foregroundStyle(.secondary)
+                                    .uiAssetText(.subtitle)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
                             } else {
                                 ForEach(Array(section.sets.enumerated()), id: \.element.id) { index, set in
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Set \(set.setIndex)")
-                                            .font(.app(.subheadline))
+                                            .uiAssetText(.footnote)
+                                            .foregroundStyle(UIAssetColors.textPrimary)
                                         Text(set.summary)
-                                            .font(.app(.caption))
-                                            .foregroundStyle(.secondary)
+                                            .uiAssetText(.caption)
+                                            .foregroundStyle(UIAssetColors.textSecondary)
                                     }
                                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -144,90 +123,60 @@ struct SessionDetailView: View {
         .task {
             await viewModel.load(sessionId: sessionId, dbQueue: container.dbQueue)
         }
-        .alert("Session Detail Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") { viewModel.errorMessage = nil }
-        } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
-        }
         .overlay {
-            if isDeleteConfirmationPresented {
+            if let error = viewModel.errorMessage {
+                Color.black.opacity(0.24)
+                    .ignoresSafeArea()
+                    .overlay {
+                        UIAssetAlertDialog(
+                            title: "Session Detail Error",
+                            message: error,
+                            cancelTitle: "Close",
+                            destructiveTitle: "OK"
+                        ) {
+                            viewModel.errorMessage = nil
+                        } onDestructive: {
+                            viewModel.errorMessage = nil
+                        }
+                        .padding(.horizontal, 16)
+                    }
+            } else if isDeleteConfirmationPresented {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
                     .overlay {
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("Delete Session")
-                                .font(.app(.headline))
-
-                            Text("Are you sure you want to delete this session?")
-                                .font(.app(.subheadline))
-                                .foregroundStyle(.secondary)
-
-                            HStack(spacing: 10) {
-                                BouncyIconButton {
-                                    Task {
-                                        let didDelete = await viewModel.deleteSession(
-                                            sessionId: sessionId,
-                                            sessionRepository: container.sessionRepository
-                                        )
-                                        if didDelete {
-                                            dismiss()
-                                        }
-                                        isDeleteConfirmationPresented = false
-                                    }
-                                } label: {
-                                    Text("Yes")
-                                        .font(.app(.subheadline))
-                                        .foregroundStyle(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .fill(Color.red)
-                                        )
+                        UIAssetAlertDialog(
+                            title: "Delete Session",
+                            message: "Are you sure you want to delete this session?",
+                            cancelTitle: "Cancel",
+                            destructiveTitle: "Delete"
+                        ) {
+                            isDeleteConfirmationPresented = false
+                        } onDestructive: {
+                            Task {
+                                let didDelete = await viewModel.deleteSession(
+                                    sessionId: sessionId,
+                                    sessionRepository: container.sessionRepository
+                                )
+                                if didDelete {
+                                    dismiss()
                                 }
-
-                                BouncyIconButton {
-                                    isDeleteConfirmationPresented = false
-                                } label: {
-                                    Text("Cancel")
-                                        .font(.app(.subheadline))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .fill(UIAssetColors.primary)
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                                        )
-                                }
+                                isDeleteConfirmationPresented = false
                             }
                         }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(UIAssetColors.primary)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                        )
-                        .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 16)
                     }
             }
         }
     }
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
+        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
             .fill(UIAssetColors.primary)
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                    .stroke(UIAssetColors.border, lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -236,29 +185,6 @@ struct SessionDetailView: View {
         formatter.timeStyle = .short
         return formatter
     }()
-}
-
-private struct BouncyIconButton<Label: View>: View {
-    let action: () -> Void
-    @ViewBuilder let label: () -> Label
-    @GestureState private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            label()
-        }
-        .buttonStyle(.plain)
-        .opacity(1)
-        .scaleEffect(isPressed ? 0.96 : 1)
-        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .updating($isPressed) { _, state, _ in
-                    state = true
-                }
-        )
-    }
-
 }
 
 @MainActor

@@ -14,7 +14,6 @@
 		1837A374A8E95143683202AE /* SessionExerciseRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */; };
 		3C6E0AE1D6F0E6CD3B111171 /* SetRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0505F484F636BDEB8BBA365 /* SetRepository.swift */; };
 		41C41081CCFE26D4B0058CA7 /* ExerciseLoggingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F3E8CD679CF6DBB0F1BB7D /* ExerciseLoggingView.swift */; };
-		4FF07FF28290D7B554E0950D /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F3E403144C31518B20DA89 /* LogView.swift */; };
 		545CF151D5899D9CD8AB0293 /* ExercisesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EED9F23E348C255D0D7627F /* ExercisesView.swift */; };
 		561EB0792F425F2B0082EC73 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 561EB0782F425F2B0082EC73 /* GRDB */; };
 		654E816E229C702930FCFF7A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4725C8BF250B18F7419D9012 /* HistoryView.swift */; };
@@ -22,10 +21,10 @@
 		737B4F4FA093470CBC2041F3 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */; };
 		73F07AFA09F140F2ADDCB67D /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */; };
 		75352D5203395423770B69A5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */; };
-		A1B2C3D4E5F60718293A4B5C /* UIAssetsCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5061728394A5B6C /* UIAssetsCatalogView.swift */; };
 		8F0D0DBC69D6E69F10DED5A2 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07A96F540CF89D3E31C744C /* SessionRepository.swift */; };
 		8F71EB095D63FB725BC0C051 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EBF254AD8414C99CB24DF2 /* ContentView.swift */; };
 		8F8A6464A66B45B6BA9AFBB2 /* TemplatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* UIAssets/UIAssetsCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */; };
 		A9D033C2EA2C4808A08C73D2 /* VolumeLast7DaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DC486DF38964F9780B41B69 /* VolumeLast7DaysView.swift */; };
 		C29F264C4C21A86A7A164298 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2A38885E68DBD40C0868072 /* Foundation.framework */; };
 		C576439F3D087839B718DAA4 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FCDA5405327EEE691FDDA8 /* AppContainer.swift */; };
@@ -48,7 +47,6 @@
 		1BE48829369D5DE4F0903AEB /* CategoryPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryPickerView.swift; sourceTree = "<group>"; };
 		35A8E2B29144A18B2818CA09 /* DatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
 		41264C054139672CD4994536 /* MilestoneApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MilestoneApp.swift; sourceTree = "<group>"; };
-		42F3E403144C31518B20DA89 /* LogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
 		4725C8BF250B18F7419D9012 /* HistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		4DC486DF38964F9780B41B69 /* VolumeLast7DaysView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VolumeLast7DaysView.swift; sourceTree = "<group>"; };
 		61EBF254AD8414C99CB24DF2 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -56,10 +54,10 @@
 		7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemplatePickerView.swift; sourceTree = "<group>"; };
 		7B7E5A6C28214072A2DCA407 /* TemplateRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemplateRepository.swift; sourceTree = "<group>"; };
 		81A6672BB6F038C57E417ABF /* ExercisePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
-		B1C2D3E4F5061728394A5B6C /* UIAssetsCatalogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIAssets/UIAssetsCatalogView.swift; sourceTree = "<group>"; };
 		8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		A83C90BD6B15408E8B8D53D7 /* TemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemplatesView.swift; sourceTree = "<group>"; };
 		AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionExerciseRepository.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIAssets/UIAssetsCatalogView.swift; sourceTree = "<group>"; };
 		B7E741AF96D842909F19C61B /* StatsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
 		B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C8CB0272FCFB47D6AAAFEF6B /* Inter-VariableFont_opsz,wght.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Inter-VariableFont_opsz,wght.ttf"; sourceTree = "<group>"; };
@@ -115,7 +113,6 @@
 				F52FE5E03D6A4DA4927E0B90 /* AppTypography.swift */,
 				61EBF254AD8414C99CB24DF2 /* ContentView.swift */,
 				D1A8572FCD2F1FD14CAA5553 /* DashboardView.swift */,
-				42F3E403144C31518B20DA89 /* LogView.swift */,
 				4725C8BF250B18F7419D9012 /* HistoryView.swift */,
 				6EED9F23E348C255D0D7627F /* ExercisesView.swift */,
 				B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */,
@@ -128,19 +125,19 @@
 				AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */,
 				D0505F484F636BDEB8BBA365 /* SetRepository.swift */,
 				F2FCDA5405327EEE691FDDA8 /* AppContainer.swift */,
+				CF89CA988A56CB09B17AC131 /* CreateExerciseView.swift */,
 				A83C90BD6B15408E8B8D53D7 /* TemplatesView.swift */,
 				1BE48829369D5DE4F0903AEB /* CategoryPickerView.swift */,
 				81A6672BB6F038C57E417ABF /* ExercisePickerView.swift */,
 				7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */,
 				CDBB81C808E69C3D49879DBD /* ActiveSessionView.swift */,
-				CF89CA988A56CB09B17AC131 /* CreateExerciseView.swift */,
 				E9F3E8CD679CF6DBB0F1BB7D /* ExerciseLoggingView.swift */,
 				8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */,
 				B7E741AF96D842909F19C61B /* StatsService.swift */,
 				FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */,
 				F28FF2F4D0DB4E0AA2E5B015 /* MonthlyCalendarView.swift */,
 				4DC486DF38964F9780B41B69 /* VolumeLast7DaysView.swift */,
-				B1C2D3E4F5061728394A5B6C /* UIAssetsCatalogView.swift */,
+				B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */,
 				8DA8834D0CDE4BF2AC3A78B4 /* Fonts */,
 			);
 			path = Milestone;
@@ -241,11 +238,10 @@
 				14F52D7C50C64FC0904B2049 /* AppTypography.swift in Sources */,
 				8F71EB095D63FB725BC0C051 /* ContentView.swift in Sources */,
 				D88A49B2D93EF9B89A9921CC /* DashboardView.swift in Sources */,
-				4FF07FF28290D7B554E0950D /* LogView.swift in Sources */,
 				654E816E229C702930FCFF7A /* HistoryView.swift in Sources */,
 				545CF151D5899D9CD8AB0293 /* ExercisesView.swift in Sources */,
 				75352D5203395423770B69A5 /* SettingsView.swift in Sources */,
-				A1B2C3D4E5F60718293A4B5C /* UIAssetsCatalogView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* UIAssets/UIAssetsCatalogView.swift in Sources */,
 				04D482ECE9C9FE3B9636334C /* DatabaseManager.swift in Sources */,
 				D64CC6EEA2D37F63ED6D4905 /* Migrations.swift in Sources */,
 				D2B6FB710FA14B606D28F29C /* Models.swift in Sources */,

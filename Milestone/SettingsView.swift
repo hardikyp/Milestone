@@ -681,15 +681,7 @@ struct UserProfileView: View {
                     Button("Save") {
                         saveAndDismiss()
                     }
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, minHeight: 36)
-                    .background(
-                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .fill(UIAssetColors.accent)
-                    )
-                    .buttonStyle(.plain)
-                    .frame(width: 94, height: 36)
+                    .buttonStyle(UIAssetTextActionButtonStyle())
                 }
 
                 VStack(alignment: .leading, spacing: 16) {

@@ -282,49 +282,102 @@ struct CreateTemplateFromSessionView: View {
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = CreateTemplateFromSessionViewModel()
+    @State private var activeDropdownID: String?
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Template") {
-                    TextField("Template name", text: $viewModel.templateName)
-                    TextField("Description (optional)", text: $viewModel.description)
-                }
+            UIAssetInlineDropdownHost {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack(spacing: 12) {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Image(systemName: "chevron.left")
+                            }
+                            .buttonStyle(UIAssetFloatingActionButtonStyle())
 
-                Section("Source Session") {
-                    if viewModel.sessions.isEmpty {
-                        Text("No sessions available")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Picker("Session", selection: $viewModel.selectedSessionId) {
-                            ForEach(viewModel.sessions) { session in
-                                Text(session.label).tag(Optional(session.id))
+                            Text("New Template")
+                                .uiAssetText(.h2)
+                                .foregroundStyle(UIAssetColors.textPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Button("Save") {
+                                Task {
+                                    await viewModel.create(templateRepository: container.templateRepository)
+                                    if viewModel.errorMessage == nil {
+                                        onCreated()
+                                        dismiss()
+                                    }
+                                }
+                            }
+                            .buttonStyle(UIAssetTextActionButtonStyle())
+                            .disabled(!viewModel.canSave)
+                        }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Template")
+                                .uiAssetText(.paragraph)
+                                .foregroundStyle(UIAssetColors.textPrimary)
+
+                            UIAssetTextField(
+                                title: "Template name",
+                                placeholder: "e.g. Push Hypertrophy A",
+                                text: $viewModel.templateName
+                            )
+
+                            UIAssetTextField(
+                                title: "Description",
+                                placeholder: "Optional notes for this template",
+                                text: $viewModel.description
+                            )
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .uiAssetCardSurface(fill: UIAssetColors.primary)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Source Session")
+                                .uiAssetText(.paragraph)
+                                .foregroundStyle(UIAssetColors.textPrimary)
+
+                            if viewModel.sessions.isEmpty {
+                                Text("No sessions available")
+                                    .uiAssetText(.paragraph)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+                                    .padding(14)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } else {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Session")
+                                        .uiAssetText(.caption)
+                                        .foregroundStyle(UIAssetColors.textSecondary)
+
+                                    UIAssetSettingsInlineDropdown(
+                                        options: viewModel.sessions.map(\.label),
+                                        selected: selectedSessionLabel,
+                                        id: "templates.createFromSession.sourceSession",
+                                        activeDropdownID: $activeDropdownID,
+                                        panelAlignment: .leading,
+                                        panelWidth: 332,
+                                        textStyle: .paragraph
+                                    )
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .uiAssetCardSurface(fill: UIAssetColors.primary)
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
                 }
             }
             .scrollContentBackground(.hidden)
             .background(UIAssetColors.secondary.ignoresSafeArea())
-            .navigationTitle("New Template")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
-                        Task {
-                            await viewModel.create(templateRepository: container.templateRepository)
-                            if viewModel.errorMessage == nil {
-                                onCreated()
-                                dismiss()
-                            }
-                        }
-                    }
-                    .disabled(!viewModel.canSave)
-                }
-            }
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 await viewModel.loadSessions(sessionRepository: container.sessionRepository)
             }
@@ -332,6 +385,20 @@ struct CreateTemplateFromSessionView: View {
                 Button("OK") { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "Unknown error")
+            }
+        }
+    }
+
+    private var selectedSessionLabel: Binding<String> {
+        Binding {
+            guard let selectedId = viewModel.selectedSessionId,
+                  let selected = viewModel.sessions.first(where: { $0.id == selectedId }) else {
+                return viewModel.sessions.first?.label ?? ""
+            }
+            return selected.label
+        } set: { selectedLabel in
+            if let matched = viewModel.sessions.first(where: { $0.label == selectedLabel }) {
+                viewModel.selectedSessionId = matched.id
             }
         }
     }

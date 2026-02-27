@@ -11,63 +11,145 @@ struct ActiveSessionView: View {
     @State private var selectedExerciseForLogging: ExercisePickerView.AddedExerciseSelection?
 
     var body: some View {
-        List {
-            Section {
-                Text(viewModel.sessionName)
-                    .font(.app(.headline))
-                Text("Started at \(viewModel.startTimeText)")
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Exercises") {
-                if viewModel.exerciseRows.isEmpty {
-                    Text("No exercises added yet")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(viewModel.exerciseRows) { row in
-                        NavigationLink {
-                            ExerciseLoggingView(
-                                sessionExerciseId: row.id,
-                                exerciseName: row.exerciseName,
-                                exerciseType: row.exerciseType
-                            )
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 12) {
+                        Button {
+                            dismiss()
                         } label: {
-                            HStack {
-                                Text(row.exerciseName)
-                                Spacer()
-                                Text("\(row.setCount) sets")
-                                    .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.left")
+                        }
+                        .buttonStyle(UIAssetFloatingActionButtonStyle())
+
+                        Text("Active Session")
+                            .uiAssetText(.h2)
+                            .foregroundStyle(UIAssetColors.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Button("Finish") {
+                            Task {
+                                await viewModel.finishSession(
+                                    sessionId: sessionId,
+                                    sessionRepository: container.sessionRepository
+                                )
+
+                                if viewModel.errorMessage == nil {
+                                    container.selectedTab = .home
+                                    dismiss()
+                                }
                             }
                         }
+                        .buttonStyle(UIAssetTextActionButtonStyle())
                     }
-                }
-            }
 
-            Section {
-                Button("Add Exercise") {
-                    isExercisePickerPresented = true
-                }
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(viewModel.sessionName)
+                                .uiAssetText(.h4)
+                                .foregroundStyle(UIAssetColors.textPrimary)
 
-                Button("Finish") {
-                    Task {
-                        await viewModel.finishSession(
-                            sessionId: sessionId,
-                            sessionRepository: container.sessionRepository
-                        )
+                            Spacer(minLength: 0)
 
-                        if viewModel.errorMessage == nil {
-                            container.selectedTab = .home
-                            dismiss()
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(viewModel.startTimeText)
+                                    .uiAssetText(.paragraph)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+
+                                Text(viewModel.startDateText)
+                                    .uiAssetText(.paragraph)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding(16)
+                        .uiAssetCardSurface(fill: UIAssetColors.primary)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(5 / 4, contentMode: .fit)
+
+                        UIAssetTiledButton(
+                            systemImage: "dumbbell.fill",
+                            label: "Add",
+                            description: "Exercise",
+                            variant: .primary
+                        ) {
+                            isExercisePickerPresented = true
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Text("Exercises")
+                        .uiAssetText(.h4)
+                        .foregroundStyle(UIAssetColors.textPrimary)
+
+                    if viewModel.exerciseRows.isEmpty {
+                        Text("No exercises added yet")
+                            .uiAssetText(.paragraph)
+                            .foregroundStyle(UIAssetColors.textSecondary)
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .uiAssetCardSurface(fill: UIAssetColors.primary)
+                    } else {
+                        ForEach(viewModel.exerciseRows) { row in
+                            NavigationLink {
+                                ExerciseLoggingView(
+                                    sessionExerciseId: row.id,
+                                    exerciseName: row.exerciseName,
+                                    exerciseType: row.exerciseType
+                                )
+                            } label: {
+                                HStack(spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(row.exerciseName)
+                                            .uiAssetText(.paragraph)
+                                            .foregroundStyle(UIAssetColors.textPrimary)
+                                        Text("\(row.setCount) sets")
+                                            .uiAssetText(.caption)
+                                            .foregroundStyle(UIAssetColors.textSecondary)
+                                    }
+                                    Spacer(minLength: 0)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(UIAssetColors.textSecondary)
+                                }
+                                .padding(14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .uiAssetCardSurface(fill: UIAssetColors.primary)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+            }
+            .background(UIAssetColors.secondary.ignoresSafeArea())
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+
+            if let error = viewModel.errorMessage {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.24))
+                        .ignoresSafeArea()
+
+                    UIAssetAlertDialog(
+                        title: "Session Error",
+                        message: error,
+                        cancelTitle: "Close",
+                        destructiveTitle: "OK"
+                    ) {
+                        viewModel.errorMessage = nil
+                    } onDestructive: {
+                        viewModel.errorMessage = nil
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .transition(.opacity)
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(UIAssetColors.secondary.ignoresSafeArea())
-        .navigationTitle("Active Session")
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isExercisePickerPresented) {
             ExercisePickerView(sessionId: sessionId, sessionCategoryName: viewModel.sessionName) { added in
                 Task {
@@ -87,11 +169,6 @@ struct ActiveSessionView: View {
         .task {
             await viewModel.loadSessionData(sessionId: sessionId, dbQueue: container.dbQueue)
         }
-        .alert("Session Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") { viewModel.errorMessage = nil }
-        } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
-        }
     }
 }
 
@@ -107,6 +184,7 @@ final class ActiveSessionViewModel: ObservableObject {
 
     @Published var sessionName = "Workout"
     @Published var startTimeText = "--"
+    @Published var startDateText = "--"
     @Published var exerciseRows: [SessionExerciseRow] = []
     @Published var errorMessage: String?
 
@@ -137,6 +215,7 @@ final class ActiveSessionViewModel: ObservableObject {
 
             sessionName = result.0.name ?? "Workout"
             startTimeText = Self.timeFormatter.string(from: result.0.startDateTime)
+            startDateText = Self.dateFormatter.string(from: result.0.startDateTime)
             exerciseRows = result.1.map {
                 let rawType: String = $0["exercise_type"]
                 let type = ExerciseType(rawValue: rawType) ?? .weight
@@ -163,8 +242,14 @@ final class ActiveSessionViewModel: ObservableObject {
 
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateStyle = .none
         formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
         return formatter
     }()
 }

@@ -393,19 +393,7 @@ struct ExerciseDetailView: View {
                         Button("Edit") {
                             isEditPresented = true
                         }
-                        .font(.app(.subheadline))
-                        .foregroundStyle(UIAssetColors.accent)
-                        .frame(maxWidth: .infinity, minHeight: 36)
-                        .background(
-                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                                .fill(UIAssetColors.accentSecondary)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                                .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 1)
-                        )
-                        .buttonStyle(.plain)
-                        .frame(width: 86, height: 36)
+                        .buttonStyle(UIAssetTextActionButtonStyle())
                     }
 
                     mediaSection

@@ -44,71 +44,61 @@ final class TemplateRepository {
         description: String? = nil
     ) throws -> Template {
         try dbQueue.write { db in
-            var createdTemplate: Template?
+            guard try Session.fetchOne(db, key: sessionId) != nil else {
+                throw RepositoryError.sessionNotFound(sessionId)
+            }
 
-            try db.inTransaction {
-                guard try Session.fetchOne(db, key: sessionId) != nil else {
-                    throw RepositoryError.sessionNotFound(sessionId)
-                }
+            let now = Date()
+            let template = Template(
+                name: templateName,
+                description: description,
+                createdAt: now,
+                updatedAt: now
+            )
+            try template.insert(db)
 
-                let now = Date()
-                let template = Template(
-                    name: templateName,
-                    description: description,
-                    createdAt: now,
-                    updatedAt: now
-                )
-                try template.insert(db)
-                createdTemplate = template
+            let sessionExercises = try SessionExercise.fetchAll(
+                db,
+                sql: """
+                SELECT *
+                FROM session_exercises
+                WHERE session_id = ?
+                ORDER BY order_index ASC
+                """,
+                arguments: [sessionId]
+            )
 
-                let sessionExercises = try SessionExercise.fetchAll(
+            for (index, sessionExercise) in sessionExercises.enumerated() {
+                let setRows = try WorkoutSet.fetchAll(
                     db,
                     sql: """
                     SELECT *
-                    FROM session_exercises
-                    WHERE session_id = ?
-                    ORDER BY order_index ASC
+                    FROM sets
+                    WHERE session_exercise_id = ?
+                    ORDER BY set_index ASC
                     """,
-                    arguments: [sessionId]
+                    arguments: [sessionExercise.id]
                 )
 
-                for (index, sessionExercise) in sessionExercises.enumerated() {
-                    let setRows = try WorkoutSet.fetchAll(
-                        db,
-                        sql: """
-                        SELECT *
-                        FROM sets
-                        WHERE session_exercise_id = ?
-                        ORDER BY set_index ASC
-                        """,
-                        arguments: [sessionExercise.id]
-                    )
+                let lastSet = setRows.last
+                let templateExercise = TemplateExercise(
+                    templateID: template.id,
+                    exerciseID: sessionExercise.exerciseID,
+                    orderIndex: index + 1,
+                    targetSets: setRows.isEmpty ? nil : setRows.count,
+                    targetReps: lastSet?.reps,
+                    targetWeightKg: lastSet?.weightKg,
+                    targetDistanceM: lastSet?.distanceM,
+                    targetDurationSec: lastSet?.durationSec,
+                    notes: sessionExercise.notes,
+                    createdAt: now,
+                    updatedAt: now
+                )
 
-                    let lastSet = setRows.last
-                    let templateExercise = TemplateExercise(
-                        templateID: template.id,
-                        exerciseID: sessionExercise.exerciseID,
-                        orderIndex: index + 1,
-                        targetSets: setRows.isEmpty ? nil : setRows.count,
-                        targetReps: lastSet?.reps,
-                        targetWeightKg: lastSet?.weightKg,
-                        targetDistanceM: lastSet?.distanceM,
-                        targetDurationSec: lastSet?.durationSec,
-                        notes: sessionExercise.notes,
-                        createdAt: now,
-                        updatedAt: now
-                    )
-
-                    try templateExercise.insert(db)
-                }
-
-                return .commit
+                try templateExercise.insert(db)
             }
 
-            guard let createdTemplate else {
-                throw TemplateRepositoryError.transactionDidNotReturnValue
-            }
-            return createdTemplate
+            return template
         }
     }
 
@@ -155,84 +145,74 @@ final class TemplateRepository {
         precreateSets: Bool
     ) throws -> Session {
         try dbQueue.write { db in
-            var createdSession: Session?
+            guard let template = try Template.fetchOne(db, key: templateId) else {
+                throw TemplateRepositoryError.templateNotFound(templateId)
+            }
 
-            try db.inTransaction {
-                guard let template = try Template.fetchOne(db, key: templateId) else {
-                    throw TemplateRepositoryError.templateNotFound(templateId)
-                }
+            let templateExercises = try TemplateExercise.fetchAll(
+                db,
+                sql: """
+                SELECT *
+                FROM template_exercises
+                WHERE template_id = ?
+                ORDER BY order_index ASC
+                """,
+                arguments: [templateId]
+            )
 
-                let templateExercises = try TemplateExercise.fetchAll(
-                    db,
-                    sql: """
-                    SELECT *
-                    FROM template_exercises
-                    WHERE template_id = ?
-                    ORDER BY order_index ASC
-                    """,
-                    arguments: [templateId]
-                )
+            let now = Date()
+            let session = Session(
+                name: sessionName ?? template.name,
+                startDateTime: now,
+                endDateTime: nil,
+                notes: nil,
+                createdAt: now,
+                updatedAt: now
+            )
+            try session.insert(db)
 
-                let now = Date()
-                let session = Session(
-                    name: sessionName ?? template.name,
-                    startDateTime: now,
-                    endDateTime: nil,
-                    notes: nil,
+            for (offset, templateExercise) in templateExercises.enumerated() {
+                let sessionExercise = SessionExercise(
+                    sessionID: session.id,
+                    exerciseID: templateExercise.exerciseID,
+                    orderIndex: offset + 1,
+                    notes: templateExercise.notes,
                     createdAt: now,
                     updatedAt: now
                 )
-                try session.insert(db)
-                createdSession = session
+                try sessionExercise.insert(db)
 
-                for (offset, templateExercise) in templateExercises.enumerated() {
-                    let sessionExercise = SessionExercise(
-                        sessionID: session.id,
-                        exerciseID: templateExercise.exerciseID,
-                        orderIndex: offset + 1,
-                        notes: templateExercise.notes,
-                        createdAt: now,
-                        updatedAt: now
-                    )
-                    try sessionExercise.insert(db)
-
-                    guard precreateSets else {
-                        continue
-                    }
-
-                    let targetSets = max(templateExercise.targetSets ?? 0, 0)
-                    guard targetSets > 0 else {
-                        continue
-                    }
-
-                    let inferredMetricType = inferMetricType(from: templateExercise)
-
-                    for setIndex in 1...targetSets {
-                        guard
-                            let metricType = inferredMetricType,
-                            let workoutSet = try buildTemplateSet(
-                                sessionExerciseID: sessionExercise.id,
-                                setIndex: setIndex,
-                                metricType: metricType,
-                                templateExercise: templateExercise,
-                                now: now
-                            )
-                        else {
-                            continue
-                        }
-
-                        var mutableSet = workoutSet
-                        try mutableSet.insert(db)
-                    }
+                guard precreateSets else {
+                    continue
                 }
 
-                return .commit
+                let targetSets = max(templateExercise.targetSets ?? 0, 0)
+                guard targetSets > 0 else {
+                    continue
+                }
+
+                let inferredMetricType = inferMetricType(from: templateExercise)
+
+                for setIndex in 1...targetSets {
+                    guard
+                        let metricType = inferredMetricType,
+                        let workoutSet = try buildTemplateSet(
+                            sessionExerciseID: sessionExercise.id,
+                            setIndex: setIndex,
+                            metricType: metricType,
+                            templateExercise: templateExercise,
+                            now: now
+                        )
+                    else {
+                        continue
+                    }
+
+                    var mutableSet = workoutSet
+                    try mutableSet.insert(db)
+                }
             }
 
-            guard let createdSession else {
-                throw TemplateRepositoryError.transactionDidNotReturnValue
-            }
-            return createdSession
+            return session
         }
     }
 

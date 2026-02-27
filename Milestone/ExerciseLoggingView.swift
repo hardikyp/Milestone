@@ -10,185 +10,248 @@ struct ExerciseLoggingView: View {
     @StateObject private var viewModel = ExerciseLoggingViewModel()
 
     var body: some View {
-        List {
-            Section {
-                Text(exerciseName)
-                    .font(.app(.headline))
-                Text(exerciseType.displayName)
-                    .font(.app(.subheadline))
-                    .foregroundStyle(.secondary)
-            }
-
-            if viewModel.availableMetricTypes.count > 1 {
+        ZStack {
+            List {
                 Section {
-                    Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
-                        ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
-                            Text(metric.displayName).tag(metric)
+                    Text(exerciseName)
+                        .uiAssetText(.h4)
+                    Text(exerciseType.displayName)
+                        .uiAssetText(.subtitle)
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+
+                if viewModel.availableMetricTypes.count > 1 {
+                    Section {
+                        Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
+                            ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
+                                Text(metric.displayName).tag(metric)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                }
+
+                if viewModel.selectedMetricType == .strength || viewModel.selectedMetricType == .repsOnly {
+                    Section {
+                        UIAssetSlidingToggle(title: "Same reps for all", isOn: $viewModel.sameRepsForAll)
+
+                        if viewModel.selectedMetricType == .strength {
+                            UIAssetSlidingToggle(title: "Same weight for all", isOn: $viewModel.sameWeightForAll)
                         }
                     }
-                    .pickerStyle(.segmented)
                 }
-            }
 
-            if viewModel.selectedMetricType == .strength || viewModel.selectedMetricType == .repsOnly {
-                Section {
-                    Toggle("Same reps for all", isOn: $viewModel.sameRepsForAll)
-
-                    if viewModel.selectedMetricType == .strength {
-                        Toggle("Same weight for all", isOn: $viewModel.sameWeightForAll)
-                    }
-                }
-            }
-
-            Section("Sets") {
-                if viewModel.rows.isEmpty {
-                    Text("No sets yet")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach($viewModel.rows) { $row in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Set \(row.setIndex)")
-                                    .font(.app(.headline))
-                                Spacer()
-                                HStack(spacing: 8) {
-                                    Text("Set performed")
-                                        .font(.app(.subheadline))
-                                        .foregroundStyle(.secondary)
+                Section("Sets") {
+                    if viewModel.rows.isEmpty {
+                        Text("No sets yet")
+                            .uiAssetText(.paragraph)
+                            .foregroundStyle(UIAssetColors.textSecondary)
+                    } else {
+                        ForEach($viewModel.rows) { $row in
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("Set \(row.setIndex)")
+                                        .uiAssetText(.subtitle)
+                                    Spacer()
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            viewModel.removeSetRow(id: row.id)
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 13, weight: .semibold))
+                                    }
+                                    .buttonStyle(UIAssetButtonStyle(variant: .destructive, symbolOnly: true))
+                                    .disabled(viewModel.rows.count <= 1)
 
                                     Button {
                                         row.isDone.toggle()
                                     } label: {
-                                        Image(systemName: row.isDone ? "checkmark.square.fill" : "square")
-                                            .font(.app(.title3))
+                                        HStack(spacing: 8) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(row.isDone ? UIAssetColors.accent : Color.clear)
+                                                    .frame(width: 22, height: 22)
+                                                    .overlay(
+                                                        Circle()
+                                                            .stroke(
+                                                                row.isDone ? UIAssetColors.accent : UIAssetColors.textSecondary.opacity(0.6),
+                                                                lineWidth: 2
+                                                            )
+                                                    )
+
+                                                if row.isDone {
+                                                    Image(systemName: "checkmark")
+                                                        .font(.system(size: 10, weight: .bold))
+                                                        .foregroundStyle(.white)
+                                                }
+                                            }
+
+                                            Text("Mark done")
+                                                .uiAssetText(.caption)
+                                                .foregroundStyle(UIAssetColors.textSecondary)
+                                        }
                                     }
                                     .buttonStyle(.plain)
                                 }
-                            }
 
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 12),
-                                GridItem(.flexible(), spacing: 12)
-                            ], spacing: 10) {
-                                switch viewModel.selectedMetricType {
-                                case .strength:
-                                    SetInputField(
-                                        title: "Reps",
-                                        placeholder: "e.g. 10",
-                                        text: $row.repsText,
-                                        keyboardType: .numberPad
-                                    )
-                                    .onChange(of: row.repsText) { _, newValue in
-                                        viewModel.applyRepChange(value: newValue)
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible(), spacing: 12),
+                                    GridItem(.flexible(), spacing: 12)
+                                ], spacing: 10) {
+                                    switch viewModel.selectedMetricType {
+                                    case .strength:
+                                        SetInputField(
+                                            title: "Reps",
+                                            placeholder: "e.g. 10",
+                                            text: $row.repsText,
+                                            keyboardType: .numberPad
+                                        )
+                                        .onChange(of: row.repsText) { _, newValue in
+                                            viewModel.applyRepChange(value: newValue)
+                                        }
+
+                                        SetInputField(
+                                            title: "Weight (kg)",
+                                            placeholder: "e.g. 40",
+                                            text: $row.weightText,
+                                            keyboardType: .decimalPad
+                                        )
+                                        .onChange(of: row.weightText) { _, newValue in
+                                            viewModel.applyWeightChange(value: newValue)
+                                        }
+
+                                    case .repsOnly:
+                                        SetInputField(
+                                            title: "Reps",
+                                            placeholder: "e.g. 15",
+                                            text: $row.repsText,
+                                            keyboardType: .numberPad
+                                        )
+                                        .onChange(of: row.repsText) { _, newValue in
+                                            viewModel.applyRepChange(value: newValue)
+                                        }
+
+                                    case .time:
+                                        SetInputField(
+                                            title: "Duration (sec)",
+                                            placeholder: "e.g. 60",
+                                            text: $row.durationText,
+                                            keyboardType: .numberPad
+                                        )
+
+                                    case .distanceOnly:
+                                        SetInputField(
+                                            title: "Distance (m)",
+                                            placeholder: "e.g. 500",
+                                            text: $row.distanceText,
+                                            keyboardType: .decimalPad
+                                        )
+
+                                    case .distanceTime:
+                                        SetInputField(
+                                            title: "Distance (m)",
+                                            placeholder: "e.g. 1000",
+                                            text: $row.distanceText,
+                                            keyboardType: .decimalPad
+                                        )
+
+                                        SetInputField(
+                                            title: "Duration (sec)",
+                                            placeholder: "e.g. 300",
+                                            text: $row.durationText,
+                                            keyboardType: .numberPad
+                                        )
                                     }
-
-                                    SetInputField(
-                                        title: "Weight (kg)",
-                                        placeholder: "e.g. 40",
-                                        text: $row.weightText,
-                                        keyboardType: .decimalPad
-                                    )
-                                    .onChange(of: row.weightText) { _, newValue in
-                                        viewModel.applyWeightChange(value: newValue)
-                                    }
-
-                                case .repsOnly:
-                                    SetInputField(
-                                        title: "Reps",
-                                        placeholder: "e.g. 15",
-                                        text: $row.repsText,
-                                        keyboardType: .numberPad
-                                    )
-                                    .onChange(of: row.repsText) { _, newValue in
-                                        viewModel.applyRepChange(value: newValue)
-                                    }
-
-                                case .time:
-                                    SetInputField(
-                                        title: "Duration (sec)",
-                                        placeholder: "e.g. 60",
-                                        text: $row.durationText,
-                                        keyboardType: .numberPad
-                                    )
-
-                                case .distanceOnly:
-                                    SetInputField(
-                                        title: "Distance (m)",
-                                        placeholder: "e.g. 500",
-                                        text: $row.distanceText,
-                                        keyboardType: .decimalPad
-                                    )
-
-                                case .distanceTime:
-                                    SetInputField(
-                                        title: "Distance (m)",
-                                        placeholder: "e.g. 1000",
-                                        text: $row.distanceText,
-                                        keyboardType: .decimalPad
-                                    )
-
-                                    SetInputField(
-                                        title: "Duration (sec)",
-                                        placeholder: "e.g. 300",
-                                        text: $row.durationText,
-                                        keyboardType: .numberPad
-                                    )
                                 }
+                                .disabled(row.isDone)
+                            }
+                            .padding(14)
+                            .uiAssetCardSurface(fill: row.isDone ? UIAssetColors.accentSecondary : UIAssetColors.primary)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                        }
+                    }
+                }
+
+                Section {
+                    Button("Add Set") {
+                        viewModel.addSetRow()
+                    }
+                    .buttonStyle(UIAssetButtonStyle(variant: .primary))
+
+                    Button("Copy Last Set") {
+                        viewModel.copyLastSetRow()
+                    }
+                    .buttonStyle(UIAssetButtonStyle(variant: .secondary))
+                }
+
+                Section {
+                    Button("Save") {
+                        Task {
+                            let didSave = await viewModel.save(
+                                sessionExerciseId: sessionExerciseId,
+                                setRepository: container.setRepository
+                            )
+                            if didSave {
+                                dismiss()
                             }
                         }
-                        .padding(.vertical, 6)
                     }
+                    .buttonStyle(UIAssetTextActionButtonStyle())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-
-            Section {
-                Button("Add Set") {
-                    viewModel.addSetRow()
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(UIAssetColors.secondary.ignoresSafeArea())
+            .navigationTitle("Log Exercise")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await viewModel.load(
+                    sessionExerciseId: sessionExerciseId,
+                    exerciseType: exerciseType,
+                    setRepository: container.setRepository
+                )
+            }
+            .onChange(of: viewModel.selectedMetricType) { _, newMetric in
+                if newMetric != .strength {
+                    viewModel.sameWeightForAll = false
                 }
-
-                Button("Copy Last Set") {
-                    viewModel.copyLastSetRow()
+                if newMetric != .strength && newMetric != .repsOnly {
+                    viewModel.sameRepsForAll = false
                 }
             }
+            .onChange(of: viewModel.sameRepsForAll) { _, isOn in
+                guard isOn else { return }
+                viewModel.fillEmptyRepsFromFirstAvailable()
+            }
+            .onChange(of: viewModel.sameWeightForAll) { _, isOn in
+                guard isOn else { return }
+                viewModel.fillEmptyWeightFromFirstAvailable()
+            }
 
-            Section {
-                Button("Save") {
-                    Task {
-                        let didSave = await viewModel.save(
-                            sessionExerciseId: sessionExerciseId,
-                            setRepository: container.setRepository
-                        )
-                        if didSave {
-                            dismiss()
-                        }
+            if let error = viewModel.errorMessage {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.24))
+                        .ignoresSafeArea()
+
+                    UIAssetAlertDialog(
+                        title: "Set Logging Error",
+                        message: error,
+                        cancelTitle: "Close",
+                        destructiveTitle: "OK"
+                    ) {
+                        viewModel.errorMessage = nil
+                    } onDestructive: {
+                        viewModel.errorMessage = nil
                     }
+                    .padding(.horizontal, 16)
                 }
-                .buttonStyle(.borderedProminent)
+                .transition(.opacity)
             }
-        }
-        .scrollContentBackground(.hidden)
-        .background(UIAssetColors.secondary.ignoresSafeArea())
-        .navigationTitle("Log Exercise")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await viewModel.load(
-                sessionExerciseId: sessionExerciseId,
-                exerciseType: exerciseType,
-                setRepository: container.setRepository
-            )
-        }
-        .onChange(of: viewModel.selectedMetricType) { _, newMetric in
-            if newMetric != .strength {
-                viewModel.sameWeightForAll = false
-            }
-            if newMetric != .strength && newMetric != .repsOnly {
-                viewModel.sameRepsForAll = false
-            }
-        }
-        .alert("Set Logging Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") { viewModel.errorMessage = nil }
-        } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
         }
     }
 }
@@ -202,11 +265,23 @@ private struct SetInputField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.app(.subheadline))
+                .uiAssetText(.caption)
                 .fontWeight(.medium)
             TextField(placeholder, text: $text)
+                .font(.app(.body))
                 .keyboardType(keyboardType)
-                .textFieldStyle(.roundedBorder)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+                .padding(.horizontal, 10)
+                .frame(height: 40)
+                .background(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                        .fill(UIAssetColors.surface)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                        .stroke(UIAssetColors.border, lineWidth: 1)
+                )
         }
     }
 }
@@ -302,11 +377,21 @@ final class ExerciseLoggingViewModel: ObservableObject {
         )
     }
 
+    func removeSetRow(id: String) {
+        rows.removeAll { $0.id == id }
+        if rows.isEmpty {
+            addSetRow()
+        }
+        normalizeSetIndexes()
+    }
+
     func applyRepChange(value: String) {
         guard sameRepsForAll else { return }
 
         for index in rows.indices {
-            rows[index].repsText = value
+            if !rows[index].isDone && rows[index].repsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                rows[index].repsText = value
+            }
         }
     }
 
@@ -314,8 +399,26 @@ final class ExerciseLoggingViewModel: ObservableObject {
         guard sameWeightForAll else { return }
 
         for index in rows.indices {
-            rows[index].weightText = value
+            if !rows[index].isDone && rows[index].weightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                rows[index].weightText = value
+            }
         }
+    }
+
+    func fillEmptyRepsFromFirstAvailable() {
+        guard sameRepsForAll else { return }
+        guard let source = rows.first(where: { !$0.isDone && !$0.repsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            return
+        }
+        applyRepChange(value: source.repsText)
+    }
+
+    func fillEmptyWeightFromFirstAvailable() {
+        guard sameWeightForAll else { return }
+        guard let source = rows.first(where: { !$0.isDone && !$0.weightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            return
+        }
+        applyWeightChange(value: source.weightText)
     }
 
     func save(sessionExerciseId: String, setRepository: SetRepository) async -> Bool {
