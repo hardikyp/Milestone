@@ -52,6 +52,7 @@ struct ExercisePickerView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
+                    .padding(.bottom, 12)
 
                     List {
                         if filteredExercises.isEmpty {

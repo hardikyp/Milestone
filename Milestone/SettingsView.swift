@@ -17,6 +17,7 @@ struct SettingsView: View {
                         .uiAssetText(.h2)
                         .foregroundStyle(UIAssetColors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 4)
 
                     VStack(alignment: .leading, spacing: 14) {
                         Text("Profile")
@@ -476,6 +477,7 @@ private struct SettingsScreenHeader<Trailing: View>: View {
 
             trailing
         }
+        .padding(.bottom, 4)
     }
 }
 

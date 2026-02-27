@@ -140,6 +140,7 @@ struct ExercisesView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 16)
+        .padding(.bottom, 12)
     }
 
     private var categoryTabs: [String] {
@@ -214,39 +215,71 @@ private struct ExerciseSwipeRow<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @State private var dragTranslation: CGFloat = 0
+    @State private var measuredRowHeight: CGFloat = UIAssetMetrics.rowCardHeight
 
-    private let actionRevealWidth: CGFloat = 84
-    private let rowHeight: CGFloat = 58
+    private let actionGap: CGFloat = 8
+    private var rowHeight: CGFloat { measuredRowHeight }
+    private var actionRevealWidth: CGFloat { rowHeight + actionGap }
     private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
     private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
 
     var body: some View {
         ZStack(alignment: .trailing) {
             if canDelete {
-                Button(action: onDelete) {
-                    UIAssetRowSlideActionButton(
-                        systemName: "trash",
-                        title: "Delete",
-                        iconColor: .white,
-                        backgroundColor: destructiveColor,
-                        borderColor: destructiveColor.opacity(0.7),
-                        height: rowHeight
-                    )
+                HStack(spacing: 0) {
+                    Color.clear
+                        .frame(width: actionGap, height: rowHeight)
+
+                    Button(action: onDelete) {
+                        VStack(spacing: 6) {
+                            Image(systemName: "trash")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(.white)
+
+                            Text("Delete")
+                                .font(.app(.caption))
+                                .foregroundStyle(.white)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                .fill(destructiveColor)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                                .stroke(destructiveColor.opacity(0.7), lineWidth: 1)
+                        )
+                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                    }
+                    .buttonStyle(BouncyPlainButtonStyle())
+                    .frame(width: rowHeight, height: rowHeight)
                 }
-                .buttonStyle(BouncyPlainButtonStyle())
-                .frame(width: actionRevealWidth, height: rowHeight)
+                .frame(width: actionRevealWidth, height: rowHeight, alignment: .leading)
                 .offset(x: actionOffset)
                 .opacity(swipeProgress)
                 .allowsHitTesting(swipeProgress > 0.02)
             }
 
             content()
-            .contentShape(Rectangle())
-            .onTapGesture {
-                onTapRow()
-            }
-            .offset(x: rowOffset)
-            .highPriorityGesture(canDelete ? dragGesture : nil)
+                .contentShape(Rectangle())
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                updateMeasuredRowHeight(proxy.size.height)
+                            }
+                            .onChange(of: proxy.size.height) { _, newHeight in
+                                updateMeasuredRowHeight(newHeight)
+                            }
+                    }
+                )
+                .onTapGesture {
+                    onTapRow()
+                }
+                .offset(x: rowOffset)
+                .highPriorityGesture(canDelete ? dragGesture : nil)
         }
         .animation(settleAnimation, value: isOpen)
     }
@@ -287,6 +320,13 @@ private struct ExerciseSwipeRow<Content: View>: View {
                     }
                 }
             }
+    }
+
+    private func updateMeasuredRowHeight(_ newHeight: CGFloat) {
+        let resolvedHeight = max(newHeight, 1)
+        if abs(resolvedHeight - measuredRowHeight) > 0.5 {
+            measuredRowHeight = resolvedHeight
+        }
     }
 }
 
@@ -395,6 +435,7 @@ struct ExerciseDetailView: View {
                         }
                         .buttonStyle(UIAssetTextActionButtonStyle())
                     }
+                    .padding(.bottom, 8)
 
                     mediaSection
 

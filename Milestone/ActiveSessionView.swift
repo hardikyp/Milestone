@@ -42,6 +42,7 @@ struct ActiveSessionView: View {
                         }
                         .buttonStyle(UIAssetTextActionButtonStyle())
                     }
+                    .padding(.bottom, 8)
 
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 0) {

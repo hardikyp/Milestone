@@ -75,7 +75,7 @@ private struct MinimalBottomMenu: View {
                             .font(.app(.caption))
                             .fontWeight(isSelected ? .semibold : .regular)
                     }
-                    .foregroundStyle(isSelected ? Color(red: 0.17, green: 0.38, blue: 0.09) : Color.gray)
+                    .foregroundStyle(isSelected ? UIAssetColors.accent : Color.gray)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .padding(.top, 6)
                     .padding(.bottom, 10)

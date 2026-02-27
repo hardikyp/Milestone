@@ -314,6 +314,7 @@ struct CreateTemplateFromSessionView: View {
                             .buttonStyle(UIAssetTextActionButtonStyle())
                             .disabled(!viewModel.canSave)
                         }
+                        .padding(.bottom, 4)
 
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Template")
@@ -328,7 +329,7 @@ struct CreateTemplateFromSessionView: View {
 
                             UIAssetTextField(
                                 title: "Description",
-                                placeholder: "Optional notes for this template",
+                                placeholder: "Notes for this template",
                                 text: $viewModel.description
                             )
                         }
@@ -418,7 +419,9 @@ final class CreateTemplateFromSessionViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     var canSave: Bool {
-        !templateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedSessionId != nil
+        !templateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && selectedSessionId != nil
     }
 
     func loadSessions(sessionRepository: SessionRepository) async {
@@ -451,7 +454,7 @@ final class CreateTemplateFromSessionViewModel: ObservableObject {
             _ = try templateRepository.createTemplateFromSession(
                 sessionId: selectedSessionId,
                 templateName: templateName.trimmingCharacters(in: .whitespacesAndNewlines),
-                description: description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : description
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines)
             )
         } catch {
             errorMessage = error.localizedDescription

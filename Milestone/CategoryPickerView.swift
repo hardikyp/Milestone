@@ -40,6 +40,7 @@ struct CategoryPickerView: View {
                         }
                         .buttonStyle(UIAssetTextActionButtonStyle())
                     }
+                    .padding(.bottom, 8)
 
                     Text("Choose a workout split")
                         .uiAssetText(.footnote)

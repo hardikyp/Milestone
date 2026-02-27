@@ -20,6 +20,7 @@ struct TemplatePickerView: View {
     @StateObject private var viewModel = TemplatePickerViewModel()
     @State private var precreateSets = false
     @State private var creationSheet: CreationSheet?
+    @State private var openSwipeTemplateID: String?
 
     var body: some View {
         NavigationStack {
@@ -37,6 +38,7 @@ struct TemplatePickerView: View {
                             }
                             .buttonStyle(UIAssetTextActionButtonStyle())
                         }
+                        .padding(.bottom, 8)
 
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
@@ -53,6 +55,7 @@ struct TemplatePickerView: View {
 
                             UIAssetSettingsInlineToggle(isOn: $precreateSets)
                         }
+                        .padding(.bottom, 4)
                             .padding(16)
                             .uiAssetCardSurface(fill: UIAssetColors.primary)
 
@@ -75,6 +78,7 @@ struct TemplatePickerView: View {
                                 creationSheet = .fromScratch
                             }
                         }
+                        .padding(.bottom, 4)
                         .frame(maxWidth: .infinity)
 
                         VStack(alignment: .leading, spacing: 10) {
@@ -91,10 +95,36 @@ struct TemplatePickerView: View {
                                     .uiAssetCardSurface(fill: UIAssetColors.primary)
                             } else {
                                 ForEach(viewModel.templates) { template in
-                                    Button {
-                                        onStart(template.id, precreateSets)
-                                        dismiss()
-                                    } label: {
+                                    TemplateSwipeRow(
+                                        isOpen: openSwipeTemplateID == template.id,
+                                        onOpen: { openSwipeTemplateID = template.id },
+                                        onClose: {
+                                            if openSwipeTemplateID == template.id {
+                                                openSwipeTemplateID = nil
+                                            }
+                                        },
+                                        onTapRow: {
+                                            if openSwipeTemplateID != nil {
+                                                openSwipeTemplateID = nil
+                                            } else {
+                                                onStart(template.id, precreateSets)
+                                                dismiss()
+                                            }
+                                        },
+                                        onDelete: {
+                                            Task {
+                                                await viewModel.deleteTemplate(
+                                                    id: template.id,
+                                                    templateRepository: container.templateRepository
+                                                )
+                                                if openSwipeTemplateID == template.id {
+                                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                                        openSwipeTemplateID = nil
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ) {
                                         HStack(spacing: 10) {
                                             VStack(alignment: .leading, spacing: 4) {
                                                 Text(template.name)
@@ -118,7 +148,6 @@ struct TemplatePickerView: View {
                                         .contentShape(Rectangle())
                                         .uiAssetCardSurface(fill: UIAssetColors.primary)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
                         }
@@ -190,6 +219,130 @@ final class TemplatePickerViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    func deleteTemplate(id: String, templateRepository: TemplateRepository) async {
+        do {
+            try templateRepository.deleteTemplate(templateId: id)
+            templates.removeAll { $0.id == id }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+private struct TemplateSwipeRow<Content: View>: View {
+    let isOpen: Bool
+    let onOpen: () -> Void
+    let onClose: () -> Void
+    let onTapRow: () -> Void
+    let onDelete: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    @State private var dragTranslation: CGFloat = 0
+    @State private var measuredRowHeight: CGFloat = UIAssetMetrics.rowCardHeight
+
+    private let actionGap: CGFloat = 8
+    private let destructiveColor = Color(red: 225 / 255, green: 0, blue: 0)
+    private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
+    private var actionWidth: CGFloat { measuredRowHeight }
+    private var revealWidth: CGFloat { actionWidth + actionGap }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            Button(action: onDelete) {
+                VStack(spacing: 6) {
+                    Image(systemName: "trash")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(.white)
+
+                    Text("Delete")
+                        .font(.app(.caption))
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .fill(destructiveColor)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .stroke(destructiveColor.opacity(0.7), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            }
+            .buttonStyle(.plain)
+            .frame(width: actionWidth, height: measuredRowHeight)
+            .offset(x: actionOffset)
+            .opacity(swipeProgress)
+            .allowsHitTesting(swipeProgress > 0.02)
+
+            content()
+                .contentShape(Rectangle())
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                updateMeasuredRowHeight(proxy.size.height)
+                            }
+                            .onChange(of: proxy.size.height) { _, newHeight in
+                                updateMeasuredRowHeight(newHeight)
+                            }
+                    }
+                )
+                .onTapGesture {
+                    onTapRow()
+                }
+                .offset(x: rowOffset)
+                .highPriorityGesture(dragGesture)
+        }
+        .animation(settleAnimation, value: isOpen)
+    }
+
+    private var rowOffset: CGFloat {
+        let baseOffset = isOpen ? -revealWidth : 0
+        let proposedOffset = baseOffset + dragTranslation
+        return min(0, max(-revealWidth, proposedOffset))
+    }
+
+    private var actionOffset: CGFloat {
+        revealWidth + rowOffset
+    }
+
+    private var swipeProgress: CGFloat {
+        min(1, max(0, -rowOffset / revealWidth))
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                dragTranslation = value.translation.width
+            }
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                let baseOffset = isOpen ? -revealWidth : 0
+                let projected = baseOffset + value.predictedEndTranslation.width
+                let shouldOpen = projected < -revealWidth * 0.45
+
+                withAnimation(settleAnimation) {
+                    dragTranslation = 0
+                    if shouldOpen {
+                        onOpen()
+                    } else {
+                        onClose()
+                    }
+                }
+            }
+    }
+
+    private func updateMeasuredRowHeight(_ newHeight: CGFloat) {
+        let resolvedHeight = max(newHeight, 1)
+        if abs(resolvedHeight - measuredRowHeight) > 0.5 {
+            measuredRowHeight = resolvedHeight
+        }
+    }
 }
 
 #Preview {
@@ -233,6 +386,7 @@ struct CreateTemplateView: View {
                             .buttonStyle(UIAssetTextActionButtonStyle())
                             .disabled(!viewModel.canSave)
                         }
+                        .padding(.bottom, 4)
 
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Template")
@@ -247,7 +401,7 @@ struct CreateTemplateView: View {
 
                             UIAssetTextField(
                                 title: "Description",
-                                placeholder: "Optional notes for this template",
+                                placeholder: "Notes for this template",
                                 text: $viewModel.description
                             )
                         }
@@ -281,13 +435,14 @@ final class CreateTemplateViewModel: ObservableObject {
 
     var canSave: Bool {
         !templateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     func create(templateRepository: TemplateRepository) async {
         do {
             _ = try templateRepository.createTemplate(
                 name: templateName.trimmingCharacters(in: .whitespacesAndNewlines),
-                description: description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : description
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines)
             )
         } catch {
             errorMessage = error.localizedDescription

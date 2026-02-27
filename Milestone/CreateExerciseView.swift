@@ -59,6 +59,7 @@ struct CreateExerciseView: View {
                             .buttonStyle(UIAssetTextActionButtonStyle())
                             .frame(minWidth: 92, alignment: .trailing)
                         }
+                        .padding(.bottom, 4)
 
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Exercise")

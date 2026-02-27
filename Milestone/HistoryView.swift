@@ -17,7 +17,7 @@ struct HistoryView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
-                .padding(.bottom, 8)
+                .padding(.bottom, 24)
 
                 List {
                     if viewModel.rows.isEmpty && viewModel.isLoading {
@@ -53,12 +53,17 @@ struct HistoryView: View {
                                             sessionId: row.id,
                                             sessionRepository: container.sessionRepository
                                         )
+                                        if openSwipeSessionID == row.id {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                openSwipeSessionID = nil
+                                            }
+                                        }
                                     }
                                 }
                             ) {
                                 historyRow(row)
                             }
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                         }
@@ -223,52 +228,69 @@ private struct HistorySwipeRow<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @State private var dragTranslation: CGFloat = 0
+    @State private var measuredRowHeight: CGFloat = UIAssetMetrics.rowCardHeight
 
-    private let actionWidth: CGFloat = 84
-    private let rowHeight: CGFloat = UIAssetMetrics.rowCardHeight
+    private let actionGap: CGFloat = 8
     private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
     private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
 
+    private var actionWidth: CGFloat { measuredRowHeight }
     private var actionCount: CGFloat { canEnd ? 2 : 1 }
-    private var actionRevealWidth: CGFloat { actionWidth * actionCount }
+    private var actionRevealWidth: CGFloat { (actionWidth * actionCount) + (actionGap * actionCount) }
 
     var body: some View {
         ZStack(alignment: .trailing) {
             HStack(spacing: 0) {
+                Color.clear
+                    .frame(width: actionGap, height: measuredRowHeight)
+
                 if canEnd {
                     Button(action: onEnd) {
-                        UIAssetRowSlideActionButton(
+                        swipeActionLabel(
                             systemName: "stop.fill",
                             title: "Stop",
                             iconColor: UIAssetColors.accent,
                             backgroundColor: UIAssetColors.accentSecondary,
-                            borderColor: UIAssetColors.accent.opacity(0.3),
-                            height: rowHeight
+                            borderColor: UIAssetColors.accent.opacity(0.3)
                         )
                     }
                     .buttonStyle(HistoryBouncyPlainButtonStyle())
-                    .frame(width: actionWidth, height: rowHeight)
+                    .frame(width: actionWidth, height: measuredRowHeight)
+
+                    Color.clear
+                        .frame(width: actionGap, height: measuredRowHeight)
                 }
 
                 Button(action: onDelete) {
-                    UIAssetRowSlideActionButton(
+                    swipeActionLabel(
                         systemName: "trash",
                         title: "Delete",
                         iconColor: .white,
                         backgroundColor: destructiveColor,
-                        borderColor: destructiveColor.opacity(0.7),
-                        height: rowHeight
+                        borderColor: destructiveColor.opacity(0.7)
                     )
                 }
                 .buttonStyle(HistoryBouncyPlainButtonStyle())
-                .frame(width: actionWidth, height: rowHeight)
+                .frame(width: actionWidth, height: measuredRowHeight)
             }
+            .frame(width: actionRevealWidth, height: measuredRowHeight, alignment: .leading)
             .offset(x: actionOffset)
             .opacity(swipeProgress)
             .allowsHitTesting(swipeProgress > 0.02)
 
             content()
                 .contentShape(Rectangle())
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                updateMeasuredRowHeight(proxy.size.height)
+                            }
+                            .onChange(of: proxy.size.height) { _, newHeight in
+                                updateMeasuredRowHeight(newHeight)
+                            }
+                    }
+                )
                 .onTapGesture {
                     onTapRow()
                 }
@@ -313,6 +335,43 @@ private struct HistorySwipeRow<Content: View>: View {
                     }
                 }
             }
+    }
+
+    private func updateMeasuredRowHeight(_ newHeight: CGFloat) {
+        let resolvedHeight = max(newHeight, 1)
+        if abs(resolvedHeight - measuredRowHeight) > 0.5 {
+            measuredRowHeight = resolvedHeight
+        }
+    }
+
+    private func swipeActionLabel(
+        systemName: String,
+        title: String,
+        iconColor: Color,
+        backgroundColor: Color,
+        borderColor: Color
+    ) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: systemName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .foregroundStyle(iconColor)
+
+            Text(title)
+                .font(.app(.caption))
+                .foregroundStyle(iconColor)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .fill(backgroundColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .stroke(borderColor, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
     }
 }
 

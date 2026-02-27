@@ -49,6 +49,7 @@ struct SessionDetailView: View {
                     }
                 }
                 .padding(.top, 16)
+                .padding(.bottom, 8)
 
                 if let session = viewModel.session {
                     VStack(alignment: .leading, spacing: 8) {

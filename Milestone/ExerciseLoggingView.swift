@@ -13,61 +13,114 @@ struct ExerciseLoggingView: View {
         ZStack {
             List {
                 Section {
-                    Text(exerciseName)
-                        .uiAssetText(.h4)
-                    Text(exerciseType.displayName)
-                        .uiAssetText(.subtitle)
-                        .foregroundStyle(UIAssetColors.textSecondary)
-                }
+                    HStack(spacing: 12) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                        .buttonStyle(UIAssetFloatingActionButtonStyle())
 
-                if viewModel.availableMetricTypes.count > 1 {
-                    Section {
-                        Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
-                            ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
-                                Text(metric.displayName).tag(metric)
+                        Text("Log Exercise")
+                            .uiAssetText(.h2)
+                            .foregroundStyle(UIAssetColors.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Button("Save") {
+                            Task {
+                                let didSave = await viewModel.save(
+                                    sessionExerciseId: sessionExerciseId,
+                                    setRepository: container.setRepository
+                                )
+                                if didSave {
+                                    dismiss()
+                                }
                             }
                         }
-                        .pickerStyle(.segmented)
+                        .buttonStyle(UIAssetTextActionButtonStyle())
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
-                if viewModel.selectedMetricType == .strength || viewModel.selectedMetricType == .repsOnly {
-                    Section {
-                        UIAssetSlidingToggle(title: "Same reps for all", isOn: $viewModel.sameRepsForAll)
+                Section {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(exerciseName)
+                            .uiAssetText(.h4)
+                            .foregroundStyle(UIAssetColors.textPrimary)
 
-                        if viewModel.selectedMetricType == .strength {
-                            UIAssetSlidingToggle(title: "Same weight for all", isOn: $viewModel.sameWeightForAll)
+                        UIAssetBadge(text: exerciseType.displayName, variant: .accent)
+
+                        if viewModel.availableMetricTypes.count > 1 {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Logging Mode")
+                                    .uiAssetText(.caption)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+
+                                Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
+                                    ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
+                                        Text(metric.displayName).tag(metric)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                            }
+                        }
+
+                        if viewModel.selectedMetricType == .strength || viewModel.selectedMetricType == .repsOnly {
+                            VStack(spacing: 10) {
+                                SetOptionToggleRow(
+                                    title: "Same reps for all",
+                                    explanation: "Apply entered reps to empty fields across unfinished sets.",
+                                    isOn: $viewModel.sameRepsForAll
+                                )
+
+                                if viewModel.selectedMetricType == .strength {
+                                    SetOptionToggleRow(
+                                        title: "Same weight for all",
+                                        explanation: "Apply entered weight to empty fields across unfinished sets.",
+                                        isOn: $viewModel.sameWeightForAll
+                                    )
+                                }
+                            }
                         }
                     }
+                    .padding(14)
+                    .uiAssetCardSurface(fill: UIAssetColors.primary)
+                    .listRowInsets(EdgeInsets(top: 24, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
-                Section("Sets") {
+                Section {
+                    Text("Sets")
+                        .uiAssetText(.h4)
+                        .foregroundStyle(UIAssetColors.textPrimary)
+                        .padding(.top, 4)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+
                     if viewModel.rows.isEmpty {
                         Text("No sets yet")
                             .uiAssetText(.paragraph)
                             .foregroundStyle(UIAssetColors.textSecondary)
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .uiAssetCardSurface(fill: UIAssetColors.primary)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     } else {
                         ForEach($viewModel.rows) { $row in
                             VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Set \(row.setIndex)")
-                                        .uiAssetText(.subtitle)
-                                    Spacer()
-                                    Button {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            viewModel.removeSetRow(id: row.id)
-                                        }
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .font(.system(size: 13, weight: .semibold))
-                                    }
-                                    .buttonStyle(UIAssetButtonStyle(variant: .destructive, symbolOnly: true))
-                                    .disabled(viewModel.rows.count <= 1)
-
-                                    Button {
-                                        row.isDone.toggle()
-                                    } label: {
-                                        HStack(spacing: 8) {
+                                HStack(alignment: .top) {
+                                    HStack(spacing: 10) {
+                                        Button {
+                                            row.isDone.toggle()
+                                        } label: {
                                             ZStack {
                                                 Circle()
                                                     .fill(row.isDone ? UIAssetColors.accent : Color.clear)
@@ -86,13 +139,25 @@ struct ExerciseLoggingView: View {
                                                         .foregroundStyle(.white)
                                                 }
                                             }
-
-                                            Text("Mark done")
-                                                .uiAssetText(.caption)
-                                                .foregroundStyle(UIAssetColors.textSecondary)
                                         }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel(row.isDone ? "Unmark set done" : "Mark set done")
+
+                                        Text("Set \(row.setIndex)")
+                                            .uiAssetText(.h5)
                                     }
-                                    .buttonStyle(.plain)
+
+                                    Spacer()
+
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            viewModel.removeSetRow(id: row.id)
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 13, weight: .semibold))
+                                    }
+                                    .buttonStyle(UIAssetButtonStyle(variant: .destructive, symbolOnly: true))
                                 }
 
                                 LazyVGrid(columns: [
@@ -176,38 +241,29 @@ struct ExerciseLoggingView: View {
                 }
 
                 Section {
-                    Button("Add Set") {
-                        viewModel.addSetRow()
-                    }
-                    .buttonStyle(UIAssetButtonStyle(variant: .primary))
-
-                    Button("Copy Last Set") {
-                        viewModel.copyLastSetRow()
-                    }
-                    .buttonStyle(UIAssetButtonStyle(variant: .secondary))
-                }
-
-                Section {
-                    Button("Save") {
-                        Task {
-                            let didSave = await viewModel.save(
-                                sessionExerciseId: sessionExerciseId,
-                                setRepository: container.setRepository
-                            )
-                            if didSave {
-                                dismiss()
-                            }
+                    HStack(spacing: 12) {
+                        Button("Add Set") {
+                            viewModel.addSetRow()
                         }
+                        .buttonStyle(UIAssetButtonStyle(variant: .primary))
+                        .frame(maxWidth: .infinity)
+
+                        Button("Copy Last Set") {
+                            viewModel.copyLastSetRow()
+                        }
+                        .buttonStyle(UIAssetButtonStyle(variant: .secondary))
+                        .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(UIAssetTextActionButtonStyle())
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(UIAssetColors.secondary.ignoresSafeArea())
-            .navigationTitle("Log Exercise")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 await viewModel.load(
                     sessionExerciseId: sessionExerciseId,
@@ -253,6 +309,31 @@ struct ExerciseLoggingView: View {
                 .transition(.opacity)
             }
         }
+    }
+}
+
+private struct SetOptionToggleRow: View {
+    let title: String
+    let explanation: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .uiAssetText(.paragraph)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+
+                Text(explanation)
+                    .uiAssetText(.footnote)
+                    .foregroundStyle(UIAssetColors.textSecondary)
+            }
+
+            Spacer(minLength: 0)
+
+            UIAssetSettingsInlineToggle(isOn: $isOn)
+        }
+        .padding(.vertical, 2)
     }
 }
 
@@ -379,9 +460,6 @@ final class ExerciseLoggingViewModel: ObservableObject {
 
     func removeSetRow(id: String) {
         rows.removeAll { $0.id == id }
-        if rows.isEmpty {
-            addSetRow()
-        }
         normalizeSetIndexes()
     }
 
