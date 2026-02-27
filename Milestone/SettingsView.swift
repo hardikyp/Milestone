@@ -3,6 +3,7 @@ import Foundation
 import GRDB
 import PhotosUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
@@ -289,9 +290,14 @@ final class SettingsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let defaults: UserDefaults
+    private let dataTransferService: DataTransferService
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        dataTransferService: DataTransferService = DataTransferService()
+    ) {
         self.defaults = defaults
+        self.dataTransferService = dataTransferService
 
         firstName = defaults.string(forKey: Keys.firstName) ?? ""
         lastName = defaults.string(forKey: Keys.lastName) ?? ""
@@ -392,20 +398,39 @@ final class SettingsViewModel: ObservableObject {
         save()
     }
 
-    func exportCSV() {
-        statusMessage = "CSV export action is ready. File output wiring is next."
+    func exportCSV(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
+        performTransfer {
+            try dataTransferService.exportCSV(dbQueue: dbQueue)
+        }
     }
 
-    func exportJSON() {
-        statusMessage = "JSON export action is ready. File output wiring is next."
+    func exportJSON(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
+        performTransfer {
+            try dataTransferService.exportJSON(dbQueue: dbQueue)
+        }
     }
 
-    func backup() {
-        statusMessage = "Backup action is ready. Archive generation is next."
+    func backup(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
+        performTransfer {
+            try dataTransferService.backup(dbQueue: dbQueue)
+        }
     }
 
-    func restore() {
-        statusMessage = "Restore action is ready. File import wiring is next."
+    func restore(from fileURL: URL, dbQueue: DatabaseQueue) -> DataTransferRestoreResult? {
+        do {
+            let result = try dataTransferService.restore(from: fileURL, dbQueue: dbQueue)
+            statusMessage = "\(result.summary) Imported from \(result.stagedURL.path)."
+            errorMessage = nil
+            return result
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = nil
+            return nil
+        }
+    }
+
+    func dataFolderPath() -> String {
+        dataTransferService.appDataFolderPath()
     }
 
     func resetData(dbQueue: DatabaseQueue) {
@@ -422,6 +447,19 @@ final class SettingsViewModel: ObservableObject {
             statusMessage = "All workout data has been reset."
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func performTransfer(_ action: () throws -> DataTransferExportResult) -> DataTransferExportResult? {
+        do {
+            let result = try action()
+            statusMessage = result.summary
+            errorMessage = nil
+            return result
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = nil
+            return nil
         }
     }
 
@@ -482,10 +520,18 @@ private struct SettingsScreenHeader<Trailing: View>: View {
 }
 
 struct DataHandlingView: View {
+    private struct SharePayload: Identifiable {
+        let id = UUID()
+        let title: String
+        let fileURL: URL
+    }
+
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: SettingsViewModel
     @State private var showingResetConfirmation = false
+    @State private var activeSharePayload: SharePayload?
+    @State private var isRestoreImporterPresented = false
 
     var body: some View {
         ZStack {
@@ -498,32 +544,62 @@ struct DataHandlingView: View {
                             .uiAssetText(.caption)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
+                        Text("Files folder: \(viewModel.dataFolderPath())")
+                            .uiAssetText(.footnote)
+                            .foregroundStyle(UIAssetColors.textSecondary)
+
                         dataActionCard(
                             symbol: "tablecells",
                             title: "Export to CSV",
                             description: "Create a CSV file export of your logged workouts.",
-                            action: viewModel.exportCSV
+                            action: {
+                                guard let result = viewModel.exportCSV(dbQueue: container.dbQueue) else {
+                                    return
+                                }
+                                activeSharePayload = SharePayload(
+                                    title: "CSV Export",
+                                    fileURL: result.fileURL
+                                )
+                            }
                         )
 
                         dataActionCard(
                             symbol: "curlybraces",
                             title: "Export to JSON",
                             description: "Create a JSON export for structured backup or migration.",
-                            action: viewModel.exportJSON
+                            action: {
+                                guard let result = viewModel.exportJSON(dbQueue: container.dbQueue) else {
+                                    return
+                                }
+                                activeSharePayload = SharePayload(
+                                    title: "JSON Export",
+                                    fileURL: result.fileURL
+                                )
+                            }
                         )
 
                         dataActionCard(
                             symbol: "externaldrive.badge.icloud",
                             title: "Backup",
                             description: "Create a full local backup snapshot of app data.",
-                            action: viewModel.backup
+                            action: {
+                                guard let result = viewModel.backup(dbQueue: container.dbQueue) else {
+                                    return
+                                }
+                                activeSharePayload = SharePayload(
+                                    title: "Backup",
+                                    fileURL: result.fileURL
+                                )
+                            }
                         )
 
                         dataActionCard(
                             symbol: "arrow.triangle.2.circlepath",
                             title: "Restore",
                             description: "Restore app data from a previously created backup.",
-                            action: viewModel.restore
+                            action: {
+                                isRestoreImporterPresented = true
+                            }
                         )
                     }
 
@@ -580,6 +656,38 @@ struct DataHandlingView: View {
         .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .fileImporter(
+            isPresented: $isRestoreImporterPresented,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let first = urls.first else {
+                    viewModel.errorMessage = "No file selected for restore."
+                    return
+                }
+                let hasScopedAccess = first.startAccessingSecurityScopedResource()
+                defer {
+                    if hasScopedAccess {
+                        first.stopAccessingSecurityScopedResource()
+                    }
+                }
+                _ = viewModel.restore(from: first, dbQueue: container.dbQueue)
+            case .failure(let error):
+                viewModel.errorMessage = error.localizedDescription
+            }
+        }
+        .sheet(item: $activeSharePayload) { payload in
+            ActivityShareSheet(activityItems: [payload.fileURL]) { completed, activityType in
+                if completed {
+                    let destination = activityType?.rawValue ?? "share destination"
+                    viewModel.statusMessage = "\(payload.title) shared via \(destination). File: \(payload.fileURL.path)"
+                } else {
+                    viewModel.statusMessage = "\(payload.title) saved at \(payload.fileURL.path)"
+                }
+            }
+        }
         .alert("Data Handling", isPresented: statusAlertPresented) {
             Button("OK") {
                 viewModel.statusMessage = nil
@@ -878,4 +986,19 @@ struct UserProfileView: View {
         )
         dismiss()
     }
+}
+
+private struct ActivityShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let onComplete: (_ completed: Bool, _ activityType: UIActivity.ActivityType?) -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        controller.completionWithItemsHandler = { activityType, completed, _, _ in
+            onComplete(completed, activityType)
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

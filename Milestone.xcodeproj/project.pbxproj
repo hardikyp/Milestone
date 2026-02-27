@@ -21,6 +21,8 @@
 		737B4F4FA093470CBC2041F3 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */; };
 		73F07AFA09F140F2ADDCB67D /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */; };
 		75352D5203395423770B69A5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */; };
+		A7B1C2D3E4F5678901234567 /* DataTransferService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1D2E3F4A5678901234567 /* DataTransferService.swift */; };
+		A8B2C3D4E5F60718293A4B5C /* DataTransferServiceSelfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */; };
 		8F0D0DBC69D6E69F10DED5A2 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07A96F540CF89D3E31C744C /* SessionRepository.swift */; };
 		8F71EB095D63FB725BC0C051 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EBF254AD8414C99CB24DF2 /* ContentView.swift */; };
 		8F8A6464A66B45B6BA9AFBB2 /* TemplatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */; };
@@ -59,6 +61,8 @@
 		AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionExerciseRepository.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIAssets/UIAssetsCatalogView.swift; sourceTree = "<group>"; };
 		B7E741AF96D842909F19C61B /* StatsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
+		B7C1D2E3F4A5678901234567 /* DataTransferService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataTransferService.swift; sourceTree = "<group>"; };
+		B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataTransferServiceSelfTests.swift; sourceTree = "<group>"; };
 		B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C8CB0272FCFB47D6AAAFEF6B /* Inter-VariableFont_opsz,wght.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Inter-VariableFont_opsz,wght.ttf"; sourceTree = "<group>"; };
 		CDBB81C808E69C3D49879DBD /* ActiveSessionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActiveSessionView.swift; sourceTree = "<group>"; };
@@ -116,6 +120,8 @@
 				4725C8BF250B18F7419D9012 /* HistoryView.swift */,
 				6EED9F23E348C255D0D7627F /* ExercisesView.swift */,
 				B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */,
+				B7C1D2E3F4A5678901234567 /* DataTransferService.swift */,
+				B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */,
 				35A8E2B29144A18B2818CA09 /* DatabaseManager.swift */,
 				E5FA0CE8485AC026E6D4605B /* Migrations.swift */,
 				FBFB24D95D09210BC0E41169 /* Models.swift */,
@@ -241,6 +247,8 @@
 				654E816E229C702930FCFF7A /* HistoryView.swift in Sources */,
 				545CF151D5899D9CD8AB0293 /* ExercisesView.swift in Sources */,
 				75352D5203395423770B69A5 /* SettingsView.swift in Sources */,
+				A7B1C2D3E4F5678901234567 /* DataTransferService.swift in Sources */,
+				A8B2C3D4E5F60718293A4B5C /* DataTransferServiceSelfTests.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C /* UIAssets/UIAssetsCatalogView.swift in Sources */,
 				04D482ECE9C9FE3B9636334C /* DatabaseManager.swift in Sources */,
 				D64CC6EEA2D37F63ED6D4905 /* Migrations.swift in Sources */,
@@ -400,8 +408,10 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Milestone;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -427,8 +437,10 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Milestone;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

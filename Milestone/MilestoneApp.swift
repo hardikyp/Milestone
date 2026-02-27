@@ -2,6 +2,9 @@ import SwiftUI
 import Foundation
 import GRDB
 import CryptoKit
+#if DEBUG
+import Darwin
+#endif
 
 @main
 struct MilestoneApp: App {
@@ -9,6 +12,45 @@ struct MilestoneApp: App {
 
     init() {
         do {
+            #if DEBUG
+            let processInfo = ProcessInfo.processInfo
+            let shouldRunSelfTests = processInfo.environment["MILESTONE_RUN_DATA_TRANSFER_SELF_TESTS"] == "1"
+                || processInfo.arguments.contains("--run-data-transfer-self-tests")
+            let shouldRunDeviceSmoke = processInfo.environment["MILESTONE_RUN_DATA_TRANSFER_DEVICE_SMOKE"] == "1"
+                || processInfo.arguments.contains("--run-data-transfer-device-smoke")
+
+            if shouldRunSelfTests {
+                do {
+                    try DataTransferServiceSelfTests.runAll()
+                    print("MILESTONE_DATA_TRANSFER_SELF_TESTS: PASS")
+                    exit(0)
+                } catch {
+                    print("MILESTONE_DATA_TRANSFER_SELF_TESTS: FAIL - \(error.localizedDescription)")
+                    exit(1)
+                }
+            }
+
+            if shouldRunDeviceSmoke {
+                do {
+                    let databaseManager = try DatabaseManager()
+                    let service = DataTransferService()
+                    let csv = try service.exportCSV(dbQueue: databaseManager.dbQueue)
+                    let json = try service.exportJSON(dbQueue: databaseManager.dbQueue)
+                    let backup = try service.backup(dbQueue: databaseManager.dbQueue)
+                    let restore = try service.restore(from: backup.fileURL, dbQueue: databaseManager.dbQueue)
+                    print("MILESTONE_DATA_TRANSFER_DEVICE_SMOKE: PASS")
+                    print("CSV: \(csv.fileURL.path)")
+                    print("JSON: \(json.fileURL.path)")
+                    print("BACKUP: \(backup.fileURL.path)")
+                    print("RESTORE: \(restore.summary)")
+                    exit(0)
+                } catch {
+                    print("MILESTONE_DATA_TRANSFER_DEVICE_SMOKE: FAIL - \(error.localizedDescription)")
+                    exit(1)
+                }
+            }
+            #endif
+
             AppTypography.configure()
             let databaseManager = try DatabaseManager()
             let appContainer = AppContainer(databaseManager: databaseManager)
