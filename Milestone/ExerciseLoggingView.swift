@@ -60,12 +60,25 @@ struct ExerciseLoggingView: View {
                                     .uiAssetText(.caption)
                                     .foregroundStyle(UIAssetColors.textSecondary)
 
-                                Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
-                                    ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
-                                        Text(metric.displayName).tag(metric)
+                                if exerciseType == .cardio || exerciseType == .functional {
+                                    VStack(spacing: 8) {
+                                        ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
+                                            CompactLoggingModeRadioRow(
+                                                title: metric.displayName,
+                                                isSelected: viewModel.selectedMetricType == metric
+                                            ) {
+                                                viewModel.selectedMetricType = metric
+                                            }
+                                        }
                                     }
+                                } else {
+                                    Picker("Logging Mode", selection: $viewModel.selectedMetricType) {
+                                        ForEach(viewModel.availableMetricTypes, id: \.self) { metric in
+                                            Text(metric.displayName).tag(metric)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
                                 }
-                                .pickerStyle(.segmented)
                             }
                         }
 
@@ -85,6 +98,10 @@ struct ExerciseLoggingView: View {
                                     )
                                 }
                             }
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .opacity
+                            ))
                         }
                     }
                     .padding(14)
@@ -160,75 +177,8 @@ struct ExerciseLoggingView: View {
                                     .buttonStyle(UIAssetButtonStyle(variant: .destructive, symbolOnly: true))
                                 }
 
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 12),
-                                    GridItem(.flexible(), spacing: 12)
-                                ], spacing: 10) {
-                                    switch viewModel.selectedMetricType {
-                                    case .strength:
-                                        SetInputField(
-                                            title: "Reps",
-                                            placeholder: "e.g. 10",
-                                            text: $row.repsText,
-                                            keyboardType: .numberPad
-                                        )
-                                        .onChange(of: row.repsText) { _, newValue in
-                                            viewModel.applyRepChange(value: newValue)
-                                        }
-
-                                        SetInputField(
-                                            title: "Weight (kg)",
-                                            placeholder: "e.g. 40",
-                                            text: $row.weightText,
-                                            keyboardType: .decimalPad
-                                        )
-                                        .onChange(of: row.weightText) { _, newValue in
-                                            viewModel.applyWeightChange(value: newValue)
-                                        }
-
-                                    case .repsOnly:
-                                        SetInputField(
-                                            title: "Reps",
-                                            placeholder: "e.g. 15",
-                                            text: $row.repsText,
-                                            keyboardType: .numberPad
-                                        )
-                                        .onChange(of: row.repsText) { _, newValue in
-                                            viewModel.applyRepChange(value: newValue)
-                                        }
-
-                                    case .time:
-                                        SetInputField(
-                                            title: "Duration (sec)",
-                                            placeholder: "e.g. 60",
-                                            text: $row.durationText,
-                                            keyboardType: .numberPad
-                                        )
-
-                                    case .distanceOnly:
-                                        SetInputField(
-                                            title: "Distance (m)",
-                                            placeholder: "e.g. 500",
-                                            text: $row.distanceText,
-                                            keyboardType: .decimalPad
-                                        )
-
-                                    case .distanceTime:
-                                        SetInputField(
-                                            title: "Distance (m)",
-                                            placeholder: "e.g. 1000",
-                                            text: $row.distanceText,
-                                            keyboardType: .decimalPad
-                                        )
-
-                                        SetInputField(
-                                            title: "Duration (sec)",
-                                            placeholder: "e.g. 300",
-                                            text: $row.durationText,
-                                            keyboardType: .numberPad
-                                        )
-                                    }
-                                }
+                                setInputs(for: $row)
+                                .frame(minHeight: 68, alignment: .topLeading)
                                 .disabled(row.isDone)
                             }
                             .padding(14)
@@ -272,11 +222,13 @@ struct ExerciseLoggingView: View {
                 )
             }
             .onChange(of: viewModel.selectedMetricType) { _, newMetric in
-                if newMetric != .strength {
-                    viewModel.sameWeightForAll = false
-                }
-                if newMetric != .strength && newMetric != .repsOnly {
-                    viewModel.sameRepsForAll = false
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    if newMetric != .strength {
+                        viewModel.sameWeightForAll = false
+                    }
+                    if newMetric != .strength && newMetric != .repsOnly {
+                        viewModel.sameRepsForAll = false
+                    }
                 }
             }
             .onChange(of: viewModel.sameRepsForAll) { _, isOn in
@@ -310,6 +262,83 @@ struct ExerciseLoggingView: View {
             }
         }
     }
+
+    @ViewBuilder
+    private func setInputs(for row: Binding<ExerciseLoggingViewModel.SetRow>) -> some View {
+        if viewModel.selectedMetricType == .distanceTime {
+            DistanceTimeInputRow(
+                distanceText: row.distanceText,
+                durationMinText: row.durationMinText,
+                durationSecText: row.durationSecText
+            )
+        } else {
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 10) {
+                switch viewModel.selectedMetricType {
+                case .strength:
+                    SetInputField(
+                        title: "Reps",
+                        placeholder: "e.g. 10",
+                        text: row.repsText,
+                        keyboardType: .numberPad
+                    )
+                    .onChange(of: row.wrappedValue.repsText) { _, newValue in
+                        viewModel.applyRepChange(value: newValue)
+                    }
+
+                    SetInputField(
+                        title: "Weight (kg)",
+                        placeholder: "e.g. 40",
+                        text: row.weightText,
+                        keyboardType: .decimalPad
+                    )
+                    .onChange(of: row.wrappedValue.weightText) { _, newValue in
+                        viewModel.applyWeightChange(value: newValue)
+                    }
+
+                case .repsOnly:
+                    SetInputField(
+                        title: "Reps",
+                        placeholder: "e.g. 15",
+                        text: row.repsText,
+                        keyboardType: .numberPad
+                    )
+                    .onChange(of: row.wrappedValue.repsText) { _, newValue in
+                        viewModel.applyRepChange(value: newValue)
+                    }
+
+                case .time:
+                    SetInputField(
+                        title: "Duration (min-sec)",
+                        placeholder: "min e.g. 2",
+                        text: row.durationMinText,
+                        keyboardType: .numberPad
+                    )
+
+                    SetInputField(
+                        title: "Duration (min-sec)",
+                        placeholder: "sec e.g. 30",
+                        text: row.durationSecText,
+                        keyboardType: .numberPad,
+                        showsTitle: false
+                    )
+
+                case .distanceOnly:
+                    SetInputField(
+                        title: "Distance (m)",
+                        placeholder: "e.g. 500",
+                        text: row.distanceText,
+                        keyboardType: .decimalPad
+                    )
+
+                case .distanceTime:
+                    EmptyView()
+                }
+            }
+        }
+    }
 }
 
 private struct SetOptionToggleRow: View {
@@ -337,17 +366,117 @@ private struct SetOptionToggleRow: View {
     }
 }
 
+private struct CompactLoggingModeRadioRow: View {
+    let title: String
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    private let unselectedRadioColor = Color(red: 0.72, green: 0.72, blue: 0.74)
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? UIAssetColors.accent : Color.clear)
+                        .frame(width: 20, height: 20)
+                        .overlay(
+                            Circle()
+                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 2)
+                        )
+
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+
+                Text(title)
+                    .uiAssetText(.paragraph)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 38)
+            .background(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                    .fill(isSelected ? UIAssetColors.accentSecondary : UIAssetColors.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
+                    .stroke(isSelected ? UIAssetColors.accent.opacity(0.28) : UIAssetColors.border, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+}
+
+private struct DistanceTimeInputRow: View {
+    @Binding var distanceText: String
+    @Binding var durationMinText: String
+    @Binding var durationSecText: String
+
+    private let columnSpacing: CGFloat = 10
+
+    var body: some View {
+        GeometryReader { proxy in
+            let availableWidth = max(proxy.size.width - (columnSpacing * 2), 0)
+            let singleColumnWidth = availableWidth / 4
+            let distanceColumnWidth = singleColumnWidth * 2
+
+            HStack(spacing: columnSpacing) {
+                SetInputField(
+                    title: "Distance (m)",
+                    placeholder: "e.g. 1000",
+                    text: $distanceText,
+                    keyboardType: .decimalPad
+                )
+                .frame(width: distanceColumnWidth)
+
+                SetInputField(
+                    title: "Duration (min-sec)",
+                    placeholder: "min e.g. 2",
+                    text: $durationMinText,
+                    keyboardType: .numberPad
+                )
+                .frame(width: singleColumnWidth)
+
+                SetInputField(
+                    title: "Duration (min-sec)",
+                    placeholder: "sec e.g. 30",
+                    text: $durationSecText,
+                    keyboardType: .numberPad,
+                    showsTitle: false
+                )
+                .frame(width: singleColumnWidth)
+            }
+        }
+        .frame(height: 64)
+    }
+}
+
 private struct SetInputField: View {
     let title: String
     let placeholder: String
     @Binding var text: String
     let keyboardType: UIKeyboardType
+    var showsTitle: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .uiAssetText(.caption)
-                .fontWeight(.medium)
+            if showsTitle {
+                Text(title)
+                    .uiAssetText(.caption)
+                    .fontWeight(.medium)
+            } else {
+                Text(title)
+                    .uiAssetText(.caption)
+                    .fontWeight(.medium)
+                    .hidden()
+            }
             TextField(placeholder, text: $text)
                 .font(.app(.body))
                 .keyboardType(keyboardType)
@@ -376,7 +505,8 @@ final class ExerciseLoggingViewModel: ObservableObject {
         var repsText: String
         var weightText: String
         var distanceText: String
-        var durationText: String
+        var durationMinText: String
+        var durationSecText: String
         var isDone: Bool
     }
 
@@ -404,14 +534,16 @@ final class ExerciseLoggingViewModel: ObservableObject {
             }
 
             rows = sets.map { set in
-                SetRow(
+                let (durationMinText, durationSecText) = Self.durationParts(from: set.durationSec)
+                return SetRow(
                     id: set.id,
                     createdAt: set.createdAt,
                     setIndex: set.setIndex,
                     repsText: set.reps.map(String.init) ?? "",
                     weightText: set.weightKg.map { String($0) } ?? "",
                     distanceText: set.distanceM.map { String($0) } ?? "",
-                    durationText: set.durationSec.map(String.init) ?? "",
+                    durationMinText: durationMinText,
+                    durationSecText: durationSecText,
                     isDone: false
                 )
             }
@@ -432,7 +564,8 @@ final class ExerciseLoggingViewModel: ObservableObject {
                 repsText: "",
                 weightText: "",
                 distanceText: "",
-                durationText: "",
+                durationMinText: "",
+                durationSecText: "",
                 isDone: false
             )
         )
@@ -452,7 +585,8 @@ final class ExerciseLoggingViewModel: ObservableObject {
                 repsText: last.repsText,
                 weightText: last.weightText,
                 distanceText: last.distanceText,
-                durationText: last.durationText,
+                durationMinText: last.durationMinText,
+                durationSecText: last.durationSecText,
                 isDone: false
             )
         )
@@ -508,7 +642,10 @@ final class ExerciseLoggingViewModel: ObservableObject {
                 let reps = try parseOptionalInt(row.repsText)
                 let weight = try parseOptionalDouble(row.weightText)
                 let distance = try parseOptionalDouble(row.distanceText)
-                let duration = try parseOptionalInt(row.durationText)
+                let duration = try parseOptionalDurationSeconds(
+                    minutesRaw: row.durationMinText,
+                    secondsRaw: row.durationSecText
+                )
 
                 let finalReps: Int?
                 let finalWeight: Double?
@@ -578,6 +715,9 @@ final class ExerciseLoggingViewModel: ObservableObject {
         guard let value = Int(trimmed) else {
             throw ValidationError.invalidNumberFormat
         }
+        guard value >= 0 else {
+            throw ValidationError.invalidNumberFormat
+        }
         return value
     }
 
@@ -587,7 +727,28 @@ final class ExerciseLoggingViewModel: ObservableObject {
         guard let value = Double(trimmed) else {
             throw ValidationError.invalidNumberFormat
         }
+        guard value >= 0 else {
+            throw ValidationError.invalidNumberFormat
+        }
         return value
+    }
+
+    private func parseOptionalDurationSeconds(minutesRaw: String, secondsRaw: String) throws -> Int? {
+        let minutes = try parseOptionalInt(minutesRaw)
+        let seconds = try parseOptionalInt(secondsRaw)
+
+        if minutes == nil && seconds == nil {
+            return nil
+        }
+
+        let resolvedMinutes = minutes ?? 0
+        let resolvedSeconds = seconds ?? 0
+
+        guard resolvedSeconds < 60 else {
+            throw ValidationError.invalidDurationSeconds
+        }
+
+        return (resolvedMinutes * 60) + resolvedSeconds
     }
 
     private func requireValue<T>(_ value: T?, field: String) throws -> T {
@@ -608,9 +769,17 @@ final class ExerciseLoggingViewModel: ObservableObject {
         }
     }
 
+    private static func durationParts(from totalSeconds: Int?) -> (String, String) {
+        guard let totalSeconds else { return ("", "") }
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return (String(minutes), String(seconds))
+    }
+
     enum ValidationError: Error, LocalizedError {
         case invalidRequiredField(String)
         case invalidNumberFormat
+        case invalidDurationSeconds
 
         var errorDescription: String? {
             switch self {
@@ -618,6 +787,8 @@ final class ExerciseLoggingViewModel: ObservableObject {
                 return "Invalid value for required field: \(field)."
             case .invalidNumberFormat:
                 return "Please enter valid numeric values."
+            case .invalidDurationSeconds:
+                return "Seconds must be between 0 and 59."
             }
         }
     }
@@ -638,6 +809,7 @@ private extension MetricType {
             return "Distance"
         }
     }
+
 }
 
 private extension ExerciseType {
