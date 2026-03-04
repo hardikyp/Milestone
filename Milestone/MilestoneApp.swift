@@ -89,8 +89,9 @@ private struct ExerciseSeedService {
 
         let fingerprint = Self.sha256Hex(seedData)
         let currentFingerprint = defaults.string(forKey: seedFingerprintKey)
+        let hasAnyExercises = try exerciseRepository.hasAnyExercises()
 
-        guard currentFingerprint != fingerprint else {
+        guard currentFingerprint != fingerprint || !hasAnyExercises else {
             return
         }
 

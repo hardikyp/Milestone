@@ -204,6 +204,12 @@ final class ExerciseRepository {
         }
     }
 
+    func hasAnyExercises() throws -> Bool {
+        try dbQueue.read { db in
+            try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM exercises") ?? 0 > 0
+        }
+    }
+
     func deleteNonSeededExercises() throws -> ExerciseSeedPruneResult {
         try dbQueue.write { db in
             let candidateIDs = try String.fetchAll(

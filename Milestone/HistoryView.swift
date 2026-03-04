@@ -184,7 +184,7 @@ struct HistoryView: View {
                     }
 
                     Spacer()
-                    Text(String(format: "Volume: %.1f kg", row.totalVolumeKg))
+                    Text(volumeText(for: row.totalVolumeKg))
                 }
                 .uiAssetText(.caption)
                 .foregroundStyle(UIAssetColors.textSecondary)
@@ -215,6 +215,19 @@ struct HistoryView: View {
         formatter.timeStyle = .short
         return formatter
     }()
+
+    private func volumeText(for totalVolumeKg: Double) -> String {
+        let weightUnit = AppUnitPreferences.weightUnit()
+        let convertedVolume = UnitConverter.weightToDisplay(totalVolumeKg, unit: weightUnit)
+        let symbol: String
+        switch weightUnit {
+        case .kg:
+            symbol = "kg"
+        case .lb:
+            symbol = "lb"
+        }
+        return String(format: "Volume: %.1f %@", convertedVolume, symbol)
+    }
 }
 
 private struct HistorySwipeRow<Content: View>: View {

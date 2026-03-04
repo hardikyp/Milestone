@@ -72,7 +72,7 @@ struct TemplatePickerView: View {
                             UIAssetTiledButton(
                                 systemImage: "square.and.pencil",
                                 label: "New",
-                                description: "Template",
+                                description: "Empty Template",
                                 variant: .secondary
                             ) {
                                 creationSheet = .fromScratch
@@ -82,7 +82,7 @@ struct TemplatePickerView: View {
                         .frame(maxWidth: .infinity)
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Templates")
+                            Text("Pick a Template")
                                 .uiAssetText(.h5)
                                 .foregroundStyle(UIAssetColors.textPrimary)
 

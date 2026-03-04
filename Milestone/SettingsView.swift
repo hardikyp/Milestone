@@ -5,6 +5,74 @@ import PhotosUI
 import UIKit
 import UniformTypeIdentifiers
 
+enum AppUnitPreferences {
+    static let weightUnitKey = "settings.weightUnit"
+    static let distanceUnitKey = "settings.distanceUnit"
+
+    static func weightUnit(defaults: UserDefaults = .standard) -> SettingsViewModel.WeightUnit {
+        guard
+            let raw = defaults.string(forKey: weightUnitKey),
+            let parsed = SettingsViewModel.WeightUnit(rawValue: raw)
+        else {
+            return .kg
+        }
+        return parsed
+    }
+
+    static func distanceUnit(defaults: UserDefaults = .standard) -> SettingsViewModel.DistanceUnit {
+        guard
+            let raw = defaults.string(forKey: distanceUnitKey),
+            let parsed = SettingsViewModel.DistanceUnit(rawValue: raw)
+        else {
+            return .km
+        }
+        return parsed
+    }
+}
+
+enum UnitConverter {
+    private static let kilogramsPerPound = 0.453_592_37
+    private static let kilometersPerMile = 1.609_344
+    private static let metersPerKilometer = 1_000.0
+
+    static func weightToDisplay(_ kilograms: Double, unit: SettingsViewModel.WeightUnit) -> Double {
+        switch unit {
+        case .kg:
+            return kilograms
+        case .lb:
+            return kilograms / kilogramsPerPound
+        }
+    }
+
+    static func weightToKilograms(_ value: Double, unit: SettingsViewModel.WeightUnit) -> Double {
+        switch unit {
+        case .kg:
+            return value
+        case .lb:
+            return value * kilogramsPerPound
+        }
+    }
+
+    static func distanceToDisplay(_ meters: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
+        let kilometers = meters / metersPerKilometer
+        switch unit {
+        case .km:
+            return kilometers
+        case .miles:
+            return kilometers / kilometersPerMile
+        }
+    }
+
+    static func distanceToMeters(_ value: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
+        switch unit {
+        case .km:
+            return value * metersPerKilometer
+        case .miles:
+            return value * kilometersPerMile * metersPerKilometer
+        }
+    }
+}
+
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var activePreferencesDropdownID: String?
@@ -104,7 +172,7 @@ struct SettingsView: View {
                                         .fill(UIAssetColors.accentSecondary)
                                 )
 
-                            Text("About")
+                            Text("About this app")
                                 .uiAssetText(.h5)
                                 .foregroundStyle(UIAssetColors.textPrimary)
                         }
@@ -114,6 +182,7 @@ struct SettingsView: View {
                             .foregroundStyle(UIAssetColors.textSecondary)
                     }
                     .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .uiAssetCardSurface(fill: UIAssetColors.primary)
                 }
                     .padding(.horizontal, 16)

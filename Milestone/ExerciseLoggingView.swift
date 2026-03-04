@@ -269,7 +269,9 @@ struct ExerciseLoggingView: View {
             DistanceTimeInputRow(
                 distanceText: row.distanceText,
                 durationMinText: row.durationMinText,
-                durationSecText: row.durationSecText
+                durationSecText: row.durationSecText,
+                distanceTitle: viewModel.distanceInputTitle,
+                distancePlaceholder: viewModel.distanceInputPlaceholder
             )
         } else {
             LazyVGrid(columns: [
@@ -289,8 +291,8 @@ struct ExerciseLoggingView: View {
                     }
 
                     SetInputField(
-                        title: "Weight (kg)",
-                        placeholder: "e.g. 40",
+                        title: viewModel.weightInputTitle,
+                        placeholder: viewModel.weightInputPlaceholder,
                         text: row.weightText,
                         keyboardType: .decimalPad
                     )
@@ -327,8 +329,8 @@ struct ExerciseLoggingView: View {
 
                 case .distanceOnly:
                     SetInputField(
-                        title: "Distance (m)",
-                        placeholder: "e.g. 500",
+                        title: viewModel.distanceInputTitle,
+                        placeholder: viewModel.distanceInputPlaceholder,
                         text: row.distanceText,
                         keyboardType: .decimalPad
                     )
@@ -418,6 +420,8 @@ private struct DistanceTimeInputRow: View {
     @Binding var distanceText: String
     @Binding var durationMinText: String
     @Binding var durationSecText: String
+    let distanceTitle: String
+    let distancePlaceholder: String
 
     private let columnSpacing: CGFloat = 10
 
@@ -429,8 +433,8 @@ private struct DistanceTimeInputRow: View {
 
             HStack(spacing: columnSpacing) {
                 SetInputField(
-                    title: "Distance (m)",
-                    placeholder: "e.g. 1000",
+                    title: distanceTitle,
+                    placeholder: distancePlaceholder,
                     text: $distanceText,
                     keyboardType: .decimalPad
                 )
@@ -516,6 +520,20 @@ final class ExerciseLoggingViewModel: ObservableObject {
     @Published var sameRepsForAll = false
     @Published var sameWeightForAll = false
     @Published var errorMessage: String?
+    @Published private(set) var preferredWeightUnit: SettingsViewModel.WeightUnit = .kg
+    @Published private(set) var preferredDistanceUnit: SettingsViewModel.DistanceUnit = .km
+
+    var weightInputTitle: String { "Weight (\(preferredWeightUnit.shortSymbol))" }
+
+    var weightInputPlaceholder: String {
+        preferredWeightUnit == .kg ? "e.g. 40" : "e.g. 90"
+    }
+
+    var distanceInputTitle: String { "Distance (\(preferredDistanceUnit.shortSymbol))" }
+
+    var distanceInputPlaceholder: String {
+        preferredDistanceUnit == .km ? "e.g. 1.2" : "e.g. 0.75"
+    }
 
     func load(
         sessionExerciseId: String,
@@ -523,6 +541,8 @@ final class ExerciseLoggingViewModel: ObservableObject {
         setRepository: SetRepository
     ) async {
         do {
+            preferredWeightUnit = AppUnitPreferences.weightUnit()
+            preferredDistanceUnit = AppUnitPreferences.distanceUnit()
             availableMetricTypes = Self.metricTypes(for: exerciseType)
             let sets = try setRepository.fetchSets(sessionExerciseId: sessionExerciseId)
 
@@ -540,8 +560,12 @@ final class ExerciseLoggingViewModel: ObservableObject {
                     createdAt: set.createdAt,
                     setIndex: set.setIndex,
                     repsText: set.reps.map(String.init) ?? "",
-                    weightText: set.weightKg.map { String($0) } ?? "",
-                    distanceText: set.distanceM.map { String($0) } ?? "",
+                    weightText: set.weightKg.map {
+                        Self.displayText(for: UnitConverter.weightToDisplay($0, unit: preferredWeightUnit))
+                    } ?? "",
+                    distanceText: set.distanceM.map {
+                        Self.displayText(for: UnitConverter.distanceToDisplay($0, unit: preferredDistanceUnit))
+                    } ?? "",
                     durationMinText: durationMinText,
                     durationSecText: durationSecText,
                     isDone: false
@@ -640,12 +664,14 @@ final class ExerciseLoggingViewModel: ObservableObject {
             let now = Date()
             let setsToPersist: [WorkoutSet] = try rows.map { row in
                 let reps = try parseOptionalInt(row.repsText)
-                let weight = try parseOptionalDouble(row.weightText)
-                let distance = try parseOptionalDouble(row.distanceText)
+                let enteredWeight = try parseOptionalDouble(row.weightText)
+                let enteredDistance = try parseOptionalDouble(row.distanceText)
                 let duration = try parseOptionalDurationSeconds(
                     minutesRaw: row.durationMinText,
                     secondsRaw: row.durationSecText
                 )
+                let weight = enteredWeight.map { UnitConverter.weightToKilograms($0, unit: preferredWeightUnit) }
+                let distance = enteredDistance.map { UnitConverter.distanceToMeters($0, unit: preferredDistanceUnit) }
 
                 let finalReps: Int?
                 let finalWeight: Double?
@@ -776,6 +802,20 @@ final class ExerciseLoggingViewModel: ObservableObject {
         return (String(minutes), String(seconds))
     }
 
+    private static func displayText(for value: Double) -> String {
+        if value.rounded() == value {
+            return String(Int(value))
+        }
+
+        let formatted = String(format: "%.3f", value)
+        let trimmed = formatted.replacingOccurrences(
+            of: #"(\.\d*?[1-9])0+$"#,
+            with: "$1",
+            options: .regularExpression
+        )
+        return trimmed.replacingOccurrences(of: ".0", with: "")
+    }
+
     enum ValidationError: Error, LocalizedError {
         case invalidRequiredField(String)
         case invalidNumberFormat
@@ -810,6 +850,24 @@ private extension MetricType {
         }
     }
 
+}
+
+private extension SettingsViewModel.WeightUnit {
+    var shortSymbol: String {
+        switch self {
+        case .kg: return "kg"
+        case .lb: return "lb"
+        }
+    }
+}
+
+private extension SettingsViewModel.DistanceUnit {
+    var shortSymbol: String {
+        switch self {
+        case .km: return "km"
+        case .miles: return "mi"
+        }
+    }
 }
 
 private extension ExerciseType {

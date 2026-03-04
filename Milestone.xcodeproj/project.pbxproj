@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F1E2D3C4B5A69788796A5B4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3B4C5 /* Assets.xcassets */; };
 		04D482ECE9C9FE3B9636334C /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A8E2B29144A18B2818CA09 /* DatabaseManager.swift */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0D6CC715B24009DACBA78285 /* CategoryPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE48829369D5DE4F0903AEB /* CategoryPickerView.swift */; };
 		126B39B31F6FA759013F50BA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A6672BB6F038C57E417ABF /* ExercisePickerView.swift */; };
@@ -21,12 +22,12 @@
 		737B4F4FA093470CBC2041F3 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */; };
 		73F07AFA09F140F2ADDCB67D /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */; };
 		75352D5203395423770B69A5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */; };
-		A7B1C2D3E4F5678901234567 /* DataTransferService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1D2E3F4A5678901234567 /* DataTransferService.swift */; };
-		A8B2C3D4E5F60718293A4B5C /* DataTransferServiceSelfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */; };
 		8F0D0DBC69D6E69F10DED5A2 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07A96F540CF89D3E31C744C /* SessionRepository.swift */; };
 		8F71EB095D63FB725BC0C051 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EBF254AD8414C99CB24DF2 /* ContentView.swift */; };
 		8F8A6464A66B45B6BA9AFBB2 /* TemplatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* UIAssets/UIAssetsCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */; };
+		A7B1C2D3E4F5678901234567 /* DataTransferService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C1D2E3F4A5678901234567 /* DataTransferService.swift */; };
+		A8B2C3D4E5F60718293A4B5C /* DataTransferServiceSelfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */; };
 		A9D033C2EA2C4808A08C73D2 /* VolumeLast7DaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DC486DF38964F9780B41B69 /* VolumeLast7DaysView.swift */; };
 		C29F264C4C21A86A7A164298 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2A38885E68DBD40C0868072 /* Foundation.framework */; };
 		C576439F3D087839B718DAA4 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FCDA5405327EEE691FDDA8 /* AppContainer.swift */; };
@@ -39,12 +40,15 @@
 		E9A9FD6382A943CE8B7A5D1F /* TemplateRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7E5A6C28214072A2DCA407 /* TemplateRepository.swift */; };
 		F044750428224B6FA4C70C6D /* TemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83C90BD6B15408E8B8D53D7 /* TemplatesView.swift */; };
 		F04D3A92C42F4E8ABCD63F7D /* Inter-VariableFont_opsz,wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C8CB0272FCFB47D6AAAFEF6B /* Inter-VariableFont_opsz,wght.ttf */; };
+		F14B2A7C2F3A4D188A7EE001 /* ExerciseGIFs in Resources */ = {isa = PBXBuildFile; fileRef = F14B2A7C2F3A4D188A7EE002 /* ExerciseGIFs */; };
+		F15D9A2E8ACD41B3BC9E0B12 /* SeedExercises.json in Resources */ = {isa = PBXBuildFile; fileRef = F25D9A2E8ACD41B3BC9E0B12 /* SeedExercises.json */; };
 		F1D6192C247B45DB97E7A112 /* MonthlyCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28FF2F4D0DB4E0AA2E5B015 /* MonthlyCalendarView.swift */; };
 		FF61AD39E86CBF90BA5CB521 /* ExerciseRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12841CAB3DC57ED66563C655 /* ExerciseRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0ACB1341E0A98B0059A7DB72 /* Milestone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Milestone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A2B3C4D5E6F708192A3B4C5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		12841CAB3DC57ED66563C655 /* ExerciseRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExerciseRepository.swift; sourceTree = "<group>"; };
 		1BE48829369D5DE4F0903AEB /* CategoryPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryPickerView.swift; sourceTree = "<group>"; };
 		35A8E2B29144A18B2818CA09 /* DatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
@@ -60,8 +64,8 @@
 		A83C90BD6B15408E8B8D53D7 /* TemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemplatesView.swift; sourceTree = "<group>"; };
 		AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionExerciseRepository.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIAssets/UIAssetsCatalogView.swift; sourceTree = "<group>"; };
-		B7E741AF96D842909F19C61B /* StatsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
 		B7C1D2E3F4A5678901234567 /* DataTransferService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataTransferService.swift; sourceTree = "<group>"; };
+		B7E741AF96D842909F19C61B /* StatsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
 		B8C2D3E4F5A60718293A4B5C /* DataTransferServiceSelfTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataTransferServiceSelfTests.swift; sourceTree = "<group>"; };
 		B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C8CB0272FCFB47D6AAAFEF6B /* Inter-VariableFont_opsz,wght.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Inter-VariableFont_opsz,wght.ttf"; sourceTree = "<group>"; };
@@ -73,6 +77,8 @@
 		E5FA0CE8485AC026E6D4605B /* Migrations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Migrations.swift; sourceTree = "<group>"; };
 		E9F3E8CD679CF6DBB0F1BB7D /* ExerciseLoggingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExerciseLoggingView.swift; sourceTree = "<group>"; };
 		F07A96F540CF89D3E31C744C /* SessionRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionRepository.swift; sourceTree = "<group>"; };
+		F14B2A7C2F3A4D188A7EE002 /* ExerciseGIFs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ExerciseGIFs; sourceTree = "<group>"; };
+		F25D9A2E8ACD41B3BC9E0B12 /* SeedExercises.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = SeedExercises.json; sourceTree = "<group>"; };
 		F28FF2F4D0DB4E0AA2E5B015 /* MonthlyCalendarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonthlyCalendarView.swift; sourceTree = "<group>"; };
 		F2FCDA5405327EEE691FDDA8 /* AppContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		F52FE5E03D6A4DA4927E0B90 /* AppTypography.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppTypography.swift; sourceTree = "<group>"; };
@@ -143,7 +149,10 @@
 				FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */,
 				F28FF2F4D0DB4E0AA2E5B015 /* MonthlyCalendarView.swift */,
 				4DC486DF38964F9780B41B69 /* VolumeLast7DaysView.swift */,
+				F25D9A2E8ACD41B3BC9E0B12 /* SeedExercises.json */,
+				F14B2A7C2F3A4D188A7EE002 /* ExerciseGIFs */,
 				B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */,
+				1A2B3C4D5E6F708192A3B4C5 /* Assets.xcassets */,
 				8DA8834D0CDE4BF2AC3A78B4 /* Fonts */,
 			);
 			path = Milestone;
@@ -229,7 +238,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F1E2D3C4B5A69788796A5B4 /* Assets.xcassets in Resources */,
 				F04D3A92C42F4E8ABCD63F7D /* Inter-VariableFont_opsz,wght.ttf in Resources */,
+				F14B2A7C2F3A4D188A7EE001 /* ExerciseGIFs in Resources */,
+				F15D9A2E8ACD41B3BC9E0B12 /* SeedExercises.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,16 +417,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 626M44H2UP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Milestone;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -422,9 +439,14 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.milestone;
 				PRODUCT_NAME = Milestone;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -434,16 +456,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 626M44H2UP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Milestone;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -451,9 +478,14 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hardik.milestone;
 				PRODUCT_NAME = Milestone;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

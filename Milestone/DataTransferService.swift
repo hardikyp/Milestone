@@ -463,8 +463,22 @@ struct DataTransferService {
         defaults.set(trimmedAge ?? "", forKey: SettingsSnapshot.Keys.age)
         defaults.set(settings.gender ?? "prefer_not_to_say", forKey: SettingsSnapshot.Keys.gender)
 
-        defaults.set(settings.weightUnit ?? "kg", forKey: SettingsSnapshot.Keys.weightUnit)
-        defaults.set(settings.distanceUnit ?? "km", forKey: SettingsSnapshot.Keys.distanceUnit)
+        let sanitizedWeightUnit: String = {
+            guard let raw = settings.weightUnit, SettingsViewModel.WeightUnit(rawValue: raw) != nil else {
+                return SettingsViewModel.WeightUnit.kg.rawValue
+            }
+            return raw
+        }()
+
+        let sanitizedDistanceUnit: String = {
+            guard let raw = settings.distanceUnit, SettingsViewModel.DistanceUnit(rawValue: raw) != nil else {
+                return SettingsViewModel.DistanceUnit.km.rawValue
+            }
+            return raw
+        }()
+
+        defaults.set(sanitizedWeightUnit, forKey: SettingsSnapshot.Keys.weightUnit)
+        defaults.set(sanitizedDistanceUnit, forKey: SettingsSnapshot.Keys.distanceUnit)
         defaults.set(trimmedRestDuration ?? "90", forKey: SettingsSnapshot.Keys.defaultRestDurationSec)
 
         defaults.set(settings.isHealthConnected ?? false, forKey: SettingsSnapshot.Keys.isHealthConnected)
