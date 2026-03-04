@@ -68,6 +68,7 @@ struct MilestoneApp: App {
             ContentView()
                 .environment(\.font, .app(.body))
                 .environmentObject(container)
+                .preferredColorScheme(.light)
         }
     }
 }
