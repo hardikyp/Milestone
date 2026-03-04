@@ -794,9 +794,7 @@ struct UIAssetTabFilter: View {
                 let isSelected = selectedTab == tab
 
                 Button {
-                    withAnimation(.interpolatingSpring(stiffness: 260, damping: 22)) {
-                        selectedTab = tab
-                    }
+                    selectedTab = tab
                 } label: {
                     VStack(spacing: 8) {
                         Text(tab)
@@ -824,6 +822,7 @@ struct UIAssetTabFilter: View {
                 .frame(maxWidth: .infinity)
             }
         }
+        .animation(.interpolatingSpring(stiffness: 260, damping: 22), value: selectedTab)
     }
 }
 

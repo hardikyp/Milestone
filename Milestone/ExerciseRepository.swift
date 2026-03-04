@@ -6,6 +6,7 @@ enum RepositoryError: Error, LocalizedError {
     case sessionNotFound(String)
     case invalidOrderedIDs
     case exerciseNotFound(String)
+    case sessionExerciseNotFound(String)
     case invalidSeedData
     case cannotDeleteSeededExercise(String)
     case exerciseInUse(String)
@@ -20,6 +21,8 @@ enum RepositoryError: Error, LocalizedError {
             return "orderedIds must exactly match session_exercise IDs for the session."
         case .exerciseNotFound(let id):
             return "Exercise not found: \(id)"
+        case .sessionExerciseNotFound(let id):
+            return "Session exercise not found: \(id)"
         case .invalidSeedData:
             return "Seed exercise data is invalid."
         case .cannotDeleteSeededExercise:

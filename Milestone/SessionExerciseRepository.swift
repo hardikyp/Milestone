@@ -33,36 +33,32 @@ final class SessionExerciseRepository {
 
     func reorderSessionExercises(sessionId: String, orderedIds: [String]) throws {
         try dbQueue.write { db in
-            try db.inTransaction {
-                let existingIDs = try String.fetchAll(
-                    db,
+            let existingIDs = try String.fetchAll(
+                db,
+                sql: """
+                SELECT id
+                FROM session_exercises
+                WHERE session_id = ?
+                """,
+                arguments: [sessionId]
+            )
+
+            guard existingIDs.count == orderedIds.count,
+                  Set(existingIDs) == Set(orderedIds) else {
+                throw RepositoryError.invalidOrderedIDs
+            }
+
+            let updatedAt = DateISO8601.string(from: Date())
+
+            for (index, id) in orderedIds.enumerated() {
+                try db.execute(
                     sql: """
-                    SELECT id
-                    FROM session_exercises
-                    WHERE session_id = ?
+                    UPDATE session_exercises
+                    SET order_index = ?, updated_at = ?
+                    WHERE id = ? AND session_id = ?
                     """,
-                    arguments: [sessionId]
+                    arguments: [index, updatedAt, id, sessionId]
                 )
-
-                guard existingIDs.count == orderedIds.count,
-                      Set(existingIDs) == Set(orderedIds) else {
-                    throw RepositoryError.invalidOrderedIDs
-                }
-
-                let updatedAt = DateISO8601.string(from: Date())
-
-                for (index, id) in orderedIds.enumerated() {
-                    try db.execute(
-                        sql: """
-                        UPDATE session_exercises
-                        SET order_index = ?, updated_at = ?
-                        WHERE id = ? AND session_id = ?
-                        """,
-                        arguments: [index, updatedAt, id, sessionId]
-                    )
-                }
-
-                return .commit
             }
         }
     }
@@ -79,6 +75,39 @@ final class SessionExerciseRepository {
                 """,
                 arguments: [sessionId]
             )
+        }
+    }
+
+    func removeExerciseFromSession(sessionExerciseId: String) throws {
+        try dbQueue.write { db in
+            guard let target = try SessionExercise.fetchOne(db, key: sessionExerciseId) else {
+                throw RepositoryError.sessionExerciseNotFound(sessionExerciseId)
+            }
+
+            try target.delete(db)
+
+            let remaining = try SessionExercise.fetchAll(
+                db,
+                sql: """
+                SELECT *
+                FROM session_exercises
+                WHERE session_id = ?
+                ORDER BY order_index ASC
+                """,
+                arguments: [target.sessionID]
+            )
+
+            let updatedAt = DateISO8601.string(from: Date())
+            for (index, item) in remaining.enumerated() {
+                try db.execute(
+                    sql: """
+                    UPDATE session_exercises
+                    SET order_index = ?, updated_at = ?
+                    WHERE id = ?
+                    """,
+                    arguments: [index, updatedAt, item.id]
+                )
+            }
         }
     }
 }

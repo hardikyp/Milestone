@@ -17,15 +17,20 @@ struct ExercisePickerView: View {
 
     @StateObject private var viewModel = ExercisePickerViewModel()
     @State private var searchText = ""
+    @State private var selectedCategoryTab = "All"
     @State private var isCreateExercisePresented = false
 
-    private var sessionCategory: ExerciseCategory? {
-        guard let sessionCategoryName else { return nil }
-        return ExerciseCategory.fromSessionCategoryName(sessionCategoryName)
+    private var categoryTabs: [String] {
+        ["All"] + ExerciseCategory.allCases.map(\.pickerDisplayName)
+    }
+
+    private var selectedCategoryFilter: ExerciseCategory? {
+        guard selectedCategoryTab != "All" else { return nil }
+        return ExerciseCategory.allCases.first { $0.pickerDisplayName == selectedCategoryTab }
     }
 
     private var filteredExercises: [Exercise] {
-        viewModel.filteredExercises(query: searchText, category: sessionCategory)
+        viewModel.filteredExercises(query: searchText, category: selectedCategoryFilter)
     }
 
     var body: some View {
@@ -54,64 +59,70 @@ struct ExercisePickerView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 12)
 
-                    List {
-                        if filteredExercises.isEmpty {
-                            Text("No exercises found")
-                                .uiAssetText(.paragraph)
-                                .foregroundStyle(UIAssetColors.textSecondary)
-                                .padding(14)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .uiAssetCardSurface(fill: UIAssetColors.primary)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                        } else {
-                            ForEach(filteredExercises) { exercise in
-                                Button {
-                                    Task {
-                                        await viewModel.addExistingExercise(
-                                            sessionId: sessionId,
-                                            exercise: exercise,
-                                            sessionExerciseRepository: container.sessionExerciseRepository
-                                        )
+                    UIAssetTabFilter(
+                        tabs: categoryTabs,
+                        selectedTab: $selectedCategoryTab
+                    )
+                    .padding(.horizontal, 16)
 
-                                        if viewModel.errorMessage == nil,
-                                           let added = viewModel.lastAddedExerciseSelection {
-                                            onDidAddExercise(added)
-                                            dismiss()
-                                        }
-                                    }
-                                } label: {
-                                    HStack(spacing: 10) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(exercise.name)
-                                                .uiAssetText(.paragraph)
-                                                .foregroundStyle(UIAssetColors.textPrimary)
-                                            Text(exercise.type.displayName)
-                                                .uiAssetText(.caption)
-                                                .foregroundStyle(UIAssetColors.textSecondary)
-                                        }
-
-                                        Spacer(minLength: 0)
-
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundStyle(UIAssetColors.textSecondary)
-                                    }
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            if filteredExercises.isEmpty {
+                                Text("No exercises found")
+                                    .uiAssetText(.paragraph)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
                                     .padding(14)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .contentShape(Rectangle())
                                     .uiAssetCardSurface(fill: UIAssetColors.primary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                            } else {
+                                ForEach(filteredExercises) { exercise in
+                                    Button {
+                                        Task {
+                                            await viewModel.addExistingExercise(
+                                                sessionId: sessionId,
+                                                exercise: exercise,
+                                                sessionExerciseRepository: container.sessionExerciseRepository
+                                            )
+
+                                            if viewModel.errorMessage == nil,
+                                               let added = viewModel.lastAddedExerciseSelection {
+                                                onDidAddExercise(added)
+                                                dismiss()
+                                            }
+                                        }
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(exercise.name)
+                                                    .uiAssetText(.paragraph)
+                                                    .foregroundStyle(UIAssetColors.textPrimary)
+                                                Text(exercise.type.displayName)
+                                                    .uiAssetText(.caption)
+                                                    .foregroundStyle(UIAssetColors.textSecondary)
+                                            }
+
+                                            Spacer(minLength: 0)
+
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundStyle(UIAssetColors.textSecondary)
+                                        }
+                                        .padding(14)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .uiAssetCardSurface(fill: UIAssetColors.primary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
                                 }
-                                .buttonStyle(.plain)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
                             }
                         }
+                        .padding(.bottom, 12)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
+                    .animation(nil, value: selectedCategoryTab)
 
                 }
                 .background(UIAssetColors.secondary.ignoresSafeArea())
@@ -289,14 +300,13 @@ private extension ExerciseType {
 }
 
 private extension ExerciseCategory {
-    static func fromSessionCategoryName(_ value: String) -> ExerciseCategory? {
-        switch value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "push": return .push
-        case "pull": return .pull
-        case "legs": return .legs
-        case "core": return .core
-        case "cardio": return .cardio
-        default: return nil
+    var pickerDisplayName: String {
+        switch self {
+        case .push: return "Push"
+        case .pull: return "Pull"
+        case .legs: return "Legs"
+        case .core: return "Core"
+        case .cardio: return "Cardio"
         }
     }
 }

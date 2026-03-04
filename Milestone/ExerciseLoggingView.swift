@@ -8,6 +8,7 @@ struct ExerciseLoggingView: View {
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = ExerciseLoggingViewModel()
+    @State private var isDeleteExerciseConfirmationPresented = false
 
     var body: some View {
         ZStack {
@@ -25,6 +26,13 @@ struct ExerciseLoggingView: View {
                             .uiAssetText(.h2)
                             .foregroundStyle(UIAssetColors.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Button {
+                            isDeleteExerciseConfirmationPresented = true
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(DestructiveFloatingActionButtonStyle())
 
                         Button("Save") {
                             Task {
@@ -259,6 +267,34 @@ struct ExerciseLoggingView: View {
                     .padding(.horizontal, 16)
                 }
                 .transition(.opacity)
+            } else if isDeleteExerciseConfirmationPresented {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.25))
+                        .ignoresSafeArea()
+
+                    UIAssetAlertDialog(
+                        title: "Remove Exercise",
+                        message: "Remove this exercise from the active session? Logged sets for it will also be removed.",
+                        cancelTitle: "Cancel",
+                        destructiveTitle: "Remove"
+                    ) {
+                        isDeleteExerciseConfirmationPresented = false
+                    } onDestructive: {
+                        isDeleteExerciseConfirmationPresented = false
+                        Task {
+                            let didDelete = await viewModel.deleteSessionExercise(
+                                sessionExerciseId: sessionExerciseId,
+                                sessionExerciseRepository: container.sessionExerciseRepository
+                            )
+                            if didDelete {
+                                dismiss()
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .transition(.opacity)
             }
         }
     }
@@ -340,6 +376,25 @@ struct ExerciseLoggingView: View {
                 }
             }
         }
+    }
+}
+
+private struct DestructiveFloatingActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 36, height: 36)
+            .background(
+                Circle()
+                    .fill(Color(red: 225/255, green: 0, blue: 0))
+                    .shadow(color: Color.black.opacity(0.18), radius: 4, x: 0, y: 2)
+            )
+            .scaleEffect(configuration.isPressed ? 0.86 : 1.0)
+            .animation(
+                .interpolatingSpring(stiffness: 320, damping: 14),
+                value: configuration.isPressed
+            )
     }
 }
 
@@ -722,6 +777,19 @@ final class ExerciseLoggingViewModel: ObservableObject {
             }
 
             try setRepository.upsertSets(sessionExerciseId: sessionExerciseId, sets: setsToPersist)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    func deleteSessionExercise(
+        sessionExerciseId: String,
+        sessionExerciseRepository: SessionExerciseRepository
+    ) async -> Bool {
+        do {
+            try sessionExerciseRepository.removeExerciseFromSession(sessionExerciseId: sessionExerciseId)
             return true
         } catch {
             errorMessage = error.localizedDescription

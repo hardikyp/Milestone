@@ -9,6 +9,8 @@ struct ActiveSessionView: View {
     @StateObject private var viewModel = ActiveSessionViewModel()
     @State private var isExercisePickerPresented = false
     @State private var selectedExerciseForLogging: ExercisePickerView.AddedExerciseSelection?
+    @State private var openSwipeSessionExerciseID: String?
+    @State private var pendingDeleteSessionExerciseID: String?
 
     var body: some View {
         ZStack {
@@ -92,31 +94,30 @@ struct ActiveSessionView: View {
                             .uiAssetCardSurface(fill: UIAssetColors.primary)
                     } else {
                         ForEach(viewModel.exerciseRows) { row in
-                            NavigationLink {
-                                ExerciseLoggingView(
-                                    sessionExerciseId: row.id,
-                                    exerciseName: row.exerciseName,
-                                    exerciseType: row.exerciseType
-                                )
-                            } label: {
-                                HStack(spacing: 10) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(row.exerciseName)
-                                            .uiAssetText(.paragraph)
-                                            .foregroundStyle(UIAssetColors.textPrimary)
-                                        Text("\(row.setCount) sets")
-                                            .uiAssetText(.caption)
-                                            .foregroundStyle(UIAssetColors.textSecondary)
+                            ActiveSessionExerciseSwipeRow(
+                                isOpen: openSwipeSessionExerciseID == row.id,
+                                onOpen: { openSwipeSessionExerciseID = row.id },
+                                onClose: {
+                                    if openSwipeSessionExerciseID == row.id {
+                                        openSwipeSessionExerciseID = nil
                                     }
-                                    Spacer(minLength: 0)
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundStyle(UIAssetColors.textSecondary)
+                                },
+                                onTapRow: {
+                                    if openSwipeSessionExerciseID != nil {
+                                        openSwipeSessionExerciseID = nil
+                                    } else {
+                                        selectedExerciseForLogging = ExercisePickerView.AddedExerciseSelection(
+                                            sessionExerciseID: row.id,
+                                            exerciseName: row.exerciseName,
+                                            exerciseType: row.exerciseType
+                                        )
+                                    }
+                                },
+                                onDelete: {
+                                    pendingDeleteSessionExerciseID = row.id
                                 }
-                                .padding(14)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
-                                .uiAssetCardSurface(fill: UIAssetColors.primary)
+                            ) {
+                                exerciseRow(row)
                             }
                             .buttonStyle(.plain)
                         }
@@ -149,6 +150,40 @@ struct ActiveSessionView: View {
                     .padding(.horizontal, 16)
                 }
                 .transition(.opacity)
+            } else if pendingDeleteSessionExerciseID != nil {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.25))
+                        .ignoresSafeArea()
+
+                    UIAssetAlertDialog(
+                        title: "Remove Exercise",
+                        message: "Remove this exercise from the active session? Logged sets for it will also be removed.",
+                        cancelTitle: "Cancel",
+                        destructiveTitle: "Remove"
+                    ) {
+                        pendingDeleteSessionExerciseID = nil
+                    } onDestructive: {
+                        guard let sessionExerciseId = pendingDeleteSessionExerciseID else { return }
+                        pendingDeleteSessionExerciseID = nil
+                        Task {
+                            await viewModel.deleteSessionExercise(
+                                sessionExerciseId: sessionExerciseId,
+                                sessionExerciseRepository: container.sessionExerciseRepository
+                            )
+
+                            if openSwipeSessionExerciseID == sessionExerciseId {
+                                openSwipeSessionExerciseID = nil
+                            }
+
+                            if viewModel.errorMessage == nil {
+                                await viewModel.loadSessionData(sessionId: sessionId, dbQueue: container.dbQueue)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .transition(.opacity)
             }
         }
         .sheet(isPresented: $isExercisePickerPresented) {
@@ -170,6 +205,28 @@ struct ActiveSessionView: View {
         .task {
             await viewModel.loadSessionData(sessionId: sessionId, dbQueue: container.dbQueue)
         }
+    }
+
+    @ViewBuilder
+    private func exerciseRow(_ row: ActiveSessionViewModel.SessionExerciseRow) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(row.exerciseName)
+                    .uiAssetText(.paragraph)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+                Text("\(row.setCount) sets")
+                    .uiAssetText(.caption)
+                    .foregroundStyle(UIAssetColors.textSecondary)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(UIAssetColors.textSecondary)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 }
 
@@ -241,6 +298,17 @@ final class ActiveSessionViewModel: ObservableObject {
         }
     }
 
+    func deleteSessionExercise(
+        sessionExerciseId: String,
+        sessionExerciseRepository: SessionExerciseRepository
+    ) async {
+        do {
+            try sessionExerciseRepository.removeExerciseFromSession(sessionExerciseId: sessionExerciseId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -253,6 +321,124 @@ final class ActiveSessionViewModel: ObservableObject {
         formatter.timeStyle = .none
         return formatter
     }()
+}
+
+private struct ActiveSessionExerciseSwipeRow<Content: View>: View {
+    let isOpen: Bool
+    let onOpen: () -> Void
+    let onClose: () -> Void
+    let onTapRow: () -> Void
+    let onDelete: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    @State private var dragTranslation: CGFloat = 0
+    @State private var measuredRowHeight: CGFloat = UIAssetMetrics.rowCardHeight
+
+    private let actionGap: CGFloat = 8
+    private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
+    private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
+
+    private var actionWidth: CGFloat { measuredRowHeight }
+    private var actionRevealWidth: CGFloat { actionWidth + actionGap }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            HStack(spacing: 0) {
+                Color.clear
+                    .frame(width: actionGap, height: measuredRowHeight)
+
+                Button(action: onDelete) {
+                    VStack(spacing: 6) {
+                        Image(systemName: "trash")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.white)
+
+                        Text("Remove")
+                            .font(.app(.caption))
+                            .foregroundStyle(.white)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                            .fill(destructiveColor)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                            .stroke(destructiveColor.opacity(0.7), lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                }
+                .buttonStyle(.plain)
+                .frame(width: actionWidth, height: measuredRowHeight)
+            }
+            .frame(width: actionRevealWidth, height: measuredRowHeight, alignment: .leading)
+            .offset(x: actionOffset)
+            .opacity(swipeProgress)
+            .allowsHitTesting(swipeProgress > 0.02)
+
+            content()
+                .contentShape(Rectangle())
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { updateMeasuredRowHeight(proxy.size.height) }
+                            .onChange(of: proxy.size.height) { _, newHeight in
+                                updateMeasuredRowHeight(newHeight)
+                            }
+                    }
+                )
+                .onTapGesture { onTapRow() }
+                .offset(x: rowOffset)
+                .highPriorityGesture(dragGesture)
+        }
+        .animation(settleAnimation, value: isOpen)
+    }
+
+    private var rowOffset: CGFloat {
+        let baseOffset = isOpen ? -actionRevealWidth : 0
+        let proposedOffset = baseOffset + dragTranslation
+        return min(0, max(-actionRevealWidth, proposedOffset))
+    }
+
+    private var actionOffset: CGFloat {
+        actionRevealWidth + rowOffset
+    }
+
+    private var swipeProgress: CGFloat {
+        min(1, max(0, -rowOffset / actionRevealWidth))
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                dragTranslation = value.translation.width
+            }
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                let baseOffset = isOpen ? -actionRevealWidth : 0
+                let projected = baseOffset + value.predictedEndTranslation.width
+                let shouldOpen = projected < -actionRevealWidth * 0.45
+
+                withAnimation(settleAnimation) {
+                    dragTranslation = 0
+                    if shouldOpen {
+                        onOpen()
+                    } else {
+                        onClose()
+                    }
+                }
+            }
+    }
+
+    private func updateMeasuredRowHeight(_ newHeight: CGFloat) {
+        let resolvedHeight = max(newHeight, 1)
+        if abs(resolvedHeight - measuredRowHeight) > 0.5 {
+            measuredRowHeight = resolvedHeight
+        }
+    }
 }
 
 #Preview {

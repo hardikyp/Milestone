@@ -22,34 +22,37 @@ struct ExercisesView: View {
                     )
                     .padding(.horizontal, 16)
 
-                    List(filteredExercises) { exercise in
-                        ExerciseSwipeRow(
-                            canDelete: exercise.source != .seeded,
-                            isOpen: openSwipeExerciseID == exercise.id,
-                            onOpen: { openSwipeExerciseID = exercise.id },
-                            onClose: {
-                                if openSwipeExerciseID == exercise.id {
-                                    openSwipeExerciseID = nil
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredExercises) { exercise in
+                                ExerciseSwipeRow(
+                                    canDelete: exercise.source != .seeded,
+                                    isOpen: openSwipeExerciseID == exercise.id,
+                                    onOpen: { openSwipeExerciseID = exercise.id },
+                                    onClose: {
+                                        if openSwipeExerciseID == exercise.id {
+                                            openSwipeExerciseID = nil
+                                        }
+                                    },
+                                    onTapRow: {
+                                        if openSwipeExerciseID != nil {
+                                            openSwipeExerciseID = nil
+                                        } else {
+                                            navigationPath.append(exercise.id)
+                                        }
+                                    },
+                                    onDelete: { pendingDeleteExercise = exercise }
+                                ) {
+                                    exerciseRow(exercise)
                                 }
-                            },
-                            onTapRow: {
-                                if openSwipeExerciseID != nil {
-                                    openSwipeExerciseID = nil
-                                } else {
-                                    navigationPath.append(exercise.id)
-                                }
-                            },
-                            onDelete: { pendingDeleteExercise = exercise }
-                        ) {
-                            exerciseRow(exercise)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                            }
                         }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .padding(.bottom, 12)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
                     .background(UIAssetColors.secondary)
+                    .animation(nil, value: selectedCategoryTab)
                 }
                 .background(UIAssetColors.secondary.ignoresSafeArea())
                 .toolbar(.hidden, for: .navigationBar)
