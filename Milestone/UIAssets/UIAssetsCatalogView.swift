@@ -678,6 +678,25 @@ struct UIAssetFloatingActionButtonStyle: ButtonStyle {
     }
 }
 
+struct UIAssetDestructiveFloatingActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 36, height: 36)
+            .background(
+                Circle()
+                    .fill(Color(red: 225/255, green: 0, blue: 0))
+                    .shadow(color: Color.black.opacity(0.18), radius: 4, x: 0, y: 2)
+            )
+            .scaleEffect(configuration.isPressed ? 0.86 : 1.0)
+            .animation(
+                .interpolatingSpring(stiffness: 320, damping: 14),
+                value: configuration.isPressed
+            )
+    }
+}
+
 struct UIAssetTextActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         Content(configuration: configuration)
