@@ -209,24 +209,17 @@ struct ActiveSessionView: View {
 
     @ViewBuilder
     private func exerciseRow(_ row: ActiveSessionViewModel.SessionExerciseRow) -> some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(row.exerciseName)
-                    .uiAssetText(.paragraph)
-                    .foregroundStyle(UIAssetColors.textPrimary)
-                Text("\(row.setCount) sets")
-                    .uiAssetText(.caption)
-                    .foregroundStyle(UIAssetColors.textSecondary)
-            }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
+        UIAssetExerciseCard(
+            symbolName: UIAssetExerciseCard<EmptyView>.symbolName(
+                for: row.exerciseType,
+                category: row.exerciseCategory
+            ),
+            title: row.exerciseName
+        ) {
+            Text("\(row.setCount) sets")
+                .uiAssetText(.caption)
                 .foregroundStyle(UIAssetColors.textSecondary)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 }
 
@@ -236,6 +229,7 @@ final class ActiveSessionViewModel: ObservableObject {
         let id: String
         let exerciseName: String
         let exerciseType: ExerciseType
+        let exerciseCategory: ExerciseCategory?
         let setCount: Int
         let orderIndex: Int
     }
@@ -259,12 +253,13 @@ final class ActiveSessionViewModel: ObservableObject {
                         se.order_index,
                         e.name AS exercise_name,
                         e.type AS exercise_type,
+                        e.exercise_category AS exercise_category,
                         COUNT(s.id) AS set_count
                     FROM session_exercises se
                     JOIN exercises e ON e.id = se.exercise_id
                     LEFT JOIN sets s ON s.session_exercise_id = se.id
                     WHERE se.session_id = ?
-                    GROUP BY se.id, se.order_index, e.name, e.type
+                    GROUP BY se.id, se.order_index, e.name, e.type, e.exercise_category
                     ORDER BY se.order_index ASC
                     """, arguments: [sessionId])
 
@@ -277,10 +272,12 @@ final class ActiveSessionViewModel: ObservableObject {
             exerciseRows = result.1.map {
                 let rawType: String = $0["exercise_type"]
                 let type = ExerciseType(rawValue: rawType) ?? .weight
+                let rawCategory: String? = $0["exercise_category"]
                 return SessionExerciseRow(
                     id: $0["id"],
                     exerciseName: $0["exercise_name"],
                     exerciseType: type,
+                    exerciseCategory: rawCategory.flatMap(ExerciseCategory.init(rawValue:)),
                     setCount: $0["set_count"],
                     orderIndex: $0["order_index"]
                 )

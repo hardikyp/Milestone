@@ -164,36 +164,19 @@ struct ExercisesView: View {
 
     @ViewBuilder
     private func exerciseRow(_ exercise: Exercise) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: exercise.listSymbolName)
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(UIAssetColors.accent)
-                .frame(width: 30, height: 30)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(exercise.name)
-                        .uiAssetText(.subtitle)
-                        .foregroundStyle(UIAssetColors.textPrimary)
-                    if exercise.source == .user {
-                        UIAssetBadge(text: "User", variant: .accent)
-                    }
-                }
-
-                Text("\(exercise.category?.displayName ?? "Uncategorized") • \(exercise.type.displayName)")
-                    .uiAssetText(.caption)
-                    .foregroundStyle(UIAssetColors.textSecondary)
+        UIAssetExerciseCard(
+            symbolName: UIAssetExerciseCard<EmptyView>.symbolName(
+                for: exercise.type,
+                category: exercise.category
+            ),
+            title: exercise.name,
+            showsChevron: true
+        ) {
+            HStack(spacing: 8) {
+                UIAssetBadge(text: exercise.type.displayName, variant: .accent)
+                UIAssetBadge(text: exercise.category?.displayName ?? "Uncategorized", variant: .neutral)
             }
-
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(UIAssetColors.textSecondary)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 14)
-        .contentShape(Rectangle())
-        .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 
     private func dialogBackdrop<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -715,16 +698,6 @@ private extension Exercise {
             targetArea: targetArea,
             mediaURI: mediaURI
         )
-    }
-
-    var listSymbolName: String {
-        if category == .core {
-            return "figure.core.training.circle.fill"
-        }
-        if category == .cardio || type == .cardio {
-            return "figure.run.circle.fill"
-        }
-        return "figure.strengthtraining.traditional.circle.fill"
     }
 }
 

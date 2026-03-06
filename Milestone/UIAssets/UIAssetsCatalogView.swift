@@ -659,6 +659,65 @@ struct UIAssetBadge: View {
     }
 }
 
+struct UIAssetExerciseCard<MetaContent: View>: View {
+    let symbolName: String
+    let title: String
+    var showsChevron: Bool = false
+    @ViewBuilder let metaContent: () -> MetaContent
+
+    init(
+        symbolName: String,
+        title: String,
+        showsChevron: Bool = false,
+        @ViewBuilder metaContent: @escaping () -> MetaContent
+    ) {
+        self.symbolName = symbolName
+        self.title = title
+        self.showsChevron = showsChevron
+        self.metaContent = metaContent
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbolName)
+                .font(.system(size: 45, weight: .semibold))
+                .foregroundStyle(UIAssetColors.accent)
+                .frame(width: 45, height: 45)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .uiAssetText(.h5)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                metaContent()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(UIAssetColors.textSecondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
+    }
+
+    static func symbolName(for type: ExerciseType, category: ExerciseCategory?) -> String {
+        if category == .core {
+            return "figure.core.training.circle.fill"
+        }
+        if category == .cardio || type == .cardio {
+            return "figure.run.circle.fill"
+        }
+        return "figure.strengthtraining.traditional.circle.fill"
+    }
+}
+
 struct UIAssetFloatingActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -1497,6 +1556,21 @@ struct UIAssetsCatalogView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
             .uiAssetCardSurface(fill: UIAssetColors.primary)
+
+            Text("Exercise List Card")
+                .uiAssetText(.h5)
+                .foregroundStyle(UIAssetColors.textPrimary)
+
+            UIAssetExerciseCard(
+                symbolName: UIAssetExerciseCard<EmptyView>.symbolName(for: .weight, category: .push),
+                title: "Bench Press",
+                showsChevron: true
+            ) {
+                HStack(spacing: 8) {
+                    UIAssetBadge(text: "Weight", variant: .accent)
+                    UIAssetBadge(text: "Push", variant: .neutral)
+                }
+            }
         }
     }
 

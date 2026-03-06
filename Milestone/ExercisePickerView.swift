@@ -93,26 +93,21 @@ struct ExercisePickerView: View {
                                             }
                                         }
                                     } label: {
-                                        HStack(spacing: 10) {
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(exercise.name)
-                                                    .uiAssetText(.paragraph)
-                                                    .foregroundStyle(UIAssetColors.textPrimary)
-                                                Text(exercise.type.displayName)
-                                                    .uiAssetText(.caption)
-                                                    .foregroundStyle(UIAssetColors.textSecondary)
+                                        UIAssetExerciseCard(
+                                            symbolName: UIAssetExerciseCard<EmptyView>.symbolName(
+                                                for: exercise.type,
+                                                category: exercise.category
+                                            ),
+                                            title: exercise.name
+                                        ) {
+                                            HStack(spacing: 8) {
+                                                UIAssetBadge(text: exercise.type.displayName, variant: .accent)
+                                                UIAssetBadge(
+                                                    text: exercise.category?.pickerDisplayName ?? "Uncategorized",
+                                                    variant: .neutral
+                                                )
                                             }
-
-                                            Spacer(minLength: 0)
-
-                                            Image(systemName: "chevron.right")
-                                                .font(.system(size: 12, weight: .semibold))
-                                                .foregroundStyle(UIAssetColors.textSecondary)
                                         }
-                                        .padding(14)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .uiAssetCardSurface(fill: UIAssetColors.primary)
                                     }
                                     .buttonStyle(.plain)
                                     .padding(.horizontal, 16)
