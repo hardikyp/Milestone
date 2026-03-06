@@ -74,7 +74,7 @@ struct SessionDetailView: View {
                                 .foregroundStyle(UIAssetColors.textSecondary)
                         }
 
-                        Text(String(format: "Total Volume: %.1f kg", viewModel.totalVolumeKg))
+                        Text("Total Volume: \(viewModel.totalVolumeText)")
                             .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
                     }
@@ -98,7 +98,12 @@ struct SessionDetailView: View {
                                         Text("Set \(set.setIndex)")
                                             .uiAssetText(.footnote)
                                             .foregroundStyle(UIAssetColors.textPrimary)
-                                        Text(set.summary)
+                                        Text(
+                                            set.summary(
+                                                weightUnit: viewModel.preferredWeightUnit,
+                                                distanceUnit: viewModel.preferredDistanceUnit
+                                            )
+                                        )
                                             .uiAssetText(.caption)
                                             .foregroundStyle(UIAssetColors.textSecondary)
                                     }
@@ -319,23 +324,35 @@ final class SessionDetailViewModel: ObservableObject {
         let durationSec: Int?
         let comment: String?
 
-        var summary: String {
+        func summary(
+            weightUnit: SettingsViewModel.WeightUnit,
+            distanceUnit: SettingsViewModel.DistanceUnit
+        ) -> String {
             switch metricType {
             case .strength:
                 let repsPart = reps.map { "\($0) reps" } ?? "- reps"
-                let weightPart = weightKg.map { String(format: "%.1f kg", $0) } ?? "- kg"
+                let weightPart = weightKg.map {
+                    UnitDisplayFormatter.weightText($0, unit: weightUnit, maxFractionDigits: 1)
+                } ?? "- \(UnitDisplayFormatter.weightSymbol(weightUnit))"
                 return [repsPart, weightPart].joined(separator: " • ")
             case .repsOnly:
                 return "\(reps ?? 0) reps"
             case .time:
                 return "\(durationSec ?? 0)s"
             case .distanceOnly:
-                let distance = distanceM ?? 0
-                return String(format: "%.0f m", distance)
+                guard let distance = distanceM else {
+                    return "- \(UnitDisplayFormatter.distanceSymbol(distanceUnit))"
+                }
+                return UnitDisplayFormatter.distanceText(distance, unit: distanceUnit, maxFractionDigits: 3)
             case .distanceTime:
-                let distance = distanceM ?? 0
+                let distanceText: String
+                if let distance = distanceM {
+                    distanceText = UnitDisplayFormatter.distanceText(distance, unit: distanceUnit, maxFractionDigits: 3)
+                } else {
+                    distanceText = "- \(UnitDisplayFormatter.distanceSymbol(distanceUnit))"
+                }
                 let duration = durationSec ?? 0
-                return String(format: "%.0f m • %ds", distance, duration)
+                return "\(distanceText) • \(duration)s"
             }
         }
     }
@@ -354,11 +371,19 @@ final class SessionDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isEnding = false
     @Published var errorMessage: String?
+    @Published private(set) var preferredWeightUnit: SettingsViewModel.WeightUnit = .kg
+    @Published private(set) var preferredDistanceUnit: SettingsViewModel.DistanceUnit = .km
+
+    var totalVolumeText: String {
+        UnitDisplayFormatter.volumeText(totalVolumeKg, unit: preferredWeightUnit, maxFractionDigits: 1)
+    }
 
     func load(sessionId: String, dbQueue: DatabaseQueue) async {
         isLoading = true
 
         do {
+            preferredWeightUnit = AppUnitPreferences.weightUnit()
+            preferredDistanceUnit = AppUnitPreferences.distanceUnit()
             let statsService = StatsService(dbQueue: dbQueue)
 
             let loaded = try dbQueue.read { db in

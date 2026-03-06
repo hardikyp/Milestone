@@ -707,7 +707,7 @@ final class ExerciseLoggingViewModel: ObservableObject {
                     secondsRaw: row.durationSecText
                 )
                 let weight = enteredWeight.map { UnitConverter.weightToKilograms($0, unit: preferredWeightUnit) }
-                let distance = enteredDistance.map { UnitConverter.distanceToMeters($0, unit: preferredDistanceUnit) }
+                let distance = enteredDistance.map { UnitConverter.distanceToKilometers($0, unit: preferredDistanceUnit) }
 
                 let finalReps: Int?
                 let finalWeight: Double?
@@ -733,12 +733,12 @@ final class ExerciseLoggingViewModel: ObservableObject {
                 case .distanceOnly:
                     finalReps = nil
                     finalWeight = nil
-                    finalDistance = try requireValue(distance, field: "distance_m")
+                    finalDistance = try requireValue(distance, field: "distance_km")
                     finalDuration = nil
                 case .distanceTime:
                     finalReps = nil
                     finalWeight = nil
-                    finalDistance = try requireValue(distance, field: "distance_m")
+                    finalDistance = try requireValue(distance, field: "distance_km")
                     finalDuration = try requireValue(duration, field: "duration_sec")
                 }
 

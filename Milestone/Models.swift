@@ -357,11 +357,11 @@ struct WorkoutSet: FetchableRecord, MutablePersistableRecord, Identifiable, Equa
             }
         case .distanceOnly:
             guard distanceM != nil else {
-                throw ModelError.invalidSet("distance_only set requires distance_m")
+                throw ModelError.invalidSet("distance_only set requires distance_km")
             }
         case .distanceTime:
             guard distanceM != nil, durationSec != nil else {
-                throw ModelError.invalidSet("distance_time set requires distance_m and duration_sec")
+                throw ModelError.invalidSet("distance_time set requires distance_km and duration_sec")
             }
         }
     }

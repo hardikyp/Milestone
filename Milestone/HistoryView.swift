@@ -218,15 +218,8 @@ struct HistoryView: View {
 
     private func volumeText(for totalVolumeKg: Double) -> String {
         let weightUnit = AppUnitPreferences.weightUnit()
-        let convertedVolume = UnitConverter.weightToDisplay(totalVolumeKg, unit: weightUnit)
-        let symbol: String
-        switch weightUnit {
-        case .kg:
-            symbol = "kg"
-        case .lb:
-            symbol = "lb"
-        }
-        return String(format: "Volume: %.1f %@", convertedVolume, symbol)
+        let volume = UnitDisplayFormatter.volumeText(totalVolumeKg, unit: weightUnit, maxFractionDigits: 1)
+        return "Volume: \(volume)"
     }
 }
 

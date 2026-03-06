@@ -43,7 +43,7 @@ struct DataTransferRestoreResult {
 
 struct DataTransferService {
     static let appDataFolderName = "MilestoneData"
-    private static let currentPayloadVersion = 1
+    private static let currentPayloadVersion = 2
 
     private let fileManager: FileManager
     private let defaults: UserDefaults
@@ -194,6 +194,15 @@ struct DataTransferService {
             guard envelope.payloadVersion <= Self.currentPayloadVersion else {
                 throw DataTransferError.unsupportedPayloadVersion(envelope.payloadVersion)
             }
+            if envelope.payloadVersion == 1 {
+                return PayloadEnvelopeV1(
+                    kind: envelope.kind,
+                    payloadVersion: Self.currentPayloadVersion,
+                    generatedAt: envelope.generatedAt,
+                    appVersion: envelope.appVersion,
+                    payload: Self.migratePayloadDistanceMetersToKilometers(envelope.payload)
+                )
+            }
             return envelope
         }
 
@@ -203,7 +212,7 @@ struct DataTransferService {
                 payloadVersion: Self.currentPayloadVersion,
                 generatedAt: DateISO8601.string(from: Date()),
                 appVersion: Self.appVersionString,
-                payload: legacy.migratedToV1()
+                payload: Self.migratePayloadDistanceMetersToKilometers(legacy.migratedToV1())
             )
         }
 
@@ -554,6 +563,48 @@ struct DataTransferService {
             return "unknown"
         }
     }
+
+    private static func migratePayloadDistanceMetersToKilometers(_ payload: PayloadV1) -> PayloadV1 {
+        PayloadV1(
+            exercises: payload.exercises,
+            sessions: payload.sessions,
+            sessionExercises: payload.sessionExercises,
+            sets: payload.sets.map { item in
+                SetRecord(
+                    id: item.id,
+                    sessionExerciseID: item.sessionExerciseID,
+                    setIndex: item.setIndex,
+                    metricType: item.metricType,
+                    reps: item.reps,
+                    weightKg: item.weightKg,
+                    distanceM: item.distanceM.map { $0 / 1000.0 },
+                    durationSec: item.durationSec,
+                    comment: item.comment,
+                    createdAt: item.createdAt,
+                    updatedAt: item.updatedAt
+                )
+            },
+            templates: payload.templates,
+            templateExercises: payload.templateExercises.map { item in
+                TemplateExerciseRecord(
+                    id: item.id,
+                    templateID: item.templateID,
+                    exerciseID: item.exerciseID,
+                    orderIndex: item.orderIndex,
+                    targetSets: item.targetSets,
+                    targetReps: item.targetReps,
+                    targetWeightKg: item.targetWeightKg,
+                    targetDistanceM: item.targetDistanceM.map { $0 / 1000.0 },
+                    targetDurationSec: item.targetDurationSec,
+                    notes: item.notes,
+                    createdAt: item.createdAt,
+                    updatedAt: item.updatedAt
+                )
+            },
+            bodyMetrics: payload.bodyMetrics,
+            settings: payload.settings
+        )
+    }
 }
 
 private struct PayloadEnvelopeV1: Codable {
@@ -813,6 +864,32 @@ private struct SetRecord: Codable {
         case updatedAt = "updated_at"
     }
 
+    init(
+        id: String,
+        sessionExerciseID: String,
+        setIndex: Int,
+        metricType: String,
+        reps: Int?,
+        weightKg: Double?,
+        distanceM: Double?,
+        durationSec: Int?,
+        comment: String?,
+        createdAt: String,
+        updatedAt: String
+    ) {
+        self.id = id
+        self.sessionExerciseID = sessionExerciseID
+        self.setIndex = setIndex
+        self.metricType = metricType
+        self.reps = reps
+        self.weightKg = weightKg
+        self.distanceM = distanceM
+        self.durationSec = durationSec
+        self.comment = comment
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
     init(model: WorkoutSet) {
         id = model.id
         sessionExerciseID = model.sessionExerciseID
@@ -909,6 +986,34 @@ private struct TemplateExerciseRecord: Codable {
         case notes
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    init(
+        id: String,
+        templateID: String,
+        exerciseID: String,
+        orderIndex: Int,
+        targetSets: Int?,
+        targetReps: Int?,
+        targetWeightKg: Double?,
+        targetDistanceM: Double?,
+        targetDurationSec: Int?,
+        notes: String?,
+        createdAt: String,
+        updatedAt: String
+    ) {
+        self.id = id
+        self.templateID = templateID
+        self.exerciseID = exerciseID
+        self.orderIndex = orderIndex
+        self.targetSets = targetSets
+        self.targetReps = targetReps
+        self.targetWeightKg = targetWeightKg
+        self.targetDistanceM = targetDistanceM
+        self.targetDurationSec = targetDurationSec
+        self.notes = notes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 
     init(model: TemplateExercise) {

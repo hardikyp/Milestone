@@ -255,12 +255,30 @@ final class TemplateDetailViewModel: ObservableObject {
                 let targetWeight: Double? = row["target_weight_kg"]
                 let targetDistance: Double? = row["target_distance_m"]
                 let targetDuration: Int? = row["target_duration_sec"]
+                let preferredWeightUnit = AppUnitPreferences.weightUnit()
+                let preferredDistanceUnit = AppUnitPreferences.distanceUnit()
 
                 var parts: [String] = []
                 if let targetSets { parts.append("\(targetSets) sets") }
                 if let targetReps { parts.append("\(targetReps) reps") }
-                if let targetWeight { parts.append(String(format: "%.1f kg", targetWeight)) }
-                if let targetDistance { parts.append(String(format: "%.0f m", targetDistance)) }
+                if let targetWeight {
+                    parts.append(
+                        UnitDisplayFormatter.weightText(
+                            targetWeight,
+                            unit: preferredWeightUnit,
+                            maxFractionDigits: 1
+                        )
+                    )
+                }
+                if let targetDistance {
+                    parts.append(
+                        UnitDisplayFormatter.distanceText(
+                            targetDistance,
+                            unit: preferredDistanceUnit,
+                            maxFractionDigits: 3
+                        )
+                    )
+                }
                 if let targetDuration { parts.append("\(targetDuration)s") }
 
                 return DisplayRow(

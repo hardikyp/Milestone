@@ -374,6 +374,24 @@ enum Migrations {
             )
         }
 
+        migrator.registerMigration("v6_store_distance_as_kilometers") { db in
+            if try db.tableExists("sets") {
+                try db.execute(sql: """
+                    UPDATE sets
+                    SET distance_m = distance_m / 1000.0
+                    WHERE distance_m IS NOT NULL
+                    """)
+            }
+
+            if try db.tableExists("template_exercises") {
+                try db.execute(sql: """
+                    UPDATE template_exercises
+                    SET target_distance_m = target_distance_m / 1000.0
+                    WHERE target_distance_m IS NOT NULL
+                    """)
+            }
+        }
+
         return migrator
     }
 }

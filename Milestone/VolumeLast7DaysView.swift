@@ -39,7 +39,9 @@ struct VolumeLast7DaysView: View {
 
     private var totalText: String {
         let total = points.reduce(0) { $0 + $1.volumeKg }
-        return String(format: "Total: %.1f kg", total)
+        let preferredWeightUnit = AppUnitPreferences.weightUnit()
+        let valueText = UnitDisplayFormatter.volumeText(total, unit: preferredWeightUnit, maxFractionDigits: 1)
+        return "Total: \(valueText)"
     }
 
     private func barHeight(for volume: Double) -> CGFloat {

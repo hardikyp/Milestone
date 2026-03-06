@@ -33,7 +33,6 @@ enum AppUnitPreferences {
 enum UnitConverter {
     private static let kilogramsPerPound = 0.453_592_37
     private static let kilometersPerMile = 1.609_344
-    private static let metersPerKilometer = 1_000.0
 
     static func weightToDisplay(_ kilograms: Double, unit: SettingsViewModel.WeightUnit) -> Double {
         switch unit {
@@ -53,8 +52,7 @@ enum UnitConverter {
         }
     }
 
-    static func distanceToDisplay(_ meters: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
-        let kilometers = meters / metersPerKilometer
+    static func distanceToDisplay(_ kilometers: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
         switch unit {
         case .km:
             return kilometers
@@ -63,12 +61,12 @@ enum UnitConverter {
         }
     }
 
-    static func distanceToMeters(_ value: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
+    static func distanceToKilometers(_ value: Double, unit: SettingsViewModel.DistanceUnit) -> Double {
         switch unit {
         case .km:
-            return value * metersPerKilometer
+            return value
         case .miles:
-            return value * kilometersPerMile * metersPerKilometer
+            return value * kilometersPerMile
         }
     }
 }
