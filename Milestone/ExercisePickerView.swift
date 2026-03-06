@@ -98,7 +98,8 @@ struct ExercisePickerView: View {
                                                 for: exercise.type,
                                                 category: exercise.category
                                             ),
-                                            title: exercise.name
+                                            title: exercise.name,
+                                            titleStyle: .paragraphSemibold
                                         ) {
                                             HStack(spacing: 8) {
                                                 UIAssetBadge(text: exercise.type.displayName, variant: .accent)
@@ -128,7 +129,7 @@ struct ExercisePickerView: View {
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         TextField("Search exercises", text: $searchText)
-                            .font(.app(.body))
+                            .font(UIAssetTextStyle.paragraph.font)
                             .foregroundStyle(UIAssetColors.textPrimary)
                     }
                     .padding(.horizontal, 12)

@@ -2,16 +2,35 @@ import SwiftUI
 import UIKit
 
 enum UIAssetColors {
-    static let primary = Color.white
-    static let secondary = Color(red: 250 / 255, green: 250 / 255, blue: 250 / 255)
-    static let accent = Color(red: 3 / 255, green: 57 / 255, blue: 50 / 255)
+    private static let lightPrimaryUIColor = UIColor.white
+    private static let lightSecondaryUIColor = UIColor(red: 248 / 255, green: 248 / 255, blue: 248 / 255, alpha: 1)
+    private static let darkPrimaryUIColor = UIColor(red: 30 / 255, green: 30 / 255, blue: 30 / 255, alpha: 1)
+    private static let darkSecondaryUIColor = UIColor(red: 0.040962, green: 0.091885, blue: 0.1121, alpha: 1)
+
+    static let primary = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark ? darkPrimaryUIColor : lightPrimaryUIColor
+        }
+    )
+    static let secondary = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark ? darkSecondaryUIColor : lightSecondaryUIColor
+        }
+    )
+    static let accent = Color(red: 0.023529, green: 0.24706, blue: 0.28235)
     static let accentSecondary = Color(red: 224 / 255, green: 234 / 255, blue: 231 / 255)
 
     static let textPrimary = Color.primary
     static let textSecondary = Color.secondary
     static let background = secondary
     static let surface = primary
-    static let border = Color.black.opacity(0.08)
+    static let border = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.16)
+                : UIColor.black.withAlphaComponent(0.08)
+        }
+    )
 }
 
 enum UIAssetMetrics {
@@ -120,7 +139,7 @@ struct UIAssetInlineDropdownHost<Content: View>: View {
                 }
             }
         }
-        .background(Color.white)
+        .background(UIAssetColors.surface)
         .clipShape(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
         )
@@ -169,38 +188,47 @@ enum UIAssetTextStyle: String, CaseIterable, Identifiable {
     case h1 = "H1 Heading"
     case h2 = "H2 Heading"
     case h3 = "H3 Heading"
-    case h4 = "H4 Heading"
-    case h5 = "H5 Heading"
-    case h6 = "H6 Heading"
     case paragraph = "Paragraph"
+    case paragraphSemibold = "Paragraph Semibold"
+    case paragraphBold = "Paragraph Bold"
     case subtitle = "Subtitle"
     case footnote = "Footnote"
-    case caption = "Caption"
 
     var id: String { rawValue }
+
+    static var allCases: [UIAssetTextStyle] {
+        [
+            .h1, .h2, .h3,
+            .paragraph, .paragraphSemibold, .paragraphBold, .subtitle, .footnote
+        ]
+    }
+
+    private static let headingRatio: CGFloat = 1.25
+    private static let paragraphSize: CGFloat = 17
+    private static let h3Size: CGFloat = paragraphSize * headingRatio
+    private static let h2Size: CGFloat = h3Size * headingRatio
+    private static let h1Size: CGFloat = h2Size * headingRatio
+    private static let subtitleSize: CGFloat = paragraphSize / headingRatio
+    private static let footnoteSize: CGFloat = subtitleSize / headingRatio
 
     var font: Font {
         switch self {
         case .h1:
-            return .app(.largeTitle).weight(.heavy)
+            return AppTypography.font(size: Self.h1Size, weight: .bold, relativeTo: .title)
         case .h2:
-            return .app(.title).weight(.bold)
+            return AppTypography.font(size: Self.h2Size, weight: .semibold, relativeTo: .title)
         case .h3:
-            return .app(.title2).weight(.bold)
-        case .h4:
-            return .app(.title3).weight(.bold)
-        case .h5:
-            return .app(.headline).weight(.semibold)
-        case .h6:
-            return .app(.subheadline).weight(.semibold)
+            return AppTypography.font(size: Self.h3Size, weight: .semibold, relativeTo: .title2)
         case .paragraph:
-            return .app(.body)
+            return AppTypography.font(size: Self.paragraphSize, weight: .regular, relativeTo: .body)
+        case .paragraphSemibold:
+            return AppTypography.font(size: Self.paragraphSize, weight: .semibold, relativeTo: .body)
+        case .paragraphBold:
+            return AppTypography.font(size: Self.paragraphSize, weight: .bold, relativeTo: .body)
         case .subtitle:
-            return .app(.subheadline)
+            return AppTypography.font(size: Self.subtitleSize, weight: .regular, relativeTo: .subheadline)
         case .footnote:
-            return .app(.footnote)
-        case .caption:
-            return .app(.caption)
+            return AppTypography.font(size: Self.footnoteSize, weight: .regular, relativeTo: .footnote)
         }
     }
 
@@ -214,6 +242,13 @@ enum UIAssetTextStyle: String, CaseIterable, Identifiable {
             return 1
         }
     }
+}
+
+extension UIAssetTextStyle {
+    static let h4: UIAssetTextStyle = .h1
+    static let h5: UIAssetTextStyle = .h2
+    static let h6: UIAssetTextStyle = .h3
+    static let caption: UIAssetTextStyle = .footnote
 }
 
 extension View {
@@ -253,7 +288,8 @@ struct UIAssetButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.headline))
+            .font(UIAssetTextStyle.paragraph.font)
+            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
             .foregroundStyle(foregroundColor)
             .frame(minWidth: symbolOnly ? 44 : nil)
             .frame(maxWidth: symbolOnly ? 44 : .infinity)
@@ -337,7 +373,7 @@ struct UIAssetSlidingToggle: View {
             .buttonStyle(.plain)
 
             Text(title)
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             Spacer(minLength: 0)
@@ -376,10 +412,10 @@ struct UIAssetRadioCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .uiAssetText(.subtitle)
-                        .foregroundStyle(UIAssetColors.textPrimary)
+                        .foregroundStyle(isSelected ? UIAssetColors.accent : UIAssetColors.textPrimary)
                     Text(subtitle)
                         .uiAssetText(.footnote)
-                        .foregroundStyle(UIAssetColors.textSecondary)
+                        .foregroundStyle(isSelected ? UIAssetColors.accent : UIAssetColors.textSecondary)
                 }
 
                 Spacer(minLength: 0)
@@ -421,7 +457,7 @@ struct UIAssetCheckboxCard: View {
 
                 Text(title)
                     .uiAssetText(.paragraph)
-                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .foregroundStyle(isChecked ? UIAssetColors.accent : UIAssetColors.textPrimary)
 
                 Spacer(minLength: 0)
             }
@@ -451,7 +487,7 @@ struct UIAssetRowSlideActionButton: View {
                 .foregroundStyle(iconColor)
 
             Text(title)
-                .font(.app(.caption))
+                .uiAssetText(.footnote)
                 .foregroundStyle(iconColor)
         }
         .frame(width: 56, height: height)
@@ -556,7 +592,7 @@ struct UIAssetTiledButton: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(label)
-                        .uiAssetText(.h4)
+                        .uiAssetText(.h3)
                         .foregroundStyle(labelColor)
 
                     Text(description)
@@ -643,7 +679,7 @@ struct UIAssetBadge: View {
                 .frame(width: 6, height: 6)
 
             Text(text)
-                .uiAssetText(.caption)
+                .uiAssetText(.subtitle)
                 .foregroundStyle(textColor)
         }
         .padding(.horizontal, 10)
@@ -662,17 +698,20 @@ struct UIAssetBadge: View {
 struct UIAssetExerciseCard<MetaContent: View>: View {
     let symbolName: String
     let title: String
+    var titleStyle: UIAssetTextStyle = .paragraphSemibold
     var showsChevron: Bool = false
     @ViewBuilder let metaContent: () -> MetaContent
 
     init(
         symbolName: String,
         title: String,
+        titleStyle: UIAssetTextStyle = .paragraphSemibold,
         showsChevron: Bool = false,
         @ViewBuilder metaContent: @escaping () -> MetaContent
     ) {
         self.symbolName = symbolName
         self.title = title
+        self.titleStyle = titleStyle
         self.showsChevron = showsChevron
         self.metaContent = metaContent
     }
@@ -686,7 +725,7 @@ struct UIAssetExerciseCard<MetaContent: View>: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .uiAssetText(.h5)
+                    .uiAssetText(titleStyle)
                     .foregroundStyle(UIAssetColors.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
@@ -832,7 +871,7 @@ private struct UIAssetAlertDialogOverlayPreview: View {
                 .overlay(
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Background Content")
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h1)
                         Text("This content is blurred and dimmed while the alert is active.")
                             .uiAssetText(.paragraph)
                     }
@@ -876,7 +915,7 @@ struct UIAssetTabFilter: View {
                 } label: {
                     VStack(spacing: 8) {
                         Text(tab)
-                            .font(.app(.subheadline))
+                            .font(UIAssetTextStyle.subtitle.font)
                             .foregroundStyle(isSelected ? UIAssetColors.accent : UIAssetColors.textSecondary)
                             .frame(maxWidth: .infinity)
 
@@ -913,11 +952,11 @@ struct UIAssetTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .uiAssetText(.caption)
+                .uiAssetText(.footnote)
                 .foregroundStyle(UIAssetColors.textSecondary)
 
             TextField(placeholder, text: $text)
-                .font(.app(.body))
+                .font(UIAssetTextStyle.paragraph.font)
                 .keyboardType(keyboardType)
                 .padding(.horizontal, 12)
                 .frame(height: 44)
@@ -961,7 +1000,7 @@ struct UIAssetSelectField: View {
                 .foregroundStyle(UIAssetColors.textSecondary)
 
             Text(title)
-                .uiAssetText(.caption)
+                .uiAssetText(.subtitle)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             Button {
@@ -974,7 +1013,7 @@ struct UIAssetSelectField: View {
                         avatar(for: selected)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(selected.name)
-                                .uiAssetText(.subtitle)
+                                .uiAssetText(.paragraph)
                                 .foregroundStyle(UIAssetColors.textPrimary)
                             Text("@\(selected.handle)")
                                 .uiAssetText(.footnote)
@@ -982,7 +1021,7 @@ struct UIAssetSelectField: View {
                         }
                     } else {
                         Text(placeholder)
-                            .uiAssetText(.subtitle)
+                            .uiAssetText(.paragraph)
                             .foregroundStyle(UIAssetColors.textSecondary)
                     }
 
@@ -1019,7 +1058,7 @@ struct UIAssetSelectField: View {
                                     avatar(for: option)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(option.name)
-                                            .uiAssetText(.subtitle)
+                                            .uiAssetText(.paragraph)
                                             .foregroundStyle(UIAssetColors.textPrimary)
                                         Text("@\(option.handle)")
                                             .uiAssetText(.footnote)
@@ -1067,7 +1106,7 @@ struct UIAssetSelectField: View {
             .frame(width: 24, height: 24)
             .overlay(
                 Text(option.initials)
-                    .font(.app(.caption).weight(.semibold))
+                    .font(AppTypography.font(size: 11, weight: .semibold, relativeTo: .footnote))
                     .foregroundStyle(UIAssetColors.accent)
             )
     }
@@ -1109,12 +1148,12 @@ struct UIAssetSettingsInlineDropdown: View {
     var expansionDirection: ExpansionDirection = .down
     var panelAlignment: PanelAlignment = .trailing
     var panelWidth: CGFloat = 86
-    var textStyle: UIAssetTextStyle = .subtitle
+    var textStyle: UIAssetTextStyle = .paragraph
     @Environment(\.uiAssetInlineDropdownOverlay) private var portalOverlay
     @State private var isExpandedLocal = false
     @State private var triggerFrame: CGRect = .zero
     @State private var localID = UUID().uuidString
-    private let opaqueSurface = Color(red: 1, green: 1, blue: 1, opacity: 1)
+    private let opaqueSurface = UIAssetColors.primary
 
     var body: some View {
         trigger
@@ -1332,7 +1371,7 @@ struct UIAssetSettingsRow<Accessory: View>: View {
                     .frame(width: 24, height: 24)
 
                 Text(title)
-                    .uiAssetText(.subtitle)
+                    .uiAssetText(.paragraph)
                     .foregroundStyle(UIAssetColors.textPrimary)
 
                 Spacer(minLength: 0)
@@ -1358,7 +1397,7 @@ struct UIAssetSettingsCategoryCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(category)
-                .uiAssetText(.caption)
+                .uiAssetText(.subtitle)
                 .foregroundStyle(UIAssetColors.textSecondary)
 
             VStack(spacing: 0) {
@@ -1426,7 +1465,7 @@ struct UIAssetsCatalogView: View {
     private var colorSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Colors")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             HStack(spacing: 12) {
                 colorChip(name: "Primary", color: UIAssetColors.primary)
@@ -1444,7 +1483,7 @@ struct UIAssetsCatalogView: View {
     private var typographySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Typography")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             ForEach(UIAssetTextStyle.allCases) { style in
                 Text(style.rawValue)
@@ -1458,7 +1497,7 @@ struct UIAssetsCatalogView: View {
     private var buttonSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Buttons")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             Button("Primary Button") {}
                 .buttonStyle(UIAssetButtonStyle(variant: .primary))
@@ -1470,7 +1509,7 @@ struct UIAssetsCatalogView: View {
                 .buttonStyle(UIAssetButtonStyle(variant: .destructive))
 
             Text("Row Slide Actions")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             HStack(spacing: 12) {
@@ -1504,7 +1543,7 @@ struct UIAssetsCatalogView: View {
     private var tiledButtonSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Tiled Buttons")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             HStack(spacing: 12) {
                 UIAssetTiledButton(
@@ -1531,7 +1570,7 @@ struct UIAssetsCatalogView: View {
     private var badgeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Badges")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             HStack(spacing: 18) {
                 UIAssetBadge(text: "Label", variant: .accent)
@@ -1543,7 +1582,7 @@ struct UIAssetsCatalogView: View {
     private var cardSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Card")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("H3 Placeholder Heading")
@@ -1558,7 +1597,7 @@ struct UIAssetsCatalogView: View {
             .uiAssetCardSurface(fill: UIAssetColors.primary)
 
             Text("Exercise List Card")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             UIAssetExerciseCard(
@@ -1577,7 +1616,7 @@ struct UIAssetsCatalogView: View {
     private var settingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Settings Section")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             UIAssetSettingsCategoryCard(category: "Preferences") {
                 UIAssetSettingsRow(symbol: "person.crop.circle", title: "Profile", showsDivider: true) {
@@ -1603,11 +1642,11 @@ struct UIAssetsCatalogView: View {
     private var userProfileSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("User Profile Info")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Name")
-                    .uiAssetText(.caption)
+                    .uiAssetText(.footnote)
                     .foregroundStyle(UIAssetColors.textSecondary)
 
                 HStack(spacing: 10) {
@@ -1628,7 +1667,7 @@ struct UIAssetsCatalogView: View {
 
             VStack(alignment: .leading, spacing: 16) {
                 Text("Profile Picture")
-                    .uiAssetText(.caption)
+                    .uiAssetText(.footnote)
                     .foregroundStyle(UIAssetColors.textSecondary)
 
                 VStack(spacing: 12) {
@@ -1659,7 +1698,7 @@ struct UIAssetsCatalogView: View {
         field: ProfileField
     ) -> some View {
         TextField(placeholder, text: text)
-            .font(.app(.body))
+            .font(UIAssetTextStyle.paragraph.font)
             .padding(.horizontal, 12)
             .frame(height: 44)
             .background(
@@ -1681,7 +1720,7 @@ struct UIAssetsCatalogView: View {
     private var alertDialogSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Alert Dialog")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             UIAssetAlertDialogOverlayPreview()
         }
@@ -1690,7 +1729,7 @@ struct UIAssetsCatalogView: View {
     private var controlSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Controls")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             UIAssetSlidingToggle(title: "Remember me", isOn: $isToggleOn)
 
@@ -1698,10 +1737,10 @@ struct UIAssetsCatalogView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Notes")
-                    .uiAssetText(.caption)
+                    .uiAssetText(.footnote)
                     .foregroundStyle(UIAssetColors.textSecondary)
                 TextEditor(text: $notes)
-                    .font(.app(.body))
+                    .font(UIAssetTextStyle.paragraph.font)
                     .frame(minHeight: 92)
                     .padding(8)
                     .background(
@@ -1715,7 +1754,7 @@ struct UIAssetsCatalogView: View {
             }
 
             Text("Dropdown")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             UIAssetSelectField(
@@ -1727,7 +1766,7 @@ struct UIAssetsCatalogView: View {
             )
 
             Text("Tab Filter")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             UIAssetTabFilter(
@@ -1736,7 +1775,7 @@ struct UIAssetsCatalogView: View {
             )
 
             Text("Radio Button")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             UIAssetRadioCard(
@@ -1756,7 +1795,7 @@ struct UIAssetsCatalogView: View {
             }
 
             Text("Checkbox")
-                .uiAssetText(.h5)
+                .uiAssetText(.h2)
                 .foregroundStyle(UIAssetColors.textPrimary)
 
             UIAssetCheckboxCard(
@@ -1771,7 +1810,7 @@ struct UIAssetsCatalogView: View {
     private var actionButtonSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Action Buttons")
-                .uiAssetText(.h4)
+                .uiAssetText(.h1)
 
             HStack(spacing: 14) {
                 Button {

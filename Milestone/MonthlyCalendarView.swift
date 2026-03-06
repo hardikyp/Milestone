@@ -53,7 +53,7 @@ struct MonthlyCalendarView: View {
                 Spacer()
 
                 Text(monthTitle)
-                    .font(.app(.headline))
+                    .font(UIAssetTextStyle.paragraph.font)
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 Spacer()
@@ -71,7 +71,7 @@ struct MonthlyCalendarView: View {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
-                        .font(.app(.caption))
+                        .font(UIAssetTextStyle.footnote.font)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -79,7 +79,7 @@ struct MonthlyCalendarView: View {
                 ForEach(Array(dayCells.enumerated()), id: \.offset) { _, day in
                     if let day {
                         Text("\(day)")
-                            .font(.app(.subheadline))
+                            .font(UIAssetTextStyle.subtitle.font)
                             .foregroundStyle(highlightedDays.contains(day) ? UIAssetColors.accent : UIAssetColors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)

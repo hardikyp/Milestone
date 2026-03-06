@@ -29,7 +29,7 @@ struct DashboardView: View {
                             .padding(.top, 16)
 
                         Text(viewModel.greetingSubtext)
-                            .uiAssetText(.h5)
+                            .uiAssetText(.paragraph)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         HStack(spacing: actionButtonSpacing) {
@@ -56,18 +56,18 @@ struct DashboardView: View {
                         if let active = viewModel.activeSession {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Active Session")
-                                    .uiAssetText(.h4)
-                                    .foregroundStyle(UIAssetColors.textPrimary)
+                                    .uiAssetText(.h2)
+                                    .foregroundStyle(UIAssetColors.accent)
 
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(active.name ?? "Workout")
-                                            .uiAssetText(.paragraph)
-                                            .foregroundStyle(UIAssetColors.textPrimary)
+                                            .uiAssetText(.h3)
+                                            .foregroundStyle(UIAssetColors.accent)
 
                                         Text("Started: \(Self.sessionStartTimeFormatter.string(from: active.startDateTime))")
-                                            .uiAssetText(.footnote)
-                                            .foregroundStyle(UIAssetColors.textSecondary)
+                                            .uiAssetText(.subtitle)
+                                            .foregroundStyle(UIAssetColors.accent)
                                     }
 
                                     Spacer(minLength: 0)
@@ -81,7 +81,7 @@ struct DashboardView: View {
                                 }
                             }
                             .padding(16)
-                            .uiAssetCardSurface(fill: UIAssetColors.primary)
+                            .uiAssetCardSurface(fill: UIAssetColors.accentSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -90,7 +90,7 @@ struct DashboardView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Your Month")
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h2)
 
                         MonthlyCalendarView(
                             monthDate: viewModel.monthDate,
@@ -119,7 +119,7 @@ struct DashboardView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Volume Last 7 Days")
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h2)
 
                         VolumeLast7DaysView(points: viewModel.last7DayVolumes, showsTitle: false)
                     }

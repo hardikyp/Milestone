@@ -71,12 +71,16 @@ private struct MinimalBottomMenu: View {
                             .scaledToFit()
                             .frame(height: iconFrameHeight)
                             .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
-                            .fontWeight(isSelected ? .semibold : .regular)
                         Text(item.title)
-                            .font(.app(.caption))
-                            .fontWeight(isSelected ? .semibold : .regular)
+                            .font(
+                                AppTypography.font(
+                                    size: 11,
+                                    weight: isSelected ? .semibold : .regular,
+                                    relativeTo: .footnote
+                                )
+                            )
                     }
-                    .foregroundStyle(isSelected ? UIAssetColors.accent : Color.gray)
+                    .foregroundStyle(isSelected ? UIAssetColors.accent : UIAssetColors.textSecondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .padding(.top, 6)
                     .padding(.bottom, 10)
@@ -90,11 +94,11 @@ private struct MinimalBottomMenu: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(Color.white)
+                .fill(UIAssetColors.primary)
         )
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                .stroke(UIAssetColors.border, lineWidth: 1)
         )
     }
 }

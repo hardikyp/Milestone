@@ -49,7 +49,7 @@ struct ActiveSessionView: View {
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(viewModel.sessionName)
-                                .uiAssetText(.h4)
+                                .uiAssetText(.h1)
                                 .foregroundStyle(UIAssetColors.textPrimary)
 
                             Spacer(minLength: 0)
@@ -82,7 +82,7 @@ struct ActiveSessionView: View {
                     }
 
                     Text("Exercises")
-                        .uiAssetText(.h4)
+                        .uiAssetText(.h1)
                         .foregroundStyle(UIAssetColors.textPrimary)
 
                     if viewModel.exerciseRows.isEmpty {
@@ -217,7 +217,7 @@ struct ActiveSessionView: View {
             title: row.exerciseName
         ) {
             Text("\(row.setCount) sets")
-                .uiAssetText(.caption)
+                .uiAssetText(.footnote)
                 .foregroundStyle(UIAssetColors.textSecondary)
         }
     }
@@ -353,7 +353,7 @@ private struct ActiveSessionExerciseSwipeRow<Content: View>: View {
                             .foregroundStyle(.white)
 
                         Text("Remove")
-                            .font(.app(.caption))
+                            .uiAssetText(.footnote)
                             .foregroundStyle(.white)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

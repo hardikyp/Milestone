@@ -26,7 +26,7 @@ final class DashboardViewModel: ObservableObject {
         do {
             let now = Date()
             monthDate = now
-            greetingText = Self.makeGreeting(for: now, firstName: Self.resolveFirstName())
+            greetingText = Self.makeGreeting(firstName: Self.resolveFirstName())
             activeSession = try sessionRepository.fetchMostRecentActiveSession()
             try loadMonthHighlights(sessionRepository: sessionRepository, month: now)
 
@@ -121,15 +121,8 @@ final class DashboardViewModel: ObservableObject {
         return result
     }
 
-    private static func makeGreeting(for date: Date, firstName: String) -> String {
-        let hour = Calendar.current.component(.hour, from: date)
-        if hour < 12 {
-            return "Good morning, \(firstName)!"
-        }
-        if hour < 18 {
-            return "Good afternoon, \(firstName)!"
-        }
-        return "Good evening, \(firstName)!"
+    private static func makeGreeting(firstName: String) -> String {
+        "Welcome, \(firstName)!"
     }
 
     private static func resolveFirstName() -> String {

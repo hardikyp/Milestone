@@ -12,7 +12,7 @@ struct VolumeLast7DaysView: View {
         VStack(alignment: .leading, spacing: 8) {
             if showsTitle {
                 Text("Volume Last 7 Days")
-                    .uiAssetText(.h4)
+                    .uiAssetText(.h1)
             }
 
             HStack(alignment: .bottom, spacing: 8) {
@@ -23,7 +23,7 @@ struct VolumeLast7DaysView: View {
                             .frame(height: barHeight(for: point.volumeKg))
 
                         Text(Self.dayFormatter.string(from: point.date))
-                            .font(.app(.caption2))
+                            .font(UIAssetTextStyle.footnote.font)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -32,7 +32,7 @@ struct VolumeLast7DaysView: View {
             .frame(height: 120)
 
             Text(totalText)
-                .font(.app(.caption))
+                .font(UIAssetTextStyle.footnote.font)
                 .foregroundStyle(.secondary)
         }
     }

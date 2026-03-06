@@ -43,11 +43,11 @@ struct TemplatePickerView: View {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Pre-create target sets")
-                                    .uiAssetText(.h5)
+                                    .uiAssetText(.h3)
                                     .foregroundStyle(UIAssetColors.textPrimary)
 
                                 Text("Auto-fill sets from template targets")
-                                    .uiAssetText(.caption)
+                                    .uiAssetText(.subtitle)
                                     .foregroundStyle(UIAssetColors.textSecondary)
                             }
 
@@ -83,7 +83,7 @@ struct TemplatePickerView: View {
 
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Pick a Template")
-                                .uiAssetText(.h5)
+                                .uiAssetText(.h3)
                                 .foregroundStyle(UIAssetColors.textPrimary)
 
                             if viewModel.templates.isEmpty {
@@ -128,11 +128,11 @@ struct TemplatePickerView: View {
                                         HStack(spacing: 10) {
                                             VStack(alignment: .leading, spacing: 4) {
                                                 Text(template.name)
-                                                    .uiAssetText(.subtitle)
+                                                    .uiAssetText(.paragraphSemibold)
                                                     .foregroundStyle(UIAssetColors.textPrimary)
                                                 if let description = template.description, !description.isEmpty {
                                                     Text(description)
-                                                        .uiAssetText(.caption)
+                                                        .uiAssetText(.subtitle)
                                                         .foregroundStyle(UIAssetColors.textSecondary)
                                                 }
                                             }
@@ -258,7 +258,7 @@ private struct TemplateSwipeRow<Content: View>: View {
                         .foregroundStyle(.white)
 
                     Text("Delete")
-                        .font(.app(.caption))
+                        .font(UIAssetTextStyle.footnote.font)
                         .foregroundStyle(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -27,6 +27,13 @@ struct SessionDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     HStack(spacing: 8) {
+                        Button {
+                            isDeleteConfirmationPresented = true
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(UIAssetDestructiveFloatingActionButtonStyle())
+                        
                         if viewModel.session?.endDateTime == nil {
                             Button(viewModel.isEnding ? "Ending..." : "End") {
                                 Task {
@@ -40,13 +47,6 @@ struct SessionDetailView: View {
                             .buttonStyle(UIAssetTextActionButtonStyle())
                             .disabled(viewModel.isEnding)
                         }
-                        
-                        Button {
-                            isDeleteConfirmationPresented = true
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(UIAssetDestructiveFloatingActionButtonStyle())
 
                         Button("Edit") {
                             isEditSessionPresented = true
@@ -61,11 +61,11 @@ struct SessionDetailView: View {
                 if let session = viewModel.session {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(session.name?.isEmpty == false ? session.name! : "Workout")
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h3)
                             .foregroundStyle(UIAssetColors.textPrimary)
 
                         Text(Self.dateFormatter.string(from: session.startDateTime))
-                            .uiAssetText(.subtitle)
+                            .uiAssetText(.paragraph)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         if let durationText = viewModel.durationText {
@@ -85,12 +85,12 @@ struct SessionDetailView: View {
                     ForEach(viewModel.exerciseSections) { section in
                         VStack(alignment: .leading, spacing: 10) {
                             Text("\(section.orderIndex). \(section.exerciseName)")
-                                .uiAssetText(.h5)
+                                .uiAssetText(.paragraphSemibold)
                                 .foregroundStyle(UIAssetColors.textPrimary)
 
                             if section.sets.isEmpty {
                                 Text("No sets logged")
-                                    .uiAssetText(.subtitle)
+                                    .uiAssetText(.paragraph)
                                     .foregroundStyle(UIAssetColors.textSecondary)
                             } else {
                                 ForEach(Array(section.sets.enumerated()), id: \.element.id) { index, set in
@@ -258,10 +258,11 @@ struct SessionDetailEditView: View {
                                         for: row.exerciseType,
                                         category: row.exerciseCategory
                                     ),
-                                    title: row.exerciseName
+                                    title: row.exerciseName,
+                                    titleStyle: .paragraphSemibold
                                 ) {
                                     Text("\(row.setCount) sets")
-                                        .uiAssetText(.caption)
+                                        .uiAssetText(.paragraph)
                                         .foregroundStyle(UIAssetColors.textSecondary)
                                 }
                             }

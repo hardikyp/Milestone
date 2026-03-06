@@ -9,6 +9,8 @@ import Darwin
 @main
 struct MilestoneApp: App {
     @StateObject private var container: AppContainer
+    @AppStorage(AppAppearancePreferences.followsSystemKey) private var followsSystemAppearance = false
+    @AppStorage(AppAppearancePreferences.darkModeEnabledKey) private var isDarkModeEnabled = false
 
     init() {
         do {
@@ -68,8 +70,13 @@ struct MilestoneApp: App {
             ContentView()
                 .environment(\.font, .app(.body))
                 .environmentObject(container)
-                .preferredColorScheme(.light)
+                .preferredColorScheme(resolvedColorScheme)
         }
+    }
+
+    private var resolvedColorScheme: ColorScheme? {
+        guard !followsSystemAppearance else { return nil }
+        return isDarkModeEnabled ? .dark : .light
     }
 }
 

@@ -30,6 +30,11 @@ enum AppUnitPreferences {
     }
 }
 
+enum AppAppearancePreferences {
+    static let followsSystemKey = "settings.appearance.followsSystem"
+    static let darkModeEnabledKey = "settings.appearance.darkModeEnabled"
+}
+
 enum UnitConverter {
     private static let kilogramsPerPound = 0.453_592_37
     private static let kilometersPerMile = 1.609_344
@@ -88,7 +93,7 @@ struct SettingsView: View {
 
                     VStack(alignment: .leading, spacing: 14) {
                         Text("Profile")
-                            .uiAssetText(.caption)
+                            .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         HStack(spacing: 12) {
@@ -97,7 +102,7 @@ struct SettingsView: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(viewModel.fullNameDisplay)
-                                    .uiAssetText(.h4)
+                                    .uiAssetText(.h3)
                                     .foregroundStyle(UIAssetColors.textPrimary)
 
                                 Text(viewModel.genderAgeDisplay)
@@ -171,12 +176,12 @@ struct SettingsView: View {
                                 )
 
                             Text("About this app")
-                                .uiAssetText(.h5)
+                                .uiAssetText(.h3)
                                 .foregroundStyle(UIAssetColors.textPrimary)
                         }
 
                         Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
-                            .uiAssetText(.footnote)
+                            .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
                     }
                     .padding(16)
@@ -193,6 +198,8 @@ struct SettingsView: View {
             .dismissKeyboardOnBackgroundTap()
             .onChange(of: viewModel.weightUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.distanceUnit) { _, _ in viewModel.save() }
+            .onChange(of: viewModel.followsSystemAppearance) { _, _ in viewModel.save() }
+            .onChange(of: viewModel.isDarkModeEnabled) { _, _ in viewModel.save() }
             .onChange(of: viewModel.isHealthConnected) { _, _ in viewModel.save() }
             .alert("Settings", isPresented: statusAlertPresented) {
                 Button("OK") {
@@ -243,7 +250,7 @@ struct SettingsView: View {
                 )
             }
 
-            UIAssetSettingsRow(symbol: "ruler", title: "Distance Unit", showsDivider: false) {
+            UIAssetSettingsRow(symbol: "ruler", title: "Distance Unit", showsDivider: true) {
                 UIAssetSettingsInlineDropdown(
                     options: SettingsViewModel.DistanceUnit.allCases.map(\.displayName),
                     selected: distanceUnitDisplaySelection,
@@ -251,6 +258,16 @@ struct SettingsView: View {
                     activeDropdownID: $activePreferencesDropdownID,
                     panelWidth: 168
                 )
+            }
+
+            UIAssetSettingsRow(symbol: "moon.fill", title: "Dark Mode", showsDivider: true) {
+                UIAssetSettingsInlineToggle(isOn: darkModeSelection)
+                    .disabled(viewModel.followsSystemAppearance)
+                    .opacity(viewModel.followsSystemAppearance ? 0.45 : 1)
+            }
+
+            UIAssetSettingsRow(symbol: "iphone", title: "Use System Appearance", showsDivider: false) {
+                UIAssetSettingsInlineToggle(isOn: $viewModel.followsSystemAppearance)
             }
         }
     }
@@ -283,6 +300,14 @@ struct SettingsView: View {
                 viewModel.statusMessage = nil
                 viewModel.errorMessage = nil
             }
+        }
+    }
+
+    private var darkModeSelection: Binding<Bool> {
+        Binding {
+            viewModel.isDarkModeEnabled
+        } set: { isOn in
+            viewModel.isDarkModeEnabled = isOn
         }
     }
 }
@@ -351,6 +376,8 @@ final class SettingsViewModel: ObservableObject {
     @Published var weightUnit: WeightUnit
     @Published var distanceUnit: DistanceUnit
     @Published var defaultRestDurationSec: String
+    @Published var followsSystemAppearance: Bool
+    @Published var isDarkModeEnabled: Bool
 
     @Published var isHealthConnected: Bool
     @Published var profileImageData: Data?
@@ -392,6 +419,8 @@ final class SettingsViewModel: ObservableObject {
         }
 
         defaultRestDurationSec = defaults.string(forKey: Keys.defaultRestDurationSec) ?? "90"
+        followsSystemAppearance = defaults.bool(forKey: Keys.followsSystemAppearance)
+        isDarkModeEnabled = defaults.bool(forKey: Keys.isDarkModeEnabled)
         isHealthConnected = defaults.bool(forKey: Keys.isHealthConnected)
         profileImageData = defaults.data(forKey: Keys.profileImageData)
     }
@@ -407,6 +436,8 @@ final class SettingsViewModel: ObservableObject {
         defaults.set(weightUnit.rawValue, forKey: Keys.weightUnit)
         defaults.set(distanceUnit.rawValue, forKey: Keys.distanceUnit)
         defaults.set(defaultRestDurationSec.trimmingCharacters(in: .whitespacesAndNewlines), forKey: Keys.defaultRestDurationSec)
+        defaults.set(followsSystemAppearance, forKey: Keys.followsSystemAppearance)
+        defaults.set(isDarkModeEnabled, forKey: Keys.isDarkModeEnabled)
 
         defaults.set(isHealthConnected, forKey: Keys.isHealthConnected)
         defaults.set(profileImageData, forKey: Keys.profileImageData)
@@ -542,6 +573,8 @@ final class SettingsViewModel: ObservableObject {
         static let weightUnit = "settings.weightUnit"
         static let distanceUnit = "settings.distanceUnit"
         static let defaultRestDurationSec = "settings.defaultRestDurationSec"
+        static let followsSystemAppearance = AppAppearancePreferences.followsSystemKey
+        static let isDarkModeEnabled = AppAppearancePreferences.darkModeEnabledKey
 
         static let isHealthConnected = "settings.isHealthConnected"
         static let profileImageData = "settings.profileImageData"
@@ -609,11 +642,11 @@ struct DataHandlingView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Export and Backup")
-                            .uiAssetText(.caption)
+                            .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         Text("Files folder: \(viewModel.dataFolderPath())")
-                            .uiAssetText(.footnote)
+                            .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         dataActionCard(
@@ -674,7 +707,7 @@ struct DataHandlingView: View {
                     UIAssetSettingsCategoryCard(category: "Danger Zone") {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Permanently clear all local workout, exercise, and template data.")
-                                .uiAssetText(.footnote)
+                                .uiAssetText(.h3)
                                 .foregroundStyle(UIAssetColors.textSecondary)
 
                             Button("Reset data") {
@@ -786,7 +819,7 @@ struct DataHandlingView: View {
                         )
 
                     Text(title)
-                        .uiAssetText(.h5)
+                        .uiAssetText(.paragraphSemibold)
                         .foregroundStyle(UIAssetColors.textPrimary)
 
                     Spacer(minLength: 0)
@@ -797,7 +830,7 @@ struct DataHandlingView: View {
                 }
 
                 Text(description)
-                    .uiAssetText(.footnote)
+                    .uiAssetText(.subtitle)
                     .foregroundStyle(UIAssetColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -864,7 +897,7 @@ struct UserProfileView: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Profile Picture")
-                        .uiAssetText(.caption)
+                        .uiAssetText(.subtitle)
                         .foregroundStyle(UIAssetColors.textSecondary)
 
                     VStack(spacing: 12) {
@@ -873,7 +906,7 @@ struct UserProfileView: View {
 
                         PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                             Text("Choose image")
-                                .font(.app(.subheadline))
+                                .uiAssetText(.paragraph)
                                 .foregroundStyle(UIAssetColors.accent)
                                 .frame(maxWidth: .infinity, minHeight: 36)
                                 .background(
@@ -895,7 +928,7 @@ struct UserProfileView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Name")
-                        .uiAssetText(.caption)
+                        .uiAssetText(.subtitle)
                         .foregroundStyle(UIAssetColors.textSecondary)
 
                     HStack(spacing: 10) {
@@ -917,7 +950,7 @@ struct UserProfileView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Body Metrics")
-                        .uiAssetText(.caption)
+                        .uiAssetText(.subtitle)
                         .foregroundStyle(UIAssetColors.textSecondary)
 
                     UIAssetTextField(
@@ -943,7 +976,7 @@ struct UserProfileView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Gender")
-                            .uiAssetText(.caption)
+                            .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         UIAssetSettingsInlineDropdown(
@@ -1010,7 +1043,7 @@ struct UserProfileView: View {
         field: ProfileField
     ) -> some View {
         TextField(placeholder, text: text)
-            .font(.app(.body))
+            .font(UIAssetTextStyle.paragraph.font)
             .padding(.horizontal, 12)
             .frame(height: 44)
             .background(

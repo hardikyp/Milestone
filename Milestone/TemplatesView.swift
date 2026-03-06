@@ -22,10 +22,10 @@ struct TemplatesView: View {
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(template.name)
-                                .font(.app(.headline))
+                                .font(UIAssetTextStyle.subtitle.font)
                             if let description = template.description, !description.isEmpty {
                                 Text(description)
-                                    .font(.app(.caption))
+                                    .font(UIAssetTextStyle.footnote.font)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -139,7 +139,7 @@ struct TemplateDetailView: View {
         List {
             Section {
                 Text(template.name)
-                    .font(.app(.headline))
+                    .font(UIAssetTextStyle.subtitle.font)
                 if let description = template.description, !description.isEmpty {
                     Text(description)
                         .foregroundStyle(.secondary)
@@ -154,9 +154,10 @@ struct TemplateDetailView: View {
                     ForEach(viewModel.rows) { row in
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(row.orderIndex). \(row.exerciseName)")
+                                .uiAssetText(.paragraphSemibold)
                             if let targetText = row.targetText {
                                 Text(targetText)
-                                    .font(.app(.caption))
+                                    .font(UIAssetTextStyle.footnote.font)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -369,7 +370,7 @@ struct CreateTemplateFromSessionView: View {
                             } else {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Session")
-                                        .uiAssetText(.caption)
+                                        .uiAssetText(.footnote)
                                         .foregroundStyle(UIAssetColors.textSecondary)
 
                                     UIAssetSettingsInlineDropdown(

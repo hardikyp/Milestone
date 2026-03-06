@@ -63,7 +63,7 @@ struct CreateExerciseView: View {
 
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Exercise")
-                                .uiAssetText(.caption)
+                                .uiAssetText(.footnote)
                                 .foregroundStyle(UIAssetColors.textSecondary)
 
                             UIAssetTextField(
@@ -152,7 +152,7 @@ struct CreateExerciseView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .uiAssetText(.caption)
+                .uiAssetText(.footnote)
                 .foregroundStyle(UIAssetColors.textSecondary)
 
             UIAssetSettingsInlineDropdown(
@@ -173,20 +173,20 @@ struct CreateExerciseView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .uiAssetText(.caption)
+                .uiAssetText(.footnote)
                 .foregroundStyle(UIAssetColors.textSecondary)
 
             ZStack(alignment: .topLeading) {
                 if text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text(placeholder)
-                        .font(.app(.body))
+                        .font(UIAssetTextStyle.paragraph.font)
                         .foregroundStyle(UIAssetColors.textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
                 }
 
                 TextEditor(text: text)
-                    .font(.app(.body))
+                    .font(UIAssetTextStyle.paragraph.font)
                     .foregroundStyle(UIAssetColors.textPrimary)
                     .frame(minHeight: 130)
                     .padding(.horizontal, 10)

@@ -166,15 +166,18 @@ struct HistoryView: View {
 
     @ViewBuilder
     private func historyRow(_ row: HistoryViewModel.SessionRow) -> some View {
+        let rowTextColor = row.isInProgress ? UIAssetColors.accent : UIAssetColors.textPrimary
+        let rowSubtextColor = row.isInProgress ? UIAssetColors.accent : UIAssetColors.textSecondary
+
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(row.name)
-                    .uiAssetText(.h5)
-                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .uiAssetText(.h3)
+                    .foregroundStyle(rowTextColor)
 
                 Text(Self.dateFormatter.string(from: row.startDateTime))
-                    .uiAssetText(.subtitle)
-                    .foregroundStyle(UIAssetColors.textSecondary)
+                    .uiAssetText(.paragraph)
+                    .foregroundStyle(rowSubtextColor)
 
                 HStack {
                     if let durationText = row.durationText {
@@ -186,14 +189,14 @@ struct HistoryView: View {
                     Spacer()
                     Text(volumeText(for: row.totalVolumeKg))
                 }
-                .uiAssetText(.caption)
-                .foregroundStyle(UIAssetColors.textSecondary)
+                .uiAssetText(.subtitle)
+                .foregroundStyle(rowSubtextColor)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(UIAssetColors.textSecondary)
+                .foregroundStyle(rowSubtextColor)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
@@ -365,7 +368,7 @@ private struct HistorySwipeRow<Content: View>: View {
                 .foregroundStyle(iconColor)
 
             Text(title)
-                .font(.app(.caption))
+                .uiAssetText(.footnote)
                 .foregroundStyle(iconColor)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

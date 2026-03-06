@@ -170,6 +170,7 @@ struct ExercisesView: View {
                 category: exercise.category
             ),
             title: exercise.name,
+            titleStyle: .paragraphSemibold,
             showsChevron: true
         ) {
             HStack(spacing: 8) {
@@ -225,7 +226,7 @@ private struct ExerciseSwipeRow<Content: View>: View {
                                 .foregroundStyle(.white)
 
                             Text("Delete")
-                                .font(.app(.caption))
+                                .uiAssetText(.footnote)
                                 .foregroundStyle(.white)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -429,7 +430,7 @@ struct ExerciseDetailView: View {
                         if let targetArea = exercise.targetArea,
                            !targetArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             Text("Target area: \(targetArea)")
-                                .uiAssetText(.subtitle)
+                                .uiAssetText(.paragraph)
                                 .foregroundStyle(UIAssetColors.textSecondary)
                         }
 
@@ -454,7 +455,7 @@ struct ExerciseDetailView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("How To Do")
-                            .uiAssetText(.h4)
+                            .uiAssetText(.h3)
                             .foregroundStyle(UIAssetColors.textPrimary)
 
                         if instructionLines.isEmpty {
@@ -562,7 +563,7 @@ struct ExerciseDetailView: View {
                 .overlay {
                     Text("No GIF available")
                         .uiAssetText(.subtitle)
-                        .foregroundStyle(UIAssetColors.textSecondary)
+                        .foregroundStyle(UIAssetColors.accent)
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
@@ -679,12 +680,44 @@ struct GIFWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        if url.isFileURL {
-            let accessURL = url.deletingLastPathComponent()
-            webView.loadFileURL(url, allowingReadAccessTo: accessURL)
-        } else {
-            webView.load(URLRequest(url: url))
-        }
+        let html = Self.html(for: url)
+        let baseURL = url.isFileURL ? url.deletingLastPathComponent() : nil
+        webView.loadHTMLString(html, baseURL: baseURL)
+    }
+
+    private static func html(for url: URL) -> String {
+        let source = url.absoluteString
+        return """
+        <!doctype html>
+        <html>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+          <style>
+            html, body {
+              margin: 0;
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+              background: transparent;
+            }
+            body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+              object-position: center;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="\(source)" alt="Exercise GIF" />
+        </body>
+        </html>
+        """
     }
 }
 

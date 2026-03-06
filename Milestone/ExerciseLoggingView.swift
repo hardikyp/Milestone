@@ -57,7 +57,7 @@ struct ExerciseLoggingView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(exerciseName)
-                            .uiAssetText(.h4)
+                            .uiAssetText(.paragraphSemibold)
                             .foregroundStyle(UIAssetColors.textPrimary)
 
                         UIAssetBadge(text: exerciseType.displayName, variant: .accent)
@@ -65,7 +65,7 @@ struct ExerciseLoggingView: View {
                         if viewModel.availableMetricTypes.count > 1 {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Logging Mode")
-                                    .uiAssetText(.caption)
+                                    .uiAssetText(.footnote)
                                     .foregroundStyle(UIAssetColors.textSecondary)
 
                                 if exerciseType == .cardio || exerciseType == .functional {
@@ -121,7 +121,7 @@ struct ExerciseLoggingView: View {
 
                 Section {
                     Text("Sets")
-                        .uiAssetText(.h4)
+                        .uiAssetText(.h1)
                         .foregroundStyle(UIAssetColors.textPrimary)
                         .padding(.top, 4)
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
@@ -169,7 +169,7 @@ struct ExerciseLoggingView: View {
                                         .accessibilityLabel(row.isDone ? "Unmark set done" : "Mark set done")
 
                                         Text("Set \(row.setIndex)")
-                                            .uiAssetText(.h5)
+                                            .uiAssetText(.h2)
                                     }
 
                                     Spacer()
@@ -433,7 +433,7 @@ private struct CompactLoggingModeRadioRow: View {
 
                 Text(title)
                     .uiAssetText(.paragraph)
-                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .foregroundStyle(isSelected ? UIAssetColors.accent : UIAssetColors.textPrimary)
 
                 Spacer(minLength: 0)
             }
@@ -510,16 +510,16 @@ private struct SetInputField: View {
         VStack(alignment: .leading, spacing: 4) {
             if showsTitle {
                 Text(title)
-                    .uiAssetText(.caption)
+                    .uiAssetText(.footnote)
                     .fontWeight(.medium)
             } else {
                 Text(title)
-                    .uiAssetText(.caption)
+                    .uiAssetText(.footnote)
                     .fontWeight(.medium)
                     .hidden()
             }
             TextField(placeholder, text: $text)
-                .font(.app(.body))
+                .font(UIAssetTextStyle.paragraph.font)
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
