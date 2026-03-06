@@ -85,7 +85,7 @@ struct SessionDetailView: View {
                     ForEach(viewModel.exerciseSections) { section in
                         VStack(alignment: .leading, spacing: 10) {
                             Text("\(section.orderIndex). \(section.exerciseName)")
-                                .uiAssetText(.subtitle)
+                                .uiAssetText(.h5)
                                 .foregroundStyle(UIAssetColors.textPrimary)
 
                             if section.sets.isEmpty {
@@ -94,20 +94,16 @@ struct SessionDetailView: View {
                                     .foregroundStyle(UIAssetColors.textSecondary)
                             } else {
                                 ForEach(Array(section.sets.enumerated()), id: \.element.id) { index, set in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Set \(set.setIndex)")
-                                            .uiAssetText(.footnote)
-                                            .foregroundStyle(UIAssetColors.textPrimary)
-                                        Text(
-                                            set.summary(
-                                                weightUnit: viewModel.preferredWeightUnit,
-                                                distanceUnit: viewModel.preferredDistanceUnit
-                                            )
+                                    HStack(alignment: .center, spacing: 10) {
+                                        SessionDetailSetBadge(text: "Set \(set.setIndex)")
+
+                                        set.styledSummaryView(
+                                            weightUnit: viewModel.preferredWeightUnit,
+                                            distanceUnit: viewModel.preferredDistanceUnit
                                         )
-                                            .uiAssetText(.caption)
-                                            .foregroundStyle(UIAssetColors.textSecondary)
+                                        .foregroundStyle(UIAssetColors.textPrimary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
 
                                     if index < section.sets.count - 1 {
                                         Divider()
@@ -348,6 +344,71 @@ final class SessionDetailViewModel: ObservableObject {
                 return "\(distanceText) • \(duration)s"
             }
         }
+
+        @ViewBuilder
+        func styledSummaryView(
+            weightUnit: SettingsViewModel.WeightUnit,
+            distanceUnit: SettingsViewModel.DistanceUnit
+        ) -> some View {
+            switch metricType {
+            case .strength:
+                HStack(spacing: 4) {
+                    if let reps {
+                        Text("\(reps)")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                            .fontWeight(.bold)
+                        Text("reps")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                    } else {
+                        Text("- reps")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                    }
+
+                    Text("•")
+                        .font(UIAssetTextStyle.paragraph.font)
+                        .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+
+                    if let weightKg {
+                        let value = UnitConverter.weightToDisplay(weightKg, unit: weightUnit)
+                        let weightNumber = UnitDisplayFormatter.decimalText(value, maxFractionDigits: 1)
+                        Text(weightNumber)
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                            .fontWeight(.bold)
+                        Text(UnitDisplayFormatter.weightSymbol(weightUnit))
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                    } else {
+                        Text("- \(UnitDisplayFormatter.weightSymbol(weightUnit))")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                    }
+                }
+            case .repsOnly:
+                if let reps {
+                    HStack(spacing: 4) {
+                        Text("\(reps)")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                            .fontWeight(.bold)
+                        Text("reps")
+                            .font(UIAssetTextStyle.paragraph.font)
+                            .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                    }
+                } else {
+                    Text("- reps")
+                        .font(UIAssetTextStyle.paragraph.font)
+                        .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+                }
+            case .time, .distanceOnly, .distanceTime:
+                Text(summary(weightUnit: weightUnit, distanceUnit: distanceUnit))
+                    .font(UIAssetTextStyle.paragraph.font)
+                    .lineSpacing(UIAssetTextStyle.paragraph.lineSpacing)
+            }
+        }
     }
 
     struct ExerciseSection: Identifiable {
@@ -449,7 +510,17 @@ final class SessionDetailViewModel: ObservableObject {
                 }
             }
 
-            let sections = orderedSectionIDs.compactMap { sectionsByID[$0] }
+            let sections = orderedSectionIDs
+                .compactMap { sectionsByID[$0] }
+                .enumerated()
+                .map { offset, section in
+                    ExerciseSection(
+                        id: section.id,
+                        orderIndex: offset + 1,
+                        exerciseName: section.exerciseName,
+                        sets: section.sets
+                    )
+                }
             let volume = try statsService.totalVolumeKg(sessionId: sessionId)
 
             session = loaded.0
@@ -508,6 +579,32 @@ final class SessionDetailViewModel: ObservableObject {
         }
 
         return String(format: "%dm %02ds", minutes, seconds)
+    }
+}
+
+private struct SessionDetailSetBadge: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(UIAssetColors.accent)
+                .frame(width: 6, height: 6)
+
+            Text(text)
+                .uiAssetText(.paragraph)
+                .foregroundStyle(UIAssetColors.accent)
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 28)
+        .background(
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.75, style: .continuous)
+                .fill(UIAssetColors.accentSecondary.opacity(0.35))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.75, style: .continuous)
+                .stroke(UIAssetColors.accentSecondary, lineWidth: 1)
+        )
     }
 }
 
