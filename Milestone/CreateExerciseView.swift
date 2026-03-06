@@ -118,6 +118,7 @@ struct CreateExerciseView: View {
                 .background(UIAssetColors.secondary.ignoresSafeArea())
                 .navigationBarBackButtonHidden(true)
                 .toolbar(.hidden, for: .navigationBar)
+                .dismissKeyboardOnBackgroundTap()
 
                 if let error = viewModel.errorMessage {
                     ZStack {

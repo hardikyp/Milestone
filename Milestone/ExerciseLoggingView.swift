@@ -247,6 +247,7 @@ struct ExerciseLoggingView: View {
                 guard isOn else { return }
                 viewModel.fillEmptyWeightFromFirstAvailable()
             }
+            .dismissKeyboardOnBackgroundTap()
 
             if let error = viewModel.errorMessage {
                 ZStack {

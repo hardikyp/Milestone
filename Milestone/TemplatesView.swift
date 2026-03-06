@@ -397,6 +397,7 @@ struct CreateTemplateFromSessionView: View {
             .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .navigationBar)
+            .dismissKeyboardOnBackgroundTap()
             .task {
                 await viewModel.loadSessions(sessionRepository: container.sessionRepository)
             }

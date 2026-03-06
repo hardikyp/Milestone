@@ -22,6 +22,7 @@
 		737B4F4FA093470CBC2041F3 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */; };
 		73F07AFA09F140F2ADDCB67D /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6EA52490F4435A9E5F2CED /* DashboardViewModel.swift */; };
 		75352D5203395423770B69A5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F3E0D5E61FB40E6C0390AF /* SettingsView.swift */; };
+		7A83FC494B6747BB95002FE0 /* KeyboardDismissOnTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AB70B4B8DA14957A89B626C /* KeyboardDismissOnTap.swift */; };
 		7A26C1E0BE174A8EA69DB504 /* UnitDisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9631B51893594B63B825A3B7 /* UnitDisplayFormatter.swift */; };
 		8F0D0DBC69D6E69F10DED5A2 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07A96F540CF89D3E31C744C /* SessionRepository.swift */; };
 		8F71EB095D63FB725BC0C051 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EBF254AD8414C99CB24DF2 /* ContentView.swift */; };
@@ -63,6 +64,7 @@
 		81A6672BB6F038C57E417ABF /* ExercisePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		9631B51893594B63B825A3B7 /* UnitDisplayFormatter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnitDisplayFormatter.swift; sourceTree = "<group>"; };
+		9AB70B4B8DA14957A89B626C /* KeyboardDismissOnTap.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeyboardDismissOnTap.swift; sourceTree = "<group>"; };
 		A83C90BD6B15408E8B8D53D7 /* TemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TemplatesView.swift; sourceTree = "<group>"; };
 		AA9D3363EAD6401560AE5099 /* SessionExerciseRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionExerciseRepository.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5061728394A5B6C /* UIAssets/UIAssetsCatalogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIAssets/UIAssetsCatalogView.swift; sourceTree = "<group>"; };
@@ -146,6 +148,7 @@
 				7778F2EDECC3494D88A8A9B5 /* TemplatePickerView.swift */,
 				CDBB81C808E69C3D49879DBD /* ActiveSessionView.swift */,
 				E9F3E8CD679CF6DBB0F1BB7D /* ExerciseLoggingView.swift */,
+				9AB70B4B8DA14957A89B626C /* KeyboardDismissOnTap.swift */,
 				9631B51893594B63B825A3B7 /* UnitDisplayFormatter.swift */,
 				8A9A8070D07C4385B3E5E89E /* SessionDetailView.swift */,
 				B7E741AF96D842909F19C61B /* StatsService.swift */,
@@ -281,6 +284,7 @@
 				C860147E05838C356FD3D403 /* ActiveSessionView.swift in Sources */,
 				685230A933E275B0934F5319 /* CreateExerciseView.swift in Sources */,
 				41C41081CCFE26D4B0058CA7 /* ExerciseLoggingView.swift in Sources */,
+				7A83FC494B6747BB95002FE0 /* KeyboardDismissOnTap.swift in Sources */,
 				7A26C1E0BE174A8EA69DB504 /* UnitDisplayFormatter.swift in Sources */,
 				737B4F4FA093470CBC2041F3 /* SessionDetailView.swift in Sources */,
 				E7EA7E3AD3864CB1AF8D47A8 /* StatsService.swift in Sources */,

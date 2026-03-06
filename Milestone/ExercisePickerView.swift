@@ -153,6 +153,7 @@ struct ExercisePickerView: View {
                 }
                 .navigationBarBackButtonHidden(true)
                 .toolbar(.hidden, for: .navigationBar)
+                .dismissKeyboardOnBackgroundTap()
                 .sheet(isPresented: $isCreateExercisePresented) {
                     CreateExerciseView { input in
                         Task {

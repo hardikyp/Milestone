@@ -418,6 +418,7 @@ struct CreateTemplateView: View {
             .background(UIAssetColors.secondary.ignoresSafeArea())
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .navigationBar)
+            .dismissKeyboardOnBackgroundTap()
             .alert("Create Template Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") { viewModel.errorMessage = nil }
             } message: {

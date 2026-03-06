@@ -14,6 +14,7 @@ struct ContentView: View {
         }
         .ignoresSafeArea(edges: .bottom)
         .background(UIAssetColors.secondary.ignoresSafeArea())
+        .dismissKeyboardOnBackgroundTap()
     }
 
     @ViewBuilder

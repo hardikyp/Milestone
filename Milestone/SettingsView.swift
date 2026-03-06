@@ -190,6 +190,7 @@ struct SettingsView: View {
             }
             .background(UIAssetColors.secondary.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
+            .dismissKeyboardOnBackgroundTap()
             .onChange(of: viewModel.weightUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.distanceUnit) { _, _ in viewModel.save() }
             .onChange(of: viewModel.isHealthConnected) { _, _ in viewModel.save() }
@@ -972,6 +973,7 @@ struct UserProfileView: View {
                 }
             }
         }
+        .dismissKeyboardOnBackgroundTap()
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
     }
