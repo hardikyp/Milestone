@@ -16,6 +16,7 @@ struct CreateExerciseView: View {
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: CreateExerciseViewModel
+    @FocusState private var isDescriptionFocused: Bool
 
     init(
         title: String = "New Exercise",
@@ -192,6 +193,7 @@ struct CreateExerciseView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .scrollContentBackground(.hidden)
+                    .focused($isDescriptionFocused)
             }
             .background(
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
@@ -199,8 +201,9 @@ struct CreateExerciseView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                    .stroke(UIAssetColors.border, lineWidth: 1)
+                    .stroke(isDescriptionFocused ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
             )
+            .animation(.easeInOut(duration: 0.18), value: isDescriptionFocused)
         }
     }
 

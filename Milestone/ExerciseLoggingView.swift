@@ -154,7 +154,7 @@ struct ExerciseLoggingView: View {
                                                         Circle()
                                                             .stroke(
                                                                 row.isDone ? UIAssetColors.accent : UIAssetColors.textSecondary.opacity(0.6),
-                                                                lineWidth: 2
+                                                                lineWidth: 0
                                                             )
                                                     )
 
@@ -421,7 +421,7 @@ private struct CompactLoggingModeRadioRow: View {
                         .frame(width: 20, height: 20)
                         .overlay(
                             Circle()
-                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 2)
+                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 0)
                         )
 
                     if isSelected {
@@ -445,7 +445,7 @@ private struct CompactLoggingModeRadioRow: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
-                    .stroke(isSelected ? UIAssetColors.accent.opacity(0.28) : UIAssetColors.border, lineWidth: 1)
+                    .stroke(isSelected ? UIAssetColors.accent.opacity(0.28) : UIAssetColors.border, lineWidth: 0)
             )
         }
         .buttonStyle(.plain)
@@ -505,6 +505,7 @@ private struct SetInputField: View {
     @Binding var text: String
     let keyboardType: UIKeyboardType
     var showsTitle: Bool = true
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -523,6 +524,7 @@ private struct SetInputField: View {
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
+                .focused($isFocused)
                 .padding(.horizontal, 10)
                 .frame(height: 40)
                 .background(
@@ -531,8 +533,9 @@ private struct SetInputField: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(isFocused ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
                 )
+                .animation(.easeInOut(duration: 0.18), value: isFocused)
         }
     }
 }

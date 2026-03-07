@@ -363,9 +363,9 @@ private struct ActiveSessionExerciseSwipeRow<Content: View>: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .stroke(destructiveColor.opacity(0.7), lineWidth: 1)
+                            .stroke(destructiveColor.opacity(0.7), lineWidth: 0)
                     )
-                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                    .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
                 .frame(width: actionWidth, height: measuredRowHeight)

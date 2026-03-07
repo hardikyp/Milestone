@@ -221,7 +221,7 @@ struct SettingsView: View {
                 .clipShape(Circle())
                 .overlay(
                     Circle()
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
         } else {
             Circle()
@@ -233,7 +233,7 @@ struct SettingsView: View {
                 )
                 .overlay(
                     Circle()
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
         }
     }
@@ -915,7 +915,7 @@ struct UserProfileView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                                        .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 1)
+                                        .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 0)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -1020,7 +1020,7 @@ struct UserProfileView: View {
                 .clipShape(Circle())
                 .overlay(
                     Circle()
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
         } else {
             Circle()
@@ -1032,7 +1032,7 @@ struct UserProfileView: View {
                 )
                 .overlay(
                     Circle()
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
         }
     }
@@ -1054,12 +1054,13 @@ struct UserProfileView: View {
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
                     .stroke(
                         focusedProfileField == field
-                        ? UIAssetColors.accent.opacity(0.7)
-                        : UIAssetColors.border.opacity(1.6),
+                        ? UIAssetControlBorderColors.active
+                        : UIAssetControlBorderColors.muted,
                         lineWidth: 1
                     )
             )
             .focused($focusedProfileField, equals: field)
+            .animation(.easeInOut(duration: 0.18), value: focusedProfileField == field)
     }
 
     private var genderOptions: [String] {

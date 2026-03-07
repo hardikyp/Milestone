@@ -93,9 +93,9 @@ struct HistoryView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                                        .stroke(Color.black.opacity(0.05), lineWidth: 0)
                                 )
-                                .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 2)
+                                .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
                             }
                             .buttonStyle(.plain)
                             .disabled(viewModel.isLoadingMore)
@@ -205,11 +205,7 @@ struct HistoryView: View {
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                 .fill(row.isInProgress ? UIAssetColors.accentSecondary : UIAssetColors.primary)
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                .stroke(UIAssetColors.border, lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -378,9 +374,9 @@ private struct HistorySwipeRow<Content: View>: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                .stroke(borderColor, lineWidth: 1)
+                .stroke(borderColor, lineWidth: 0)
         )
-        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
     }
 }
 

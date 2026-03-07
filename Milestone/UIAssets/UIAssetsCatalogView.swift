@@ -3,9 +3,13 @@ import UIKit
 
 enum UIAssetColors {
     private static let lightPrimaryUIColor = UIColor.white
-    private static let lightSecondaryUIColor = UIColor(red: 248 / 255, green: 248 / 255, blue: 248 / 255, alpha: 1)
-    private static let darkPrimaryUIColor = UIColor(red: 30 / 255, green: 30 / 255, blue: 30 / 255, alpha: 1)
-    private static let darkSecondaryUIColor = UIColor(red: 0.040962, green: 0.091885, blue: 0.1121, alpha: 1)
+    private static let lightSecondaryUIColor = UIColor(red: 242 / 255, green: 242 / 255, blue: 242 / 255, alpha: 1)
+    private static let darkPrimaryUIColor = UIColor(red: 20 / 255, green: 20 / 255, blue: 20 / 255, alpha: 1)
+    private static let darkSecondaryUIColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+    private static let lightAccentUIColor = UIColor(red: 6 / 255, green: 63 / 255, blue: 72 / 255, alpha: 1)
+    private static let darkAccentUIColor = UIColor(red: 47 / 255, green: 163 / 255, blue: 176 / 255, alpha: 1)
+    private static let lightAccentSecondaryUIColor = UIColor(red: 215 / 255, green: 232 / 255, blue: 229 / 255, alpha: 1)
+    private static let darkAccentSecondaryUIColor = UIColor(red: 24 / 255, green: 62 / 255, blue: 68 / 255, alpha: 1)
 
     static let primary = Color(
         UIColor { traits in
@@ -17,8 +21,16 @@ enum UIAssetColors {
             traits.userInterfaceStyle == .dark ? darkSecondaryUIColor : lightSecondaryUIColor
         }
     )
-    static let accent = Color(red: 0.023529, green: 0.24706, blue: 0.28235)
-    static let accentSecondary = Color(red: 224 / 255, green: 234 / 255, blue: 231 / 255)
+    static let accent = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark ? darkAccentUIColor : lightAccentUIColor
+        }
+    )
+    static let accentSecondary = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark ? darkAccentSecondaryUIColor : lightAccentSecondaryUIColor
+        }
+    )
 
     static let textPrimary = Color.primary
     static let textSecondary = Color.secondary
@@ -29,6 +41,40 @@ enum UIAssetColors {
             traits.userInterfaceStyle == .dark
                 ? UIColor.white.withAlphaComponent(0.16)
                 : UIColor.black.withAlphaComponent(0.08)
+        }
+    )
+
+    // Explicit preview colors for the UI Assets color library.
+    static let lightModePrimary = Color(lightPrimaryUIColor)
+    static let lightModeSecondary = Color(lightSecondaryUIColor)
+    static let lightModeAccent = Color(lightAccentUIColor)
+    static let lightModeAccentSecondary = Color(lightAccentSecondaryUIColor)
+    static let darkModePrimary = Color(darkPrimaryUIColor)
+    static let darkModeSecondary = Color(darkSecondaryUIColor)
+    static let darkModeAccent = Color(darkAccentUIColor)
+    static let darkModeAccentSecondary = Color(darkAccentSecondaryUIColor)
+    static let lightModeBorder = Color(UIColor.black.withAlphaComponent(0.08))
+    static let darkModeBorder = Color(UIColor.white.withAlphaComponent(0.16))
+}
+
+enum UIAssetControlBorderColors {
+    static let muted = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.22)
+                : UIColor.black.withAlphaComponent(0.18)
+        }
+    )
+
+    static let active = UIAssetColors.accent
+}
+
+enum UIAssetShadows {
+    static let soft = Color(
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.08)
+                : UIColor.black.withAlphaComponent(0.10)
         }
     )
 }
@@ -145,7 +191,7 @@ struct UIAssetInlineDropdownHost<Content: View>: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
-                .stroke(UIAssetColors.border, lineWidth: 1)
+                .stroke(UIAssetControlBorderColors.muted, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 3)
         .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .topTrailing)))
@@ -262,11 +308,7 @@ extension View {
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                     .fill(fill)
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                    .stroke(UIAssetColors.border, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
     }
 }
 
@@ -296,6 +338,7 @@ struct UIAssetButtonStyle: ButtonStyle {
             .frame(height: 44)
             .padding(.horizontal, symbolOnly ? 0 : 14)
             .background(backgroundShape(configuration: configuration))
+            .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .opacity(configuration.isPressed ? 0.92 : 1)
             .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
@@ -308,7 +351,7 @@ struct UIAssetButtonStyle: ButtonStyle {
         case .secondary:
             return symbolOnly ? .black : UIAssetColors.accent
         case .destructive:
-            return symbolOnly ? .white : UIAssetButtonPalette.deepRed
+            return .white
         }
     }
 
@@ -325,20 +368,11 @@ struct UIAssetButtonStyle: ButtonStyle {
                 .fill(UIAssetColors.accentSecondary.opacity(1))
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 1)
+                        .stroke(UIAssetColors.accent.opacity(0.25), lineWidth: 0)
                 )
         case .destructive:
-            if symbolOnly {
-                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                    .fill(UIAssetButtonPalette.deepRed.opacity(fillOpacity))
-            } else {
-                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                    .fill(UIAssetButtonPalette.deepRed.opacity(0.2 * fillOpacity))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .stroke(UIAssetButtonPalette.deepRed.opacity(0.5), lineWidth: 1)
-                    )
-            }
+            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                .fill(UIAssetButtonPalette.deepRed.opacity(fillOpacity))
         }
     }
 }
@@ -399,7 +433,7 @@ struct UIAssetRadioCard: View {
                         .frame(width: 24, height: 24)
                         .overlay(
                             Circle()
-                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 2)
+                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 0)
                         )
 
                     if isSelected {
@@ -445,7 +479,7 @@ struct UIAssetCheckboxCard: View {
                         .frame(width: 24, height: 24)
                         .overlay(
                             Circle()
-                                .stroke(isChecked ? UIAssetColors.accent : uncheckedColor, lineWidth: 2)
+                                .stroke(isChecked ? UIAssetColors.accent : uncheckedColor, lineWidth: 0)
                         )
 
                     if isChecked {
@@ -497,7 +531,7 @@ struct UIAssetRowSlideActionButton: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                .stroke(borderColor, lineWidth: 1)
+                .stroke(borderColor, lineWidth: 0)
         )
     }
 }
@@ -610,10 +644,10 @@ struct UIAssetTiledButton: View {
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                     .stroke(
                         variant == .secondary ? UIAssetColors.accent.opacity(0.5) : Color.clear,
-                        lineWidth: 1
+                        lineWidth: 0
                     )
             )
-            .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 3)
+            .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
         }
         .buttonStyle(UIAssetTiledButtonStyle())
         .aspectRatio(5 / 4, contentMode: .fit)
@@ -639,16 +673,16 @@ struct UIAssetBadge: View {
     private var dotColor: Color {
         switch variant {
         case .accent:
-            return UIAssetColors.accent
+            return UIAssetColors.accentSecondary
         case .neutral:
-            return UIAssetColors.accent.opacity(0.8)
+            return UIAssetColors.accent
         }
     }
 
     private var textColor: Color {
         switch variant {
         case .accent:
-            return UIAssetColors.accent
+            return UIAssetColors.primary
         case .neutral:
             return UIAssetColors.textPrimary
         }
@@ -657,18 +691,24 @@ struct UIAssetBadge: View {
     private var backgroundColor: Color {
         switch variant {
         case .accent:
-            return UIAssetColors.accentSecondary.opacity(0.35)
+            return UIAssetColors.accent
         case .neutral:
-            return UIAssetColors.surface
+            return UIAssetColors.secondary
         }
     }
 
     private var borderColor: Color {
         switch variant {
         case .accent:
-            return UIAssetColors.accentSecondary
+            return UIAssetColors.accent
         case .neutral:
-            return UIAssetColors.border.opacity(1.6)
+            return Color(
+                UIColor { traits in
+                    traits.userInterfaceStyle == .dark
+                        ? UIColor(red: 86 / 255, green: 86 / 255, blue: 88 / 255, alpha: 1)
+                        : UIColor(red: 198 / 255, green: 198 / 255, blue: 200 / 255, alpha: 1)
+                }
+            )
         }
     }
 
@@ -766,7 +806,7 @@ struct UIAssetFloatingActionButtonStyle: ButtonStyle {
             .background(
                 Circle()
                     .fill(UIAssetColors.accent)
-                    .shadow(color: Color.black.opacity(0.18), radius: 4, x: 0, y: 2)
+                    .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
             )
             .scaleEffect(configuration.isPressed ? 0.86 : 1.0)
             .animation(
@@ -785,7 +825,7 @@ struct UIAssetDestructiveFloatingActionButtonStyle: ButtonStyle {
             .background(
                 Circle()
                     .fill(Color(red: 225/255, green: 0, blue: 0))
-                    .shadow(color: Color.black.opacity(0.18), radius: 4, x: 0, y: 2)
+                    .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
             )
             .scaleEffect(configuration.isPressed ? 0.86 : 1.0)
             .animation(
@@ -796,12 +836,15 @@ struct UIAssetDestructiveFloatingActionButtonStyle: ButtonStyle {
 }
 
 struct UIAssetTextActionButtonStyle: ButtonStyle {
+    var hasShadow: Bool = true
+
     func makeBody(configuration: Configuration) -> some View {
-        Content(configuration: configuration)
+        Content(configuration: configuration, hasShadow: hasShadow)
     }
 
     private struct Content: View {
         let configuration: Configuration
+        let hasShadow: Bool
         @Environment(\.isEnabled) private var isEnabled
 
         var body: some View {
@@ -813,6 +856,12 @@ struct UIAssetTextActionButtonStyle: ButtonStyle {
                 .background(
                     Capsule(style: .continuous)
                         .fill(UIAssetColors.accent)
+                )
+                .shadow(
+                    color: hasShadow ? UIAssetShadows.soft : .clear,
+                    radius: hasShadow ? 4 : 0,
+                    x: 0,
+                    y: hasShadow ? 2 : 0
                 )
                 .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
                 .opacity(isEnabled ? (configuration.isPressed ? 0.84 : 1.0) : 0.5)
@@ -948,6 +997,7 @@ struct UIAssetTextField: View {
     let placeholder: String
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -958,6 +1008,7 @@ struct UIAssetTextField: View {
             TextField(placeholder, text: $text)
                 .font(UIAssetTextStyle.paragraph.font)
                 .keyboardType(keyboardType)
+                .focused($isFocused)
                 .padding(.horizontal, 12)
                 .frame(height: 44)
                 .background(
@@ -966,8 +1017,9 @@ struct UIAssetTextField: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(isFocused ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
                 )
+                .animation(.easeInOut(duration: 0.18), value: isFocused)
         }
     }
 }
@@ -1040,7 +1092,7 @@ struct UIAssetSelectField: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(isExpanded ? UIAssetColors.accent.opacity(0.45) : UIAssetColors.border, lineWidth: 1)
+                        .stroke(isExpanded ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -1088,7 +1140,7 @@ struct UIAssetSelectField: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .stroke(UIAssetColors.border, lineWidth: 1)
+                            .stroke(UIAssetControlBorderColors.muted, lineWidth: 1)
                     )
                     .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
                     .offset(y: 50)
@@ -1211,12 +1263,13 @@ struct UIAssetSettingsInlineDropdown: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
-                .stroke(isExpanded ? UIAssetColors.accent.opacity(0.45) : UIAssetColors.border, lineWidth: 1)
+                .stroke(isExpanded ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
         )
         .contentShape(RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous))
         .onTapGesture {
             toggle()
         }
+        .animation(.easeInOut(duration: 0.18), value: isExpanded)
     }
 
     private var panel: some View {
@@ -1256,7 +1309,7 @@ struct UIAssetSettingsInlineDropdown: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
-                .stroke(UIAssetColors.border, lineWidth: 1)
+                .stroke(UIAssetControlBorderColors.muted, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.08), radius: 6, x: 0, y: 3)
     }
@@ -1429,6 +1482,7 @@ struct UIAssetsCatalogView: View {
     @State private var firstNameInput = ""
     @State private var lastNameInput = ""
     @FocusState private var focusedProfileField: ProfileField?
+    @FocusState private var isNotesFocused: Bool
     private let teamMemberOptions: [UIAssetSelectOption] = [
         UIAssetSelectOption(id: "olivia", name: "Olivia Rhye", handle: "olivia"),
         UIAssetSelectOption(id: "phoenix", name: "Phoenix Baker", handle: "phoenix"),
@@ -1467,12 +1521,25 @@ struct UIAssetsCatalogView: View {
             Text("Colors")
                 .uiAssetText(.h1)
 
-            HStack(spacing: 12) {
-                colorChip(name: "Primary", color: UIAssetColors.primary)
-                colorChip(name: "Secondary", color: UIAssetColors.secondary)
-                colorChip(name: "Accent", color: UIAssetColors.accent)
-                colorChip(name: "Accent Light", color: UIAssetColors.accentSecondary)
-            }
+            modeColorSection(
+                title: "Light Mode",
+                chips: [
+                    ("Primary", UIAssetColors.lightModePrimary),
+                    ("Secondary", UIAssetColors.lightModeSecondary),
+                    ("Accent", UIAssetColors.lightModeAccent),
+                    ("Accent Secondary", UIAssetColors.lightModeAccentSecondary)
+                ]
+            )
+
+            modeColorSection(
+                title: "Dark Mode",
+                chips: [
+                    ("Primary", UIAssetColors.darkModePrimary),
+                    ("Secondary", UIAssetColors.darkModeSecondary),
+                    ("Accent", UIAssetColors.darkModeAccent),
+                    ("Accent Secondary", UIAssetColors.darkModeAccentSecondary)
+                ]
+            )
 
             Text("Corner Radius: \(Int(UIAssetMetrics.cornerRadius))pt (edit in UIAssetMetrics.cornerRadius)")
                 .uiAssetText(.footnote)
@@ -1709,12 +1776,13 @@ struct UIAssetsCatalogView: View {
                 RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.6, style: .continuous)
                     .stroke(
                         focusedProfileField == field
-                        ? UIAssetColors.accent.opacity(0.7)
-                        : UIAssetColors.border.opacity(1.6),
+                        ? UIAssetControlBorderColors.active
+                        : UIAssetControlBorderColors.muted,
                         lineWidth: 1
                     )
             )
             .focused($focusedProfileField, equals: field)
+            .animation(.easeInOut(duration: 0.18), value: focusedProfileField == field)
     }
 
     private var alertDialogSection: some View {
@@ -1741,6 +1809,7 @@ struct UIAssetsCatalogView: View {
                     .foregroundStyle(UIAssetColors.textSecondary)
                 TextEditor(text: $notes)
                     .font(UIAssetTextStyle.paragraph.font)
+                    .focused($isNotesFocused)
                     .frame(minHeight: 92)
                     .padding(8)
                     .background(
@@ -1749,8 +1818,9 @@ struct UIAssetsCatalogView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .stroke(UIAssetColors.border, lineWidth: 1)
+                            .stroke(isNotesFocused ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
                     )
+                    .animation(.easeInOut(duration: 0.18), value: isNotesFocused)
             }
 
             Text("Dropdown")
@@ -1863,6 +1933,24 @@ struct UIAssetsCatalogView: View {
                 .foregroundStyle(UIAssetColors.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func modeColorSection(
+        title: String,
+        chips: [(String, Color)]
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .uiAssetText(.h3)
+                .foregroundStyle(UIAssetColors.textPrimary)
+
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 2)
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(chips, id: \.0) { chip in
+                    colorChip(name: chip.0, color: chip.1)
+                }
+            }
+        }
     }
 }
 

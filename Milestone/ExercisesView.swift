@@ -174,8 +174,8 @@ struct ExercisesView: View {
             showsChevron: true
         ) {
             HStack(spacing: 8) {
-                UIAssetBadge(text: exercise.type.displayName, variant: .accent)
                 UIAssetBadge(text: exercise.category?.displayName ?? "Uncategorized", variant: .neutral)
+                UIAssetBadge(text: exercise.type.displayName, variant: .accent)
             }
         }
     }
@@ -236,9 +236,9 @@ private struct ExerciseSwipeRow<Content: View>: View {
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                                .stroke(destructiveColor.opacity(0.7), lineWidth: 1)
+                                .stroke(destructiveColor.opacity(0.7), lineWidth: 0)
                         )
-                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
                     }
                     .buttonStyle(BouncyPlainButtonStyle())
                     .frame(width: rowHeight, height: rowHeight)
@@ -552,7 +552,7 @@ struct ExerciseDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
                 .background(UIAssetColors.primary)
         } else {
@@ -567,7 +567,7 @@ struct ExerciseDetailView: View {
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 1)
+                        .stroke(UIAssetColors.border, lineWidth: 0)
                 )
         }
     }

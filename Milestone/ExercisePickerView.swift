@@ -17,6 +17,7 @@ struct ExercisePickerView: View {
 
     @StateObject private var viewModel = ExercisePickerViewModel()
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
     @State private var selectedCategoryTab = "All"
     @State private var isCreateExercisePresented = false
 
@@ -131,6 +132,7 @@ struct ExercisePickerView: View {
                         TextField("Search exercises", text: $searchText)
                             .font(UIAssetTextStyle.paragraph.font)
                             .foregroundStyle(UIAssetColors.textPrimary)
+                            .focused($isSearchFocused)
                     }
                     .padding(.horizontal, 12)
                     .frame(height: 44)
@@ -140,8 +142,9 @@ struct ExercisePickerView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                            .stroke(UIAssetColors.border, lineWidth: 1)
+                            .stroke(isSearchFocused ? UIAssetControlBorderColors.active : UIAssetControlBorderColors.muted, lineWidth: 1)
                     )
+                    .animation(.easeInOut(duration: 0.18), value: isSearchFocused)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 16)

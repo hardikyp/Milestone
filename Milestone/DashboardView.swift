@@ -77,7 +77,7 @@ struct DashboardView: View {
                                     } label: {
                                         Text("Resume")
                                     }
-                                    .buttonStyle(UIAssetTextActionButtonStyle())
+                                    .buttonStyle(UIAssetTextActionButtonStyle(hasShadow: false))
                                 }
                             }
                             .padding(16)

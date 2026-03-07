@@ -187,11 +187,7 @@ struct SessionDetailView: View {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
             .fill(UIAssetColors.primary)
-            .overlay(
-                RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                    .stroke(UIAssetColors.border, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -604,7 +600,7 @@ private struct SessionDetailSetBadge: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius * 0.75, style: .continuous)
-                .stroke(UIAssetColors.accentSecondary, lineWidth: 1)
+                .stroke(UIAssetColors.accentSecondary, lineWidth: 0)
         )
     }
 }

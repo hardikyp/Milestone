@@ -98,7 +98,7 @@ private struct MinimalBottomMenu: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(UIAssetColors.border, lineWidth: 1)
+                .stroke(UIAssetColors.border, lineWidth: 0)
         )
     }
 }
