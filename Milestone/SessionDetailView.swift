@@ -24,7 +24,10 @@ struct SessionDetailView: View {
                     Text("Session")
                         .uiAssetText(.h2)
                         .foregroundStyle(UIAssetColors.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .layoutPriority(0)
 
                     HStack(spacing: 8) {
                         Button {
@@ -35,7 +38,7 @@ struct SessionDetailView: View {
                         .buttonStyle(UIAssetDestructiveFloatingActionButtonStyle())
                         
                         if viewModel.session?.endDateTime == nil {
-                            Button(viewModel.isEnding ? "Ending..." : "End") {
+                            Button {
                                 Task {
                                     await viewModel.endSession(
                                         sessionId: sessionId,
@@ -43,16 +46,26 @@ struct SessionDetailView: View {
                                         dbQueue: container.dbQueue
                                     )
                                 }
+                            } label: {
+                                Text(viewModel.isEnding ? "Ending..." : "End")
+                                    .lineLimit(1)
+                                    .fixedSize(horizontal: true, vertical: false)
                             }
                             .buttonStyle(UIAssetTextActionButtonStyle())
                             .disabled(viewModel.isEnding)
+                            .layoutPriority(1)
                         }
 
-                        Button("Edit") {
+                        Button {
                             isEditSessionPresented = true
+                        } label: {
+                            Text("Edit")
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                         .buttonStyle(UIAssetTextActionButtonStyle())
                         .disabled(viewModel.session == nil)
+                        .layoutPriority(1)
                     }
                 }
                 .padding(.top, 16)

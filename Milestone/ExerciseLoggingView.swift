@@ -154,7 +154,7 @@ struct ExerciseLoggingView: View {
                                                         Circle()
                                                             .stroke(
                                                                 row.isDone ? UIAssetColors.accent : UIAssetColors.textSecondary.opacity(0.6),
-                                                                lineWidth: 0
+                                                                lineWidth: 1.5
                                                             )
                                                     )
 
