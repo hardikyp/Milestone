@@ -4,7 +4,7 @@ import UIKit
 enum UIAssetColors {
     private static let lightPrimaryUIColor = UIColor.white
     private static let lightSecondaryUIColor = UIColor(red: 242 / 255, green: 242 / 255, blue: 242 / 255, alpha: 1)
-    private static let darkPrimaryUIColor = UIColor(red: 20 / 255, green: 20 / 255, blue: 20 / 255, alpha: 1)
+    private static let darkPrimaryUIColor = UIColor(red: 25 / 255, green: 25 / 255, blue: 25 / 255, alpha: 1)
     private static let darkSecondaryUIColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
     private static let lightAccentUIColor = UIColor(red: 6 / 255, green: 63 / 255, blue: 72 / 255, alpha: 1)
     private static let darkAccentUIColor = UIColor(red: 47 / 255, green: 163 / 255, blue: 176 / 255, alpha: 1)
@@ -670,15 +670,6 @@ struct UIAssetBadge: View {
     let text: String
     let variant: UIAssetBadgeVariant
 
-    private var dotColor: Color {
-        switch variant {
-        case .accent:
-            return UIAssetColors.accentSecondary
-        case .neutral:
-            return UIAssetColors.accent
-        }
-    }
-
     private var textColor: Color {
         switch variant {
         case .accent:
@@ -713,11 +704,7 @@ struct UIAssetBadge: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(dotColor)
-                .frame(width: 6, height: 6)
-
+        HStack(spacing: 0) {
             Text(text)
                 .uiAssetText(.subtitle)
                 .foregroundStyle(textColor)
