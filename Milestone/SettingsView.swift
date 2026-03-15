@@ -818,7 +818,6 @@ struct DataHandlingView: View {
                                 isRestoreImporterPresented = true
                             }
                         )
-                    }
 
                     UIAssetSettingsCategoryCard(category: "Danger Zone") {
                         VStack(alignment: .leading, spacing: 10) {

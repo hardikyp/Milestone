@@ -172,7 +172,7 @@ struct DashboardView: View {
             .navigationDestination(for: String.self) { sessionID in
                 ActiveSessionView(sessionId: sessionID)
             }
-            .onChange(of: navigationPath) { _ in
+            .onChange(of: navigationPath) { _, _ in
                 Task {
                     await viewModel.loadActiveSession(sessionRepository: container.sessionRepository)
                 }

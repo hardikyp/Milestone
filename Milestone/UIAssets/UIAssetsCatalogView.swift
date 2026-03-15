@@ -1325,7 +1325,7 @@ struct UIAssetSettingsInlineDropdown: View {
 
     private func setExpanded(_ expanded: Bool) {
         withAnimation(.easeInOut(duration: 0.18)) {
-            if var activeDropdownID, let id {
+            if let activeDropdownID, let id {
                 if expanded {
                     activeDropdownID.wrappedValue = id
                 } else if activeDropdownID.wrappedValue == id {
