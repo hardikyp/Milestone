@@ -315,6 +315,15 @@
     "media_uri": "ExerciseGIFs/standing-rotation.gif"
   },
   {
+    "id": "seed-hyperextension",
+    "name": "Hyperextension",
+    "type": "functional",
+    "category": "core",
+    "description": "Position your thighs on the pads of the Roman chair so that your hips are free to flex. Your feet should be flat on the foot supports, your spine neutral, and your elbows pointing out.\nFlex at your hips and drop your upper body toward the floor, keeping your back flat. Stop bending when the flexibility of your hamstrings restricts further movement.\nReturn to the start position, contracting your hamstrings, glutes, and spinal erectors. Do not extend beyond the start position because you may injure your back",
+    "target_area": "Erector Spinae",
+    "media_uri": "ExerciseGIFs/hyperextension.gif"
+  },
+  {
     "id": "seed-stationary-bike",
     "name": "Stationary Bike",
     "type": "cardio",
