@@ -422,19 +422,23 @@ final class SettingsViewModel: ObservableObject {
     @Published var isDarkModeEnabled: Bool
 
     @Published var isHealthConnected: Bool
+    @Published var isAutomaticBackupEnabled: Bool
     @Published var profileImageData: Data?
     @Published var statusMessage: String?
     @Published var errorMessage: String?
 
     private let defaults: UserDefaults
     private let dataTransferService: DataTransferService
+    private let automaticBackupService: AutomaticBackupService
 
     init(
         defaults: UserDefaults = .standard,
-        dataTransferService: DataTransferService = DataTransferService()
+        dataTransferService: DataTransferService = DataTransferService(),
+        automaticBackupService: AutomaticBackupService = AutomaticBackupService()
     ) {
         self.defaults = defaults
         self.dataTransferService = dataTransferService
+        self.automaticBackupService = automaticBackupService
 
         firstName = defaults.string(forKey: Keys.firstName) ?? ""
         lastName = defaults.string(forKey: Keys.lastName) ?? ""
@@ -464,6 +468,7 @@ final class SettingsViewModel: ObservableObject {
         followsSystemAppearance = defaults.bool(forKey: Keys.followsSystemAppearance)
         isDarkModeEnabled = defaults.bool(forKey: Keys.isDarkModeEnabled)
         isHealthConnected = defaults.bool(forKey: Keys.isHealthConnected)
+        isAutomaticBackupEnabled = automaticBackupService.isEnabled
         profileImageData = defaults.data(forKey: Keys.profileImageData)
     }
 
@@ -482,6 +487,7 @@ final class SettingsViewModel: ObservableObject {
         defaults.set(isDarkModeEnabled, forKey: Keys.isDarkModeEnabled)
 
         defaults.set(isHealthConnected, forKey: Keys.isHealthConnected)
+        automaticBackupService.setEnabled(isAutomaticBackupEnabled)
         defaults.set(profileImageData, forKey: Keys.profileImageData)
     }
 
@@ -571,9 +577,21 @@ final class SettingsViewModel: ObservableObject {
 
     var exportDestinationSurvivalMessage: String {
         if hasExternalExportFolderSelection {
-            return "Exports in the selected folder survive app deletion."
+            return "NOTE: Exports in the selected folder survive app deletion."
         }
-        return "App-local exports are deleted when the app is removed."
+        return "NOTE: App-local exports are deleted when the app is removed."
+    }
+
+    var automaticBackupSummary: String {
+        automaticBackupService.lastSuccessfulBackupSummary()
+    }
+
+    var automaticBackupDestinationSummary: String {
+        "Automatic backups use \(exportDestinationDetail)."
+    }
+
+    var automaticBackupScheduleSummary: String {
+        "Runs once per day when the app becomes active."
     }
 
     func saveExternalExportFolderSelection(_ folderURL: URL) {
@@ -713,18 +731,37 @@ struct DataHandlingView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     SettingsScreenHeader(title: "Data Handling", onBack: { dismiss() })
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Export and Backup")
-                            .uiAssetText(.subtitle)
-                            .foregroundStyle(UIAssetColors.textSecondary)
-
-                        Text("Current destination: \(viewModel.exportDestinationDetail)")
+                        Text("Current destination:\n\(viewModel.exportDestinationDetail)")
                             .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
                         Text(viewModel.exportDestinationSurvivalMessage)
                             .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
+
+                        UIAssetSettingsCategoryCard(category: "Automatic Backup", bottomPadding: 8) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                UIAssetSettingsRow(
+                                    symbol: "clock.arrow.circlepath",
+                                    title: "Daily Auto Backup",
+                                    showsDivider: false
+                                ) {
+                                    UIAssetSettingsInlineToggle(isOn: $viewModel.isAutomaticBackupEnabled)
+                                }
+
+                                Text(viewModel.automaticBackupScheduleSummary)
+                                    .uiAssetText(.subtitle)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+
+                                Text(viewModel.automaticBackupDestinationSummary)
+                                    .uiAssetText(.subtitle)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+
+                                Text(viewModel.automaticBackupSummary)
+                                    .uiAssetText(.subtitle)
+                                    .foregroundStyle(UIAssetColors.textSecondary)
+                            }
+                        }
 
                         dataActionCard(
                             symbol: "folder.badge.plus",
@@ -893,6 +930,9 @@ struct DataHandlingView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 showingTransferStatusDialog = isPresented
             }
+        }
+        .onChange(of: viewModel.isAutomaticBackupEnabled) { _, _ in
+            viewModel.save()
         }
     }
 

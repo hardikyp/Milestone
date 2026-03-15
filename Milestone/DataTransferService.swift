@@ -618,8 +618,27 @@ struct DataTransferService {
     }
 
     private func writeFile(data: Data, filenamePrefix: String, pathExtension: String) throws -> URL {
-        let exportDirectory = try resolvePreferredExportDirectory()
         let filename = "\(filenamePrefix)-\(Self.timestampToken()).\(pathExtension)"
+        do {
+            let exportDirectory = try resolvePreferredExportDirectory()
+            return try writeFile(data: data, filename: filename, to: exportDirectory)
+        } catch DataTransferError.selectedExportFolderUnavailable,
+                DataTransferError.failedToAccessSelectedExportFolder {
+            clearExternalExportFolderSelection()
+            let fallbackDirectory = ResolvedExportDirectory(
+                url: try prepareFilesDirectory(),
+                isExternal: false,
+                displayName: "Milestone > Exports"
+            )
+            return try writeFile(data: data, filename: filename, to: fallbackDirectory)
+        }
+    }
+
+    private func writeFile(
+        data: Data,
+        filename: String,
+        to exportDirectory: ResolvedExportDirectory
+    ) throws -> URL {
         let destination = exportDirectory.url.appendingPathComponent(filename, isDirectory: false)
 
         if exportDirectory.isExternal {
@@ -628,13 +647,10 @@ struct DataTransferService {
                 throw DataTransferError.failedToAccessSelectedExportFolder
             }
             defer { exportDirectory.url.stopAccessingSecurityScopedResource() }
-
-            try data.write(to: destination, options: .atomic)
-            return destination
-        } else {
-            try data.write(to: destination, options: .atomic)
-            return destination
         }
+
+        try data.write(to: destination, options: .atomic)
+        return destination
     }
 
     private func resolvePreferredExportDirectory() throws -> ResolvedExportDirectory {
@@ -764,6 +780,69 @@ struct DataTransferService {
             bodyMetrics: payload.bodyMetrics,
             settings: payload.settings
         )
+    }
+}
+
+struct AutomaticBackupService {
+    private let defaults: UserDefaults
+    private let dataTransferService: DataTransferService
+
+    private enum Keys {
+        static let enabled = "autoBackup.enabled"
+        static let lastSuccessfulDay = "autoBackup.lastSuccessfulDay"
+        static let lastSuccessfulDate = "autoBackup.lastSuccessfulDate"
+    }
+
+    init(
+        defaults: UserDefaults = .standard,
+        dataTransferService: DataTransferService = DataTransferService()
+    ) {
+        self.defaults = defaults
+        self.dataTransferService = dataTransferService
+    }
+
+    var isEnabled: Bool {
+        defaults.bool(forKey: Keys.enabled)
+    }
+
+    func setEnabled(_ isEnabled: Bool) {
+        defaults.set(isEnabled, forKey: Keys.enabled)
+    }
+
+    func performBackupIfNeeded(dbQueue: DatabaseQueue, now: Date = Date()) throws -> DataTransferExportResult? {
+        guard isEnabled else { return nil }
+
+        let dayToken = Self.dayToken(for: now)
+        guard defaults.string(forKey: Keys.lastSuccessfulDay) != dayToken else {
+            return nil
+        }
+
+        let result = try dataTransferService.backup(dbQueue: dbQueue)
+        defaults.set(dayToken, forKey: Keys.lastSuccessfulDay)
+        defaults.set(now, forKey: Keys.lastSuccessfulDate)
+        return result
+    }
+
+    func lastSuccessfulBackupSummary() -> String {
+        guard let date = defaults.object(forKey: Keys.lastSuccessfulDate) as? Date else {
+            return "No automatic backup has run yet."
+        }
+
+        let formatted = DateFormatter.localizedString(
+            from: date,
+            dateStyle: .medium,
+            timeStyle: .short
+        )
+        return "Last automatic backup: \(formatted)"
+    }
+
+    private static func dayToken(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
     }
 }
 

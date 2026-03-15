@@ -8,6 +8,7 @@ import Darwin
 
 @main
 struct MilestoneApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var container: AppContainer
     @AppStorage(AppAppearancePreferences.followsSystemKey) private var followsSystemAppearance = false
     @AppStorage(AppAppearancePreferences.darkModeEnabledKey) private var isDarkModeEnabled = false
@@ -72,6 +73,11 @@ struct MilestoneApp: App {
                 .environment(\.font, .app(.body))
                 .environmentObject(container)
                 .preferredColorScheme(resolvedColorScheme)
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        container.triggerAutomaticBackupIfNeeded()
+                    }
+                }
         }
     }
 
