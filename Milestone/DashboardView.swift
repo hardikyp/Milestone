@@ -2,9 +2,14 @@ import SwiftUI
 import UIKit
 
 struct DashboardView: View {
+    private enum DashboardRoute: Hashable {
+        case activeSession(String)
+        case sessionDetail(String)
+    }
+
     @EnvironmentObject private var container: AppContainer
     @StateObject private var viewModel = DashboardViewModel()
-    @State private var navigationPath: [String] = []
+    @State private var navigationPath: [DashboardRoute] = []
     @State private var isCategoryPickerPresented = false
     @State private var isTemplatePickerPresented = false
     @State private var actionErrorMessage: String?
@@ -73,7 +78,7 @@ struct DashboardView: View {
                                     Spacer(minLength: 0)
 
                                     Button {
-                                        navigationPath.append(active.id)
+                                        navigationPath.append(.activeSession(active.id))
                                     } label: {
                                         Text("Resume")
                                     }
@@ -110,7 +115,8 @@ struct DashboardView: View {
                                         sessionRepository: container.sessionRepository
                                     )
                                 }
-                            }
+                            },
+                            onSelectDay: handleCalendarSelection(day:)
                         )
                     }
                     .padding(16)
@@ -141,7 +147,7 @@ struct DashboardView: View {
                 CategoryPickerView { category in
                     do {
                         let session = try container.sessionRepository.startSession(name: category)
-                        navigationPath.append(session.id)
+                        navigationPath.append(.activeSession(session.id))
                         isCategoryPickerPresented = false
                         Task {
                             await viewModel.loadActiveSession(sessionRepository: container.sessionRepository)
@@ -159,7 +165,7 @@ struct DashboardView: View {
                             sessionName: nil,
                             precreateSets: precreateSets
                         )
-                        navigationPath.append(session.id)
+                        navigationPath.append(.activeSession(session.id))
                         Task {
                             await viewModel.loadActiveSession(sessionRepository: container.sessionRepository)
                         }
@@ -169,8 +175,13 @@ struct DashboardView: View {
                 }
                 .environmentObject(container)
             }
-            .navigationDestination(for: String.self) { sessionID in
-                ActiveSessionView(sessionId: sessionID)
+            .navigationDestination(for: DashboardRoute.self) { route in
+                switch route {
+                case .activeSession(let sessionID):
+                    ActiveSessionView(sessionId: sessionID)
+                case .sessionDetail(let sessionID):
+                    SessionDetailView(sessionId: sessionID)
+                }
             }
             .onChange(of: navigationPath) { _, _ in
                 Task {
@@ -197,6 +208,20 @@ struct DashboardView: View {
                 DashboardTopFadeNavigationBackground()
             }
         }
+    }
+
+    private func handleCalendarSelection(day: Int) {
+        let sessions = viewModel.sessions(forDay: day)
+        guard !sessions.isEmpty else { return }
+
+        if sessions.count == 1, let session = sessions.first {
+            navigationPath.append(.sessionDetail(session.id))
+            return
+        }
+
+        guard let selectedDate = viewModel.dateForSelectedDay(day) else { return }
+        container.historyNavigationDate = selectedDate
+        container.selectedTab = .history
     }
 }
 

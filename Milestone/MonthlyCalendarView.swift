@@ -5,6 +5,7 @@ struct MonthlyCalendarView: View {
     let highlightedDays: Set<Int>
     let onPreviousMonth: () -> Void
     let onNextMonth: () -> Void
+    let onSelectDay: (Int) -> Void
 
     private let calendar = Calendar(identifier: .gregorian)
 
@@ -78,15 +79,21 @@ struct MonthlyCalendarView: View {
 
                 ForEach(Array(dayCells.enumerated()), id: \.offset) { _, day in
                     if let day {
-                        Text("\(day)")
-                            .font(UIAssetTextStyle.subtitle.font)
-                            .foregroundStyle(highlightedDays.contains(day) ? UIAssetColors.accent : UIAssetColors.textPrimary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
-                            .background(
-                                Circle()
-                                    .fill(highlightedDays.contains(day) ? UIAssetColors.accentSecondary : Color.clear)
-                            )
+                        Button {
+                            onSelectDay(day)
+                        } label: {
+                            Text("\(day)")
+                                .font(UIAssetTextStyle.subtitle.font)
+                                .foregroundStyle(highlightedDays.contains(day) ? UIAssetColors.accent : UIAssetColors.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Circle()
+                                        .fill(highlightedDays.contains(day) ? UIAssetColors.accentSecondary : Color.clear)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!highlightedDays.contains(day))
                     } else {
                         Text(" ")
                             .frame(maxWidth: .infinity)
@@ -109,6 +116,7 @@ struct MonthlyCalendarView: View {
         monthDate: Date(),
         highlightedDays: [1, 4, 9, 21],
         onPreviousMonth: {},
-        onNextMonth: {}
+        onNextMonth: {},
+        onSelectDay: { _ in }
     )
 }

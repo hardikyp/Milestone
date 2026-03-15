@@ -11,6 +11,7 @@ enum AppTab: Hashable {
 @MainActor
 final class AppContainer: ObservableObject {
     @Published var selectedTab: AppTab = .home
+    @Published var historyNavigationDate: Date?
 
     let dbManager: DatabaseManager
     let dbQueue: DatabaseQueue

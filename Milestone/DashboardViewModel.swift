@@ -11,6 +11,7 @@ struct DailyVolumePoint: Identifiable {
 final class DashboardViewModel: ObservableObject {
     @Published var monthDate: Date = Date()
     @Published var highlightedDays: Set<Int> = []
+    @Published private(set) var sessionsByDay: [Int: [Session]] = [:]
     @Published var last7DayVolumes: [DailyVolumePoint] = []
     @Published var greetingText: String = "Hello"
     @Published var greetingSubtext: String = "What would you like to work on today?"
@@ -85,6 +86,21 @@ final class DashboardViewModel: ObservableObject {
     private func loadMonthHighlights(sessionRepository: SessionRepository, month: Date) throws {
         let monthlySessions = try sessionRepository.fetchSessionsForMonth(month: month)
         highlightedDays = Set(monthlySessions.map { calendar.component(.day, from: $0.startDateTime) })
+        sessionsByDay = Dictionary(
+            grouping: monthlySessions,
+            by: { calendar.component(.day, from: $0.startDateTime) }
+        )
+    }
+
+    func sessions(forDay day: Int) -> [Session] {
+        sessionsByDay[day, default: []]
+            .sorted { $0.startDateTime > $1.startDateTime }
+    }
+
+    func dateForSelectedDay(_ day: Int) -> Date? {
+        var components = calendar.dateComponents([.year, .month], from: monthDate)
+        components.day = day
+        return calendar.date(from: components)
     }
 
     private func loadSessionsForLast7Days(sessionRepository: SessionRepository, now: Date) throws -> [Session] {

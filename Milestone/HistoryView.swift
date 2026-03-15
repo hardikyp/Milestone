@@ -6,160 +6,174 @@ struct HistoryView: View {
     @State private var pendingDeleteSessionID: String?
     @State private var navigationPath: [String] = []
     @State private var openSwipeSessionID: String?
+    @State private var scrollTargetSessionID: String?
+    private let calendar = Calendar(identifier: .gregorian)
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 12) {
-                    Text("History")
-                        .uiAssetText(.h2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 24)
+            ScrollViewReader { proxy in
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Text("History")
+                            .uiAssetText(.h2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
 
-                List {
-                    if viewModel.rows.isEmpty && viewModel.isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                    } else {
-                        ForEach(viewModel.rows) { row in
-                            HistorySwipeRow(
-                                canEnd: row.isInProgress,
-                                isOpen: openSwipeSessionID == row.id,
-                                onOpen: { openSwipeSessionID = row.id },
-                                onClose: {
-                                    if openSwipeSessionID == row.id {
-                                        openSwipeSessionID = nil
-                                    }
-                                },
-                                onTapRow: {
-                                    if openSwipeSessionID != nil {
-                                        openSwipeSessionID = nil
-                                    } else {
-                                        navigationPath.append(row.id)
-                                    }
-                                },
-                                onDelete: {
-                                    pendingDeleteSessionID = row.id
-                                },
-                                onEnd: {
-                                    Task {
-                                        await viewModel.endSession(
-                                            sessionId: row.id,
-                                            sessionRepository: container.sessionRepository
-                                        )
+                    List {
+                        if viewModel.rows.isEmpty && viewModel.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                        } else {
+                            ForEach(viewModel.rows) { row in
+                                HistorySwipeRow(
+                                    canEnd: row.isInProgress,
+                                    isOpen: openSwipeSessionID == row.id,
+                                    onOpen: { openSwipeSessionID = row.id },
+                                    onClose: {
                                         if openSwipeSessionID == row.id {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                openSwipeSessionID = nil
+                                            openSwipeSessionID = nil
+                                        }
+                                    },
+                                    onTapRow: {
+                                        if openSwipeSessionID != nil {
+                                            openSwipeSessionID = nil
+                                        } else {
+                                            navigationPath.append(row.id)
+                                        }
+                                    },
+                                    onDelete: {
+                                        pendingDeleteSessionID = row.id
+                                    },
+                                    onEnd: {
+                                        Task {
+                                            await viewModel.endSession(
+                                                sessionId: row.id,
+                                                sessionRepository: container.sessionRepository
+                                            )
+                                            if openSwipeSessionID == row.id {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    openSwipeSessionID = nil
+                                                }
                                             }
                                         }
                                     }
+                                ) {
+                                    historyRow(row)
                                 }
-                            ) {
-                                historyRow(row)
+                                .id(row.id)
+                                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                             }
-                            .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                        }
 
-                        if viewModel.canLoadMore {
-                            Button {
-                                Task {
-                                    await viewModel.loadMore(
-                                        sessionRepository: container.sessionRepository,
-                                        statsService: StatsService(dbQueue: container.dbQueue)
-                                    )
-                                }
-                            } label: {
-                                Group {
-                                    if viewModel.isLoadingMore {
-                                        ProgressView()
-                                    } else {
-                                        Text("Load More")
+                            if viewModel.canLoadMore {
+                                Button {
+                                    Task {
+                                        await viewModel.loadMore(
+                                            sessionRepository: container.sessionRepository,
+                                            statsService: StatsService(dbQueue: container.dbQueue)
+                                        )
                                     }
+                                } label: {
+                                    Group {
+                                        if viewModel.isLoadingMore {
+                                            ProgressView()
+                                        } else {
+                                            Text("Load More")
+                                        }
+                                    }
+                                    .uiAssetText(.paragraph)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(UIAssetColors.primary)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .stroke(Color.black.opacity(0.05), lineWidth: 0)
+                                    )
+                                    .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
                                 }
-                                .uiAssetText(.paragraph)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(UIAssetColors.primary)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.black.opacity(0.05), lineWidth: 0)
-                                )
-                                .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
+                                .buttonStyle(.plain)
+                                .disabled(viewModel.isLoadingMore)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                             }
-                            .buttonStyle(.plain)
-                            .disabled(viewModel.isLoadingMore)
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
                         }
                     }
                 }
-            }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(UIAssetColors.secondary.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
-            .task {
-                await viewModel.loadInitial(
-                    sessionRepository: container.sessionRepository,
-                    statsService: StatsService(dbQueue: container.dbQueue)
-                )
-            }
-            .overlay {
-                if let error = viewModel.errorMessage {
-                    Color.black.opacity(0.24)
-                        .ignoresSafeArea()
-                        .overlay {
-                            UIAssetAlertDialog(
-                                title: "History Error",
-                                message: error,
-                                cancelTitle: "Close",
-                                destructiveTitle: "OK"
-                            ) {
-                                viewModel.errorMessage = nil
-                            } onDestructive: {
-                                viewModel.errorMessage = nil
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                } else if pendingDeleteSessionID != nil {
-                    Color.black.opacity(0.25)
-                        .ignoresSafeArea()
-                        .overlay {
-                            UIAssetAlertDialog(
-                                title: "Delete Session",
-                                message: "Are you sure you want to delete this session?",
-                                cancelTitle: "Cancel",
-                                destructiveTitle: "Delete"
-                            ) {
-                                pendingDeleteSessionID = nil
-                            } onDestructive: {
-                                guard let sessionId = pendingDeleteSessionID else { return }
-                                pendingDeleteSessionID = nil
-                                Task {
-                                    await viewModel.deleteSession(
-                                        sessionId: sessionId,
-                                        sessionRepository: container.sessionRepository
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(UIAssetColors.secondary.ignoresSafeArea())
+                .toolbar(.hidden, for: .navigationBar)
+                .task {
+                    await viewModel.loadInitial(
+                        sessionRepository: container.sessionRepository,
+                        statsService: StatsService(dbQueue: container.dbQueue)
+                    )
+                    await navigateToPendingHistoryDateIfNeeded(proxy: proxy)
                 }
-            }
-            .navigationDestination(for: String.self) { sessionId in
-                SessionDetailView(sessionId: sessionId)
+                .onChange(of: container.historyNavigationDate) { _, _ in
+                    Task {
+                        await navigateToPendingHistoryDateIfNeeded(proxy: proxy)
+                    }
+                }
+                .onChange(of: viewModel.rows) { _, _ in
+                    scrollToTargetIfNeeded(proxy: proxy)
+                }
+                .overlay {
+                    if let error = viewModel.errorMessage {
+                        Color.black.opacity(0.24)
+                            .ignoresSafeArea()
+                            .overlay {
+                                UIAssetAlertDialog(
+                                    title: "History Error",
+                                    message: error,
+                                    cancelTitle: "Close",
+                                    destructiveTitle: "OK"
+                                ) {
+                                    viewModel.errorMessage = nil
+                                } onDestructive: {
+                                    viewModel.errorMessage = nil
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                    } else if pendingDeleteSessionID != nil {
+                        Color.black.opacity(0.25)
+                            .ignoresSafeArea()
+                            .overlay {
+                                UIAssetAlertDialog(
+                                    title: "Delete Session",
+                                    message: "Are you sure you want to delete this session?",
+                                    cancelTitle: "Cancel",
+                                    destructiveTitle: "Delete"
+                                ) {
+                                    pendingDeleteSessionID = nil
+                                } onDestructive: {
+                                    guard let sessionId = pendingDeleteSessionID else { return }
+                                    pendingDeleteSessionID = nil
+                                    Task {
+                                        await viewModel.deleteSession(
+                                            sessionId: sessionId,
+                                            sessionRepository: container.sessionRepository
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                    }
+                }
+                .navigationDestination(for: String.self) { sessionId in
+                    SessionDetailView(sessionId: sessionId)
+                }
             }
         }
     }
@@ -219,6 +233,33 @@ struct HistoryView: View {
         let weightUnit = AppUnitPreferences.weightUnit()
         let volume = UnitDisplayFormatter.volumeText(totalVolumeKg, unit: weightUnit, maxFractionDigits: 1)
         return "Volume: \(volume)"
+    }
+
+    private func navigateToPendingHistoryDateIfNeeded(proxy: ScrollViewProxy) async {
+        guard let targetDate = container.historyNavigationDate else { return }
+
+        await viewModel.loadUntilContainsDay(
+            targetDate,
+            sessionRepository: container.sessionRepository,
+            statsService: StatsService(dbQueue: container.dbQueue)
+        )
+
+        guard let row = viewModel.firstRow(on: targetDate, calendar: calendar) else {
+            container.historyNavigationDate = nil
+            return
+        }
+
+        scrollTargetSessionID = row.id
+        scrollToTargetIfNeeded(proxy: proxy)
+        container.historyNavigationDate = nil
+    }
+
+    private func scrollToTargetIfNeeded(proxy: ScrollViewProxy) {
+        guard let scrollTargetSessionID else { return }
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            proxy.scrollTo(scrollTargetSessionID, anchor: .top)
+        }
     }
 }
 
@@ -390,7 +431,7 @@ private struct HistoryBouncyPlainButtonStyle: ButtonStyle {
 
 @MainActor
 final class HistoryViewModel: ObservableObject {
-    struct SessionRow: Identifiable {
+    struct SessionRow: Identifiable, Equatable {
         let id: String
         let name: String
         let startDateTime: Date
@@ -491,6 +532,23 @@ final class HistoryViewModel: ObservableObject {
             canLoadMore = rows.count % pageSize == 0
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    func loadUntilContainsDay(
+        _ date: Date,
+        sessionRepository: SessionRepository,
+        statsService: StatsService
+    ) async {
+        while firstRow(on: date, calendar: Calendar(identifier: .gregorian)) == nil && canLoadMore {
+            await loadMore(sessionRepository: sessionRepository, statsService: statsService)
+        }
+    }
+
+    func firstRow(on date: Date, calendar: Calendar) -> SessionRow? {
+        let targetDay = calendar.startOfDay(for: date)
+        return rows.first { row in
+            calendar.startOfDay(for: row.startDateTime) == targetDay
         }
     }
 
