@@ -433,7 +433,7 @@ struct UIAssetRadioCard: View {
                         .frame(width: 24, height: 24)
                         .overlay(
                             Circle()
-                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 0)
+                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 1.5)
                         )
 
                     if isSelected {
@@ -479,7 +479,7 @@ struct UIAssetCheckboxCard: View {
                         .frame(width: 24, height: 24)
                         .overlay(
                             Circle()
-                                .stroke(isChecked ? UIAssetColors.accent : uncheckedColor, lineWidth: 0)
+                                .stroke(isChecked ? UIAssetColors.accent : uncheckedColor, lineWidth: 1.5)
                         )
 
                     if isChecked {

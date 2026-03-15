@@ -549,12 +549,15 @@ struct ExerciseDetailView: View {
             GIFWebView(url: url)
                 .aspectRatio(1, contentMode: .fit)
                 .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .fill(UIAssetColors.primary)
+                )
                 .clipShape(RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 0)
+                        .stroke(UIAssetColors.border, lineWidth: 1)
                 )
-                .background(UIAssetColors.primary)
         } else {
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                 .fill(UIAssetColors.accentSecondary)
@@ -567,7 +570,7 @@ struct ExerciseDetailView: View {
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                        .stroke(UIAssetColors.border, lineWidth: 0)
+                        .stroke(UIAssetColors.border, lineWidth: 1)
                 )
         }
     }
@@ -670,19 +673,38 @@ struct ExerciseDetailView: View {
 struct GIFWebView: UIViewRepresentable {
     let url: URL
 
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero)
         webView.scrollView.isScrollEnabled = false
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.contentMode = .scaleAspectFit
+        webView.clipsToBounds = true
+        webView.layer.cornerRadius = UIAssetMetrics.cornerRadius
+        webView.layer.masksToBounds = true
+        webView.scrollView.clipsToBounds = true
+        webView.scrollView.layer.cornerRadius = UIAssetMetrics.cornerRadius
+        webView.scrollView.layer.masksToBounds = true
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
+        guard context.coordinator.lastLoadedURL != url else {
+            return
+        }
+
+        context.coordinator.lastLoadedURL = url
         let html = Self.html(for: url)
         let baseURL = url.isFileURL ? url.deletingLastPathComponent() : nil
         webView.loadHTMLString(html, baseURL: baseURL)
+    }
+
+    final class Coordinator {
+        var lastLoadedURL: URL?
     }
 
     private static func html(for url: URL) -> String {

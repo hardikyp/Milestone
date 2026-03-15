@@ -421,7 +421,7 @@ private struct CompactLoggingModeRadioRow: View {
                         .frame(width: 20, height: 20)
                         .overlay(
                             Circle()
-                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 0)
+                                .stroke(isSelected ? UIAssetColors.accent : unselectedRadioColor, lineWidth: 1.5)
                         )
 
                     if isSelected {
