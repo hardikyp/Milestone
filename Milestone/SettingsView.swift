@@ -79,118 +79,14 @@ enum UnitConverter {
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var activePreferencesDropdownID: String?
+    @State private var showingStatusDialog = false
 
     var body: some View {
         NavigationStack {
             UIAssetInlineDropdownHost {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                    Text("Settings")
-                        .uiAssetText(.h2)
-                        .foregroundStyle(UIAssetColors.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 4)
-
-                    VStack(alignment: .leading, spacing: 14) {
-                        Text("Profile")
-                            .uiAssetText(.subtitle)
-                            .foregroundStyle(UIAssetColors.textSecondary)
-
-                        HStack(spacing: 12) {
-                            profileImageView
-                                .frame(width: 52, height: 52)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(viewModel.fullNameDisplay)
-                                    .uiAssetText(.h3)
-                                    .foregroundStyle(UIAssetColors.textPrimary)
-
-                                Text(viewModel.genderAgeDisplay)
-                                    .uiAssetText(.footnote)
-                                    .foregroundStyle(UIAssetColors.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        Divider()
-
-                        NavigationLink {
-                            UserProfileView(viewModel: viewModel)
-                        } label: {
-                            UIAssetSettingsRow(symbol: "person.crop.circle", title: "Modify Details", showsDivider: false) {
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(UIAssetColors.textSecondary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.top, 16)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
-                    .uiAssetCardSurface(fill: UIAssetColors.primary)
-
-                    preferencesCard
-
-                    UIAssetSettingsCategoryCard(category: "Health and Fitness Data", bottomPadding: 8) {
-                        UIAssetSettingsRow(symbol: "heart.text.square", title: "Connect HealthKit", showsDivider: false) {
-                            UIAssetSettingsInlineToggle(isOn: $viewModel.isHealthConnected)
-                        }
-                    }
-
-                    UIAssetSettingsCategoryCard(category: "Design System", bottomPadding: 8) {
-                        NavigationLink {
-                            UIAssetsCatalogView()
-                        } label: {
-                            UIAssetSettingsRow(symbol: "paintpalette", title: "UI Assets", showsDivider: false) {
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(UIAssetColors.textSecondary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    UIAssetSettingsCategoryCard(category: "Data Handling", bottomPadding: 8) {
-                        NavigationLink {
-                            DataHandlingView(viewModel: viewModel)
-                        } label: {
-                            UIAssetSettingsRow(symbol: "externaldrive", title: "Data", showsDivider: false) {
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(UIAssetColors.textSecondary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(UIAssetColors.accent)
-                                .frame(width: 28, height: 28)
-                                .background(
-                                    Circle()
-                                        .fill(UIAssetColors.accentSecondary)
-                                )
-
-                            Text("About this app")
-                                .uiAssetText(.h3)
-                                .foregroundStyle(UIAssetColors.textPrimary)
-                        }
-
-                        Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
-                            .uiAssetText(.subtitle)
-                            .foregroundStyle(UIAssetColors.textSecondary)
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .uiAssetCardSurface(fill: UIAssetColors.primary)
-                }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
+                ZStack {
+                    settingsScrollView
+                    settingsStatusDialog
                 }
             }
             .background(UIAssetColors.secondary.ignoresSafeArea())
@@ -201,15 +97,164 @@ struct SettingsView: View {
             .onChange(of: viewModel.followsSystemAppearance) { _, _ in viewModel.save() }
             .onChange(of: viewModel.isDarkModeEnabled) { _, _ in viewModel.save() }
             .onChange(of: viewModel.isHealthConnected) { _, _ in viewModel.save() }
-            .alert("Settings", isPresented: statusAlertPresented) {
-                Button("OK") {
-                    viewModel.statusMessage = nil
-                    viewModel.errorMessage = nil
+            .onChange(of: viewModel.statusMessage != nil || viewModel.errorMessage != nil) { _, isPresented in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showingStatusDialog = isPresented
                 }
-            } message: {
-                Text(viewModel.errorMessage ?? viewModel.statusMessage ?? "")
             }
         }
+    }
+
+    private var settingsScrollView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Settings")
+                    .uiAssetText(.h2)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 4)
+
+                profileCard
+                preferencesCard
+                healthCard
+                designSystemCard
+                dataHandlingCard
+                aboutCard
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
+        }
+    }
+
+    @ViewBuilder
+    private var settingsStatusDialog: some View {
+        if showingStatusDialog {
+            Rectangle()
+                .fill(Color.black.opacity(0.24))
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismissStatusDialog()
+                }
+
+            UIAssetAlertDialog(
+                title: "Settings",
+                message: viewModel.errorMessage ?? viewModel.statusMessage ?? "",
+                cancelTitle: "OK",
+                destructiveTitle: "Close"
+            ) {
+                dismissStatusDialog()
+            } onDestructive: {
+                dismissStatusDialog()
+            }
+            .padding(.horizontal, 16)
+            .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    private var profileCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Profile")
+                .uiAssetText(.subtitle)
+                .foregroundStyle(UIAssetColors.textSecondary)
+
+            HStack(spacing: 12) {
+                profileImageView
+                    .frame(width: 52, height: 52)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(viewModel.fullNameDisplay)
+                        .uiAssetText(.h3)
+                        .foregroundStyle(UIAssetColors.textPrimary)
+
+                    Text(viewModel.genderAgeDisplay)
+                        .uiAssetText(.footnote)
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Divider()
+
+            NavigationLink {
+                UserProfileView(viewModel: viewModel)
+            } label: {
+                UIAssetSettingsRow(symbol: "person.crop.circle", title: "Modify Details", showsDivider: false) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 16)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
+    }
+
+    private var healthCard: some View {
+        UIAssetSettingsCategoryCard(category: "Health and Fitness Data", bottomPadding: 8) {
+            UIAssetSettingsRow(symbol: "heart.text.square", title: "Connect HealthKit", showsDivider: false) {
+                UIAssetSettingsInlineToggle(isOn: $viewModel.isHealthConnected)
+            }
+        }
+    }
+
+    private var designSystemCard: some View {
+        UIAssetSettingsCategoryCard(category: "Design System", bottomPadding: 8) {
+            NavigationLink {
+                UIAssetsCatalogView()
+            } label: {
+                UIAssetSettingsRow(symbol: "paintpalette", title: "UI Assets", showsDivider: false) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var dataHandlingCard: some View {
+        UIAssetSettingsCategoryCard(category: "Data Handling", bottomPadding: 8) {
+            NavigationLink {
+                DataHandlingView(viewModel: viewModel)
+            } label: {
+                UIAssetSettingsRow(symbol: "externaldrive", title: "Data", showsDivider: false) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(UIAssetColors.textSecondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var aboutCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(UIAssetColors.accent)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle()
+                            .fill(UIAssetColors.accentSecondary)
+                    )
+
+                Text("About this app")
+                    .uiAssetText(.h3)
+                    .foregroundStyle(UIAssetColors.textPrimary)
+            }
+
+            Text("Milestone | v1.0\n\nDesigned for the love of training by Hardik Patil.\nBuilt local-first so your progress stays yours.\nSimple, friendly workout tracking for everyday consistency.")
+                .uiAssetText(.subtitle)
+                .foregroundStyle(UIAssetColors.textSecondary)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 
     @ViewBuilder
@@ -292,14 +337,11 @@ struct SettingsView: View {
         }
     }
 
-    private var statusAlertPresented: Binding<Bool> {
-        Binding {
-            viewModel.statusMessage != nil || viewModel.errorMessage != nil
-        } set: { isPresented in
-            if !isPresented {
-                viewModel.statusMessage = nil
-                viewModel.errorMessage = nil
-            }
+    private func dismissStatusDialog() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showingStatusDialog = false
+            viewModel.statusMessage = nil
+            viewModel.errorMessage = nil
         }
     }
 
@@ -498,27 +540,63 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func exportCSV(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
-        performTransfer {
+        performTransfer(successTitle: "CSV export") {
             try dataTransferService.exportCSV(dbQueue: dbQueue)
         }
     }
 
     func exportJSON(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
-        performTransfer {
+        performTransfer(successTitle: "JSON export") {
             try dataTransferService.exportJSON(dbQueue: dbQueue)
         }
     }
 
     func backup(dbQueue: DatabaseQueue) -> DataTransferExportResult? {
-        performTransfer {
+        performTransfer(successTitle: "Backup") {
             try dataTransferService.backup(dbQueue: dbQueue)
         }
+    }
+
+    var exportDestinationDetail: String {
+        dataTransferService.exportDestinationInfo().detail
+    }
+
+    var exportDestinationDisplayName: String {
+        dataTransferService.exportDestinationInfo().displayName
+    }
+
+    var hasExternalExportFolderSelection: Bool {
+        dataTransferService.hasExternalExportFolderSelection()
+    }
+
+    var exportDestinationSurvivalMessage: String {
+        if hasExternalExportFolderSelection {
+            return "Exports in the selected folder survive app deletion."
+        }
+        return "App-local exports are deleted when the app is removed."
+    }
+
+    func saveExternalExportFolderSelection(_ folderURL: URL) {
+        do {
+            let destination = try dataTransferService.saveExternalExportFolderSelection(folderURL)
+            statusMessage = "Export folder set to \(destination.displayName). New exports will be saved there automatically."
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = nil
+        }
+    }
+
+    func clearExternalExportFolderSelection() {
+        dataTransferService.clearExternalExportFolderSelection()
+        statusMessage = "External export folder cleared. Exports will be saved to Files > On My iPhone > Milestone > Exports."
+        errorMessage = nil
     }
 
     func restore(from fileURL: URL, dbQueue: DatabaseQueue) -> DataTransferRestoreResult? {
         do {
             let result = try dataTransferService.restore(from: fileURL, dbQueue: dbQueue)
-            statusMessage = "\(result.summary) Imported from \(result.stagedURL.path)."
+            statusMessage = result.summary
             errorMessage = nil
             return result
         } catch {
@@ -526,10 +604,6 @@ final class SettingsViewModel: ObservableObject {
             statusMessage = nil
             return nil
         }
-    }
-
-    func dataFolderPath() -> String {
-        dataTransferService.appDataFolderPath()
     }
 
     func resetData(dbQueue: DatabaseQueue) {
@@ -549,10 +623,14 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    private func performTransfer(_ action: () throws -> DataTransferExportResult) -> DataTransferExportResult? {
+    private func performTransfer(
+        successTitle: String,
+        _ action: () throws -> DataTransferExportResult
+    ) -> DataTransferExportResult? {
         do {
             let result = try action()
-            statusMessage = result.summary
+            let destination = dataTransferService.exportDestinationInfo()
+            statusMessage = "\(successTitle) saved as \(result.fileURL.lastPathComponent) in \(destination.detail)."
             errorMessage = nil
             return result
         } catch {
@@ -621,18 +699,13 @@ private struct SettingsScreenHeader<Trailing: View>: View {
 }
 
 struct DataHandlingView: View {
-    private struct SharePayload: Identifiable {
-        let id = UUID()
-        let title: String
-        let fileURL: URL
-    }
-
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: SettingsViewModel
     @State private var showingResetConfirmation = false
-    @State private var activeSharePayload: SharePayload?
     @State private var isRestoreImporterPresented = false
+    @State private var showingTransferStatusDialog = false
+    @State private var isExportFolderPickerPresented = false
 
     var body: some View {
         ZStack {
@@ -645,22 +718,40 @@ struct DataHandlingView: View {
                             .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
 
-                        Text("Files folder: \(viewModel.dataFolderPath())")
+                        Text("Current destination: \(viewModel.exportDestinationDetail)")
                             .uiAssetText(.subtitle)
                             .foregroundStyle(UIAssetColors.textSecondary)
+
+                        Text(viewModel.exportDestinationSurvivalMessage)
+                            .uiAssetText(.subtitle)
+                            .foregroundStyle(UIAssetColors.textSecondary)
+
+                        dataActionCard(
+                            symbol: "folder.badge.plus",
+                            title: "Choose Export Folder",
+                            description: "Pick a Files folder once and future exports will be saved there automatically.",
+                            action: {
+                                isExportFolderPickerPresented = true
+                            }
+                        )
+
+                        if viewModel.hasExternalExportFolderSelection {
+                            dataActionCard(
+                                symbol: "folder.badge.minus",
+                                title: "Use App Folder Instead",
+                                description: "Stop using the custom export folder and save back into the app's Files folder.",
+                                action: {
+                                    viewModel.clearExternalExportFolderSelection()
+                                }
+                            )
+                        }
 
                         dataActionCard(
                             symbol: "tablecells",
                             title: "Export to CSV",
                             description: "Create a CSV file export of your logged workouts.",
                             action: {
-                                guard let result = viewModel.exportCSV(dbQueue: container.dbQueue) else {
-                                    return
-                                }
-                                activeSharePayload = SharePayload(
-                                    title: "CSV Export",
-                                    fileURL: result.fileURL
-                                )
+                                _ = viewModel.exportCSV(dbQueue: container.dbQueue)
                             }
                         )
 
@@ -669,13 +760,7 @@ struct DataHandlingView: View {
                             title: "Export to JSON",
                             description: "Create a JSON export for structured backup or migration.",
                             action: {
-                                guard let result = viewModel.exportJSON(dbQueue: container.dbQueue) else {
-                                    return
-                                }
-                                activeSharePayload = SharePayload(
-                                    title: "JSON Export",
-                                    fileURL: result.fileURL
-                                )
+                                _ = viewModel.exportJSON(dbQueue: container.dbQueue)
                             }
                         )
 
@@ -684,13 +769,7 @@ struct DataHandlingView: View {
                             title: "Backup",
                             description: "Create a full local backup snapshot of app data.",
                             action: {
-                                guard let result = viewModel.backup(dbQueue: container.dbQueue) else {
-                                    return
-                                }
-                                activeSharePayload = SharePayload(
-                                    title: "Backup",
-                                    fileURL: result.fileURL
-                                )
+                                _ = viewModel.backup(dbQueue: container.dbQueue)
                             }
                         )
 
@@ -753,10 +832,41 @@ struct DataHandlingView: View {
                 .padding(.horizontal, 16)
                 .transition(.scale.combined(with: .opacity))
             }
+
+            if showingTransferStatusDialog {
+                Rectangle()
+                    .fill(Color.black.opacity(0.24))
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        dismissTransferStatusDialog()
+                    }
+
+                UIAssetAlertDialog(
+                    title: "Data Handling",
+                    message: viewModel.errorMessage ?? viewModel.statusMessage ?? "",
+                    cancelTitle: "OK",
+                    destructiveTitle: "Close"
+                ) {
+                    dismissTransferStatusDialog()
+                } onDestructive: {
+                    dismissTransferStatusDialog()
+                }
+                .padding(.horizontal, 16)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
         .background(UIAssetColors.secondary.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isExportFolderPickerPresented) {
+            ExportFolderPicker { folderURL in
+                isExportFolderPickerPresented = false
+                viewModel.saveExternalExportFolderSelection(folderURL)
+            } onCancel: {
+                isExportFolderPickerPresented = false
+            }
+            .ignoresSafeArea()
+        }
         .fileImporter(
             isPresented: $isRestoreImporterPresented,
             allowedContentTypes: [.json],
@@ -779,23 +889,10 @@ struct DataHandlingView: View {
                 viewModel.errorMessage = error.localizedDescription
             }
         }
-        .sheet(item: $activeSharePayload) { payload in
-            ActivityShareSheet(activityItems: [payload.fileURL]) { completed, activityType in
-                if completed {
-                    let destination = activityType?.rawValue ?? "share destination"
-                    viewModel.statusMessage = "\(payload.title) shared via \(destination). File: \(payload.fileURL.path)"
-                } else {
-                    viewModel.statusMessage = "\(payload.title) saved at \(payload.fileURL.path)"
-                }
+        .onChange(of: viewModel.statusMessage != nil || viewModel.errorMessage != nil) { _, isPresented in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showingTransferStatusDialog = isPresented
             }
-        }
-        .alert("Data Handling", isPresented: statusAlertPresented) {
-            Button("OK") {
-                viewModel.statusMessage = nil
-                viewModel.errorMessage = nil
-            }
-        } message: {
-            Text(viewModel.errorMessage ?? viewModel.statusMessage ?? "")
         }
     }
 
@@ -842,14 +939,54 @@ struct DataHandlingView: View {
         .uiAssetCardSurface(fill: UIAssetColors.primary)
     }
 
-    private var statusAlertPresented: Binding<Bool> {
-        Binding {
-            viewModel.statusMessage != nil || viewModel.errorMessage != nil
-        } set: { isPresented in
-            if !isPresented {
-                viewModel.statusMessage = nil
-                viewModel.errorMessage = nil
+    private func dismissTransferStatusDialog() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showingTransferStatusDialog = false
+            viewModel.statusMessage = nil
+            viewModel.errorMessage = nil
+        }
+    }
+}
+
+private struct ExportFolderPicker: UIViewControllerRepresentable {
+    let onPick: (URL) -> Void
+    let onCancel: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPick: onPick, onCancel: onCancel)
+    }
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let controller = UIDocumentPickerViewController(
+            forOpeningContentTypes: [.folder],
+            asCopy: false
+        )
+        controller.delegate = context.coordinator
+        controller.allowsMultipleSelection = false
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    final class Coordinator: NSObject, UIDocumentPickerDelegate {
+        private let onPick: (URL) -> Void
+        private let onCancel: () -> Void
+
+        init(onPick: @escaping (URL) -> Void, onCancel: @escaping () -> Void) {
+            self.onPick = onPick
+            self.onCancel = onCancel
+        }
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            onCancel()
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else {
+                onCancel()
+                return
             }
+            onPick(url)
         }
     }
 }
@@ -1089,19 +1226,4 @@ struct UserProfileView: View {
         )
         dismiss()
     }
-}
-
-private struct ActivityShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    let onComplete: (_ completed: Bool, _ activityType: UIActivity.ActivityType?) -> Void
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        controller.completionWithItemsHandler = { activityType, completed, _, _ in
-            onComplete(completed, activityType)
-        }
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

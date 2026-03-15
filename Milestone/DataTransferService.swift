@@ -3,7 +3,10 @@ import GRDB
 
 enum DataTransferError: Error, LocalizedError {
     case documentsDirectoryUnavailable
-    case failedToCreateDataDirectory
+    case failedToPrepareFilesDirectory
+    case failedToCreateBookmark(String)
+    case selectedExportFolderUnavailable
+    case failedToAccessSelectedExportFolder
     case invalidBackupPayload(String)
     case unsupportedPayloadVersion(Int)
     case duplicateIdentifier(table: String)
@@ -14,8 +17,14 @@ enum DataTransferError: Error, LocalizedError {
         switch self {
         case .documentsDirectoryUnavailable:
             return "Unable to access the app Documents directory."
-        case .failedToCreateDataDirectory:
-            return "Unable to create the Milestone data folder in Files."
+        case .failedToPrepareFilesDirectory:
+            return "Unable to prepare the app's Files folder."
+        case .failedToCreateBookmark(let message):
+            return "Unable to save the selected export folder: \(message)"
+        case .selectedExportFolderUnavailable:
+            return "The selected export folder is no longer available. Choose it again."
+        case .failedToAccessSelectedExportFolder:
+            return "Unable to access the selected export folder."
         case .invalidBackupPayload(let message):
             return "Invalid backup payload: \(message)"
         case .unsupportedPayloadVersion(let version):
@@ -41,13 +50,29 @@ struct DataTransferRestoreResult {
     let summary: String
 }
 
+struct ExportDestinationInfo {
+    let displayName: String
+    let detail: String
+    let isExternal: Bool
+}
+
 struct DataTransferService {
-    static let appDataFolderName = "MilestoneData"
     private static let currentPayloadVersion = 2
 
     private let fileManager: FileManager
     private let defaults: UserDefaults
     private let baseDirectoryURL: URL?
+
+    private enum Keys {
+        static let externalExportFolderBookmark = "dataTransfer.externalExportFolderBookmark"
+        static let externalExportFolderName = "dataTransfer.externalExportFolderName"
+    }
+
+    private struct ResolvedExportDirectory {
+        let url: URL
+        let isExternal: Bool
+        let displayName: String
+    }
 
     init(
         fileManager: FileManager = .default,
@@ -59,38 +84,106 @@ struct DataTransferService {
         self.baseDirectoryURL = baseDirectoryURL
     }
 
-    func appDataFolderURL() throws -> URL {
-        let rootDirectory: URL
+    func appDocumentsURL() throws -> URL {
+        let documentsURL: URL
         if let baseDirectoryURL {
-            rootDirectory = baseDirectoryURL
+            documentsURL = baseDirectoryURL
         } else {
-            guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            guard let resolvedDocumentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
                 throw DataTransferError.documentsDirectoryUnavailable
             }
-            rootDirectory = documentsURL
+            documentsURL = resolvedDocumentsURL
         }
 
-        let folderURL = rootDirectory.appendingPathComponent(Self.appDataFolderName, isDirectory: true)
         var isDirectory: ObjCBool = false
-        let exists = fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory)
+        let exists = fileManager.fileExists(atPath: documentsURL.path, isDirectory: &isDirectory)
+
+        guard exists, isDirectory.boolValue else {
+            throw DataTransferError.failedToPrepareFilesDirectory
+        }
+
+        return documentsURL
+    }
+
+    @discardableResult
+    func prepareFilesDirectory() throws -> URL {
+        let documentsURL = try appDocumentsURL()
+        let exportsFolderURL = documentsURL.appendingPathComponent("Exports", isDirectory: true)
+        var isDirectory: ObjCBool = false
+        let exists = fileManager.fileExists(atPath: exportsFolderURL.path, isDirectory: &isDirectory)
 
         if exists {
             if isDirectory.boolValue {
-                return folderURL
+                return exportsFolderURL
             }
-            throw DataTransferError.failedToCreateDataDirectory
+            throw DataTransferError.failedToPrepareFilesDirectory
         }
 
         do {
-            try fileManager.createDirectory(at: folderURL, withIntermediateDirectories: true)
-            return folderURL
+            try fileManager.createDirectory(at: exportsFolderURL, withIntermediateDirectories: true)
+            return exportsFolderURL
         } catch {
-            throw DataTransferError.failedToCreateDataDirectory
+            throw DataTransferError.failedToPrepareFilesDirectory
         }
     }
 
-    func appDataFolderPath() -> String {
-        (try? appDataFolderURL().path) ?? "Unavailable"
+    func exportsFolderPath() -> String {
+        (try? prepareFilesDirectory().path) ?? "Unavailable"
+    }
+
+    func exportDestinationInfo() -> ExportDestinationInfo {
+        if let external = try? resolveExternalExportDirectory() {
+            return ExportDestinationInfo(
+                displayName: external.displayName,
+                detail: "Custom folder: \(external.displayName)",
+                isExternal: true
+            )
+        }
+
+        return ExportDestinationInfo(
+            displayName: "Milestone > Exports",
+            detail: "Files > On My iPhone > Milestone > Exports",
+            isExternal: false
+        )
+    }
+
+    func hasExternalExportFolderSelection() -> Bool {
+        defaults.data(forKey: Keys.externalExportFolderBookmark) != nil
+    }
+
+    @discardableResult
+    func saveExternalExportFolderSelection(_ folderURL: URL) throws -> ExportDestinationInfo {
+        let hasAccess = folderURL.startAccessingSecurityScopedResource()
+        defer {
+            if hasAccess {
+                folderURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        do {
+            let bookmark = try folderURL.bookmarkData(
+                options: [],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            defaults.set(bookmark, forKey: Keys.externalExportFolderBookmark)
+
+            let displayName = Self.displayName(for: folderURL)
+            defaults.set(displayName, forKey: Keys.externalExportFolderName)
+
+            return ExportDestinationInfo(
+                displayName: displayName,
+                detail: "Custom folder: \(displayName)",
+                isExternal: true
+            )
+        } catch {
+            throw DataTransferError.failedToCreateBookmark(error.localizedDescription)
+        }
+    }
+
+    func clearExternalExportFolderSelection() {
+        defaults.removeObject(forKey: Keys.externalExportFolderBookmark)
+        defaults.removeObject(forKey: Keys.externalExportFolderName)
     }
 
     func exportCSV(dbQueue: DatabaseQueue) throws -> DataTransferExportResult {
@@ -500,14 +593,14 @@ struct DataTransferService {
     }
 
     private func stageRestoreSource(_ sourceURL: URL) throws -> URL {
-        let folder = try appDataFolderURL()
-        let sourceFolder = sourceURL.deletingLastPathComponent().standardizedFileURL
-        if sourceFolder == folder.standardizedFileURL {
-            return sourceURL
+        let stagingFolder = fileManager.temporaryDirectory.appendingPathComponent("MilestoneRestore", isDirectory: true)
+
+        if !fileManager.fileExists(atPath: stagingFolder.path) {
+            try fileManager.createDirectory(at: stagingFolder, withIntermediateDirectories: true)
         }
 
         let extensionValue = sourceURL.pathExtension.isEmpty ? "json" : sourceURL.pathExtension
-        let destination = folder.appendingPathComponent(
+        let destination = stagingFolder.appendingPathComponent(
             "restore-source-\(Self.timestampToken()).\(extensionValue)",
             isDirectory: false
         )
@@ -525,12 +618,74 @@ struct DataTransferService {
     }
 
     private func writeFile(data: Data, filenamePrefix: String, pathExtension: String) throws -> URL {
-        let folderURL = try appDataFolderURL()
+        let exportDirectory = try resolvePreferredExportDirectory()
         let filename = "\(filenamePrefix)-\(Self.timestampToken()).\(pathExtension)"
-        let destination = folderURL.appendingPathComponent(filename, isDirectory: false)
+        let destination = exportDirectory.url.appendingPathComponent(filename, isDirectory: false)
 
-        try data.write(to: destination, options: .atomic)
-        return destination
+        if exportDirectory.isExternal {
+            let hasAccess = exportDirectory.url.startAccessingSecurityScopedResource()
+            guard hasAccess else {
+                throw DataTransferError.failedToAccessSelectedExportFolder
+            }
+            defer { exportDirectory.url.stopAccessingSecurityScopedResource() }
+
+            try data.write(to: destination, options: .atomic)
+            return destination
+        } else {
+            try data.write(to: destination, options: .atomic)
+            return destination
+        }
+    }
+
+    private func resolvePreferredExportDirectory() throws -> ResolvedExportDirectory {
+        if let externalDirectory = try resolveExternalExportDirectory() {
+            return externalDirectory
+        }
+
+        let fallbackURL = try prepareFilesDirectory()
+        return ResolvedExportDirectory(
+            url: fallbackURL,
+            isExternal: false,
+            displayName: "Milestone > Exports"
+        )
+    }
+
+    private func resolveExternalExportDirectory() throws -> ResolvedExportDirectory? {
+        guard let bookmarkData = defaults.data(forKey: Keys.externalExportFolderBookmark) else {
+            return nil
+        }
+
+        var isStale = false
+        let folderURL: URL
+
+        do {
+            folderURL = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+        } catch {
+            clearExternalExportFolderSelection()
+            throw DataTransferError.selectedExportFolderUnavailable
+        }
+
+        if isStale {
+            _ = try saveExternalExportFolderSelection(folderURL)
+        }
+
+        var isDirectory: ObjCBool = false
+        let exists = fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory)
+        guard exists, isDirectory.boolValue else {
+            clearExternalExportFolderSelection()
+            throw DataTransferError.selectedExportFolderUnavailable
+        }
+
+        return ResolvedExportDirectory(
+            url: folderURL,
+            isExternal: true,
+            displayName: defaults.string(forKey: Keys.externalExportFolderName) ?? Self.displayName(for: folderURL)
+        )
     }
 
     private static func timestampToken(date: Date = Date()) -> String {
@@ -540,6 +695,11 @@ struct DataTransferService {
         formatter.timeZone = TimeZone.current
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         return formatter.string(from: date)
+    }
+
+    private static func displayName(for url: URL) -> String {
+        let trimmed = url.lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Selected Folder" : trimmed
     }
 
     private static func csvEscape(_ raw: String) -> String {

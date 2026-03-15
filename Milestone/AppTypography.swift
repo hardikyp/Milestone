@@ -129,8 +129,9 @@ enum AppTypography {
         guard UIFont(name: fontFamilyName, size: 14) == nil else { return }
 
         if let url = Bundle.main.url(forResource: bundleFontFileName, withExtension: "ttf") {
-            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-            return
+            if registerFontIfValid(at: url) {
+                return
+            }
         }
 
         #if DEBUG
@@ -139,9 +140,22 @@ enum AppTypography {
             .appendingPathComponent("Fonts")
             .appendingPathComponent("\(bundleFontFileName).ttf")
         if FileManager.default.fileExists(atPath: sourcePath.path) {
-            CTFontManagerRegisterFontsForURL(sourcePath as CFURL, .process, nil)
+            _ = registerFontIfValid(at: sourcePath)
         }
         #endif
+    }
+
+    @discardableResult
+    private static func registerFontIfValid(at url: URL) -> Bool {
+        guard
+            let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
+            !descriptors.isEmpty
+        else {
+            return false
+        }
+
+        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+        return true
     }
 }
 

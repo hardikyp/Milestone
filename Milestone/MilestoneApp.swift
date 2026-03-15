@@ -54,6 +54,7 @@ struct MilestoneApp: App {
             #endif
 
             AppTypography.configure()
+            _ = try? DataTransferService().prepareFilesDirectory()
             let databaseManager = try DatabaseManager()
             let appContainer = AppContainer(databaseManager: databaseManager)
             try ExerciseSeedService(
