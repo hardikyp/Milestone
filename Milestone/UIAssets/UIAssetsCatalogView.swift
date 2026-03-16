@@ -312,6 +312,28 @@ extension View {
     }
 }
 
+private struct UIAssetExerciseCardSurfaceModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .fill(UIAssetColors.primary)
+                        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
+
+                    RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
+                        .fill(UIAssetColors.primary)
+                }
+            )
+    }
+}
+
+private extension View {
+    func uiAssetExerciseCardSurface() -> some View {
+        modifier(UIAssetExerciseCardSurfaceModifier())
+    }
+}
+
 enum UIAssetButtonVariant: String, CaseIterable, Identifiable {
     case primary
     case secondary
@@ -770,7 +792,7 @@ struct UIAssetExerciseCard<MetaContent: View>: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .uiAssetCardSurface(fill: UIAssetColors.primary)
+        .uiAssetExerciseCardSurface()
     }
 
     static func symbolName(for type: ExerciseType, category: ExerciseCategory?) -> String {
