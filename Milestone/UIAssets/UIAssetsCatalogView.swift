@@ -532,6 +532,7 @@ struct UIAssetRowSlideActionButton: View {
     let iconColor: Color
     let backgroundColor: Color
     let borderColor: Color
+    var width: CGFloat = 56
     var height: CGFloat = UIAssetMetrics.rowCardHeight
 
     var body: some View {
@@ -546,7 +547,7 @@ struct UIAssetRowSlideActionButton: View {
                 .uiAssetText(.footnote)
                 .foregroundStyle(iconColor)
         }
-        .frame(width: 56, height: height)
+        .frame(width: width, height: height)
         .background(
             RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
                 .fill(backgroundColor)

@@ -22,96 +22,97 @@ struct HistoryView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 24)
 
-                    List {
-                        if viewModel.rows.isEmpty && viewModel.isLoading {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                        } else {
-                            ForEach(viewModel.rows) { row in
-                                HistorySwipeRow(
-                                    canEnd: row.isInProgress,
-                                    isOpen: openSwipeSessionID == row.id,
-                                    onOpen: { openSwipeSessionID = row.id },
-                                    onClose: {
-                                        if openSwipeSessionID == row.id {
-                                            openSwipeSessionID = nil
-                                        }
-                                    },
-                                    onTapRow: {
-                                        if openSwipeSessionID != nil {
-                                            openSwipeSessionID = nil
-                                        } else {
-                                            navigationPath.append(row.id)
-                                        }
-                                    },
-                                    onDelete: {
-                                        pendingDeleteSessionID = row.id
-                                    },
-                                    onEnd: {
-                                        Task {
-                                            await viewModel.endSession(
-                                                sessionId: row.id,
-                                                sessionRepository: container.sessionRepository
-                                            )
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            if viewModel.rows.isEmpty && viewModel.isLoading {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.top, 16)
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 8)
+                            } else {
+                                ForEach(viewModel.rows) { row in
+                                    HistorySwipeRow(
+                                        canEnd: row.isInProgress,
+                                        isOpen: openSwipeSessionID == row.id,
+                                        onOpen: { openSwipeSessionID = row.id },
+                                        onClose: {
                                             if openSwipeSessionID == row.id {
-                                                withAnimation(.easeInOut(duration: 0.2)) {
-                                                    openSwipeSessionID = nil
+                                                openSwipeSessionID = nil
+                                            }
+                                        },
+                                        onTapRow: {
+                                            if openSwipeSessionID != nil {
+                                                openSwipeSessionID = nil
+                                            } else {
+                                                navigationPath.append(row.id)
+                                            }
+                                        },
+                                        onDelete: {
+                                            pendingDeleteSessionID = row.id
+                                        },
+                                        onEnd: {
+                                            Task {
+                                                await viewModel.endSession(
+                                                    sessionId: row.id,
+                                                    sessionRepository: container.sessionRepository
+                                                )
+                                                if openSwipeSessionID == row.id {
+                                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                                        openSwipeSessionID = nil
+                                                    }
                                                 }
                                             }
                                         }
+                                    ) {
+                                        historyRow(row)
                                     }
-                                ) {
-                                    historyRow(row)
+                                    .id(row.id)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
                                 }
-                                .id(row.id)
-                                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                            }
 
-                            if viewModel.canLoadMore {
-                                Button {
-                                    Task {
-                                        await viewModel.loadMore(
-                                            sessionRepository: container.sessionRepository,
-                                            statsService: StatsService(dbQueue: container.dbQueue)
-                                        )
-                                    }
-                                } label: {
-                                    Group {
-                                        if viewModel.isLoadingMore {
-                                            ProgressView()
-                                        } else {
-                                            Text("Load More")
+                                if viewModel.canLoadMore {
+                                    Button {
+                                        Task {
+                                            await viewModel.loadMore(
+                                                sessionRepository: container.sessionRepository,
+                                                statsService: StatsService(dbQueue: container.dbQueue)
+                                            )
                                         }
+                                    } label: {
+                                        Group {
+                                            if viewModel.isLoadingMore {
+                                                ProgressView()
+                                            } else {
+                                                Text("Load More")
+                                            }
+                                        }
+                                        .uiAssetText(.paragraph)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .fill(UIAssetColors.primary)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .stroke(Color.black.opacity(0.05), lineWidth: 0)
+                                        )
+                                        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
                                     }
-                                    .uiAssetText(.paragraph)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(UIAssetColors.primary)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .stroke(Color.black.opacity(0.05), lineWidth: 0)
-                                    )
-                                    .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
+                                    .buttonStyle(.plain)
+                                    .disabled(viewModel.isLoadingMore)
+                                    .padding(.top, 8)
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 12)
                                 }
-                                .buttonStyle(.plain)
-                                .disabled(viewModel.isLoadingMore)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
                             }
                         }
+                        .padding(.bottom, 12)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
                 .background(UIAssetColors.secondary.ignoresSafeArea())
                 .toolbar(.hidden, for: .navigationBar)
                 .task {
@@ -275,14 +276,19 @@ private struct HistorySwipeRow<Content: View>: View {
 
     @State private var dragTranslation: CGFloat = 0
     @State private var measuredRowHeight: CGFloat = UIAssetMetrics.rowCardHeight
+    @State private var measuredRowWidth: CGFloat = 0
 
     private let actionGap: CGFloat = 8
-    private let destructiveColor = Color(red: 225/255, green: 0, blue: 0)
+    private let destructiveColor = Color(red: 225 / 255, green: 0, blue: 0)
     private let settleAnimation = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.82)
 
     private var actionWidth: CGFloat { measuredRowHeight }
     private var actionCount: CGFloat { canEnd ? 2 : 1 }
     private var actionRevealWidth: CGFloat { (actionWidth * actionCount) + (actionGap * actionCount) }
+    private var swipeActivationWidth: CGFloat {
+        let closedWidth = max(actionRevealWidth + 24, min(measuredRowWidth * 0.42, 180))
+        return isOpen ? max(measuredRowWidth, closedWidth) : closedWidth
+    }
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -292,12 +298,14 @@ private struct HistorySwipeRow<Content: View>: View {
 
                 if canEnd {
                     Button(action: onEnd) {
-                        swipeActionLabel(
+                        UIAssetRowSlideActionButton(
                             systemName: "stop.fill",
                             title: "Stop",
                             iconColor: UIAssetColors.accent,
                             backgroundColor: UIAssetColors.accentSecondary,
-                            borderColor: UIAssetColors.accent.opacity(0.3)
+                            borderColor: UIAssetColors.accent.opacity(0.3),
+                            width: actionWidth,
+                            height: measuredRowHeight
                         )
                     }
                     .buttonStyle(HistoryBouncyPlainButtonStyle())
@@ -308,12 +316,14 @@ private struct HistorySwipeRow<Content: View>: View {
                 }
 
                 Button(action: onDelete) {
-                    swipeActionLabel(
+                    UIAssetRowSlideActionButton(
                         systemName: "trash",
                         title: "Delete",
                         iconColor: .white,
                         backgroundColor: destructiveColor,
-                        borderColor: destructiveColor.opacity(0.7)
+                        borderColor: destructiveColor.opacity(0.7),
+                        width: actionWidth,
+                        height: measuredRowHeight
                     )
                 }
                 .buttonStyle(HistoryBouncyPlainButtonStyle())
@@ -330,18 +340,23 @@ private struct HistorySwipeRow<Content: View>: View {
                     GeometryReader { proxy in
                         Color.clear
                             .onAppear {
-                                updateMeasuredRowHeight(proxy.size.height)
+                                updateMeasuredRowSize(proxy.size)
                             }
-                            .onChange(of: proxy.size.height) { _, newHeight in
-                                updateMeasuredRowHeight(newHeight)
+                            .onChange(of: proxy.size) { _, newSize in
+                                updateMeasuredRowSize(newSize)
                             }
                     }
                 )
                 .onTapGesture {
                     onTapRow()
                 }
+                .overlay(alignment: .trailing) {
+                    Color.clear
+                        .frame(width: swipeActivationWidth)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(dragGesture)
+                }
                 .offset(x: rowOffset)
-                .highPriorityGesture(dragGesture)
         }
         .animation(settleAnimation, value: isOpen)
     }
@@ -363,11 +378,11 @@ private struct HistorySwipeRow<Content: View>: View {
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 8)
             .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                guard isHorizontalSwipe(value.translation) else { return }
                 dragTranslation = value.translation.width
             }
             .onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                guard isHorizontalSwipe(value.translation) else { return }
                 let baseOffset = isOpen ? -actionRevealWidth : 0
                 let projected = baseOffset + value.predictedEndTranslation.width
                 let shouldOpen = projected < -actionRevealWidth * 0.45
@@ -383,41 +398,22 @@ private struct HistorySwipeRow<Content: View>: View {
             }
     }
 
-    private func updateMeasuredRowHeight(_ newHeight: CGFloat) {
-        let resolvedHeight = max(newHeight, 1)
+    private func updateMeasuredRowSize(_ newSize: CGSize) {
+        let resolvedHeight = max(newSize.height, 1)
         if abs(resolvedHeight - measuredRowHeight) > 0.5 {
             measuredRowHeight = resolvedHeight
         }
+
+        let resolvedWidth = max(newSize.width, 1)
+        if abs(resolvedWidth - measuredRowWidth) > 0.5 {
+            measuredRowWidth = resolvedWidth
+        }
     }
 
-    private func swipeActionLabel(
-        systemName: String,
-        title: String,
-        iconColor: Color,
-        backgroundColor: Color,
-        borderColor: Color
-    ) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: systemName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 24, height: 24)
-                .foregroundStyle(iconColor)
-
-            Text(title)
-                .uiAssetText(.footnote)
-                .foregroundStyle(iconColor)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                .fill(backgroundColor)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: UIAssetMetrics.cornerRadius, style: .continuous)
-                .stroke(borderColor, lineWidth: 0)
-        )
-        .shadow(color: UIAssetShadows.soft, radius: 4, x: 0, y: 2)
+    private func isHorizontalSwipe(_ translation: CGSize) -> Bool {
+        let horizontal = abs(translation.width)
+        let vertical = abs(translation.height)
+        return horizontal > 12 && horizontal > vertical * 1.35
     }
 }
 
